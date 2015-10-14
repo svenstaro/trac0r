@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(trac0r)
 
-add_definitions("-g -O0 -Wall -Wextra -pedantic -Werror -std=c++14 -Wno-unused-parameter")
+add_definitions("-g -O3 -Wall -Wextra -pedantic -Werror -std=c++14 -Wno-unused-parameter")
 
 file(GLOB trac0r_sources trac0r/*.cpp)
 file(GLOB trac0r_viewer viewer/*.cpp)

@@ -8,6 +8,8 @@ struct Camera {
     glm::vec3 dir;
     glm::vec3 up;
     float fov;
+    float near_plane_dist;
+    float far_plane_dist;
 };
 
 #endif /* end of include guard: CAMERA_HPP */
