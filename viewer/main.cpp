@@ -2,24 +2,24 @@
 #include <emscripten.h>
 #endif
 
-#include "game.hpp"
+#include "viewer.hpp"
 
 void mainloop(void *args) {
-    auto game = static_cast<Game *>(args);
-    game->mainloop();
+    auto viewer = static_cast<Viewer *>(args);
+    viewer->mainloop();
 }
 
 int main() {
-    Game game;
+    Viewer viewer;
 
-    if (game.init() != 0)
+    if (viewer.init() != 0)
         return 1;
 
 #ifdef __EMSCRIPTEN__
-    emscripten_set_main_loop_arg(mainloop, &game, 0, true);
+    emscripten_set_main_loop_arg(mainloop, &viewer, 0, true);
 #else
-    while (game.is_running()) {
-        mainloop(&game);
+    while (viewer.is_running()) {
+        mainloop(&viewer);
     }
 #endif
 

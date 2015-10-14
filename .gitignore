@@ -26,3 +26,10 @@
 *.exe
 *.out
 *.app
+
+# Python cache
+*.pyc
+
+# Build dirs
+build/
+build-web/

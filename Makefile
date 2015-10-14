@@ -9,7 +9,7 @@ clang:
 	cd build; CXX=clang++ cmake ..; make -j
 
 run:
-	build/trac0r
+	build/trac0r_viewer
 
 web:
 	mkdir -p build-web
