@@ -28,8 +28,8 @@ int Viewer::init() {
         return 1;
     }
 
-    int width = 400;
-    int height = 300;
+    int width = 600;
+    int height = 400;
 
     m_window = SDL_CreateWindow("trac0r", 100, 100, width, height, SDL_WINDOW_SHOWN);
     if (m_window == nullptr) {
@@ -56,7 +56,7 @@ int Viewer::init() {
     }
     
     // Setup scene
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+    //SDL_SetRelativeMouseMode(SDL_TRUE);
     setup_scene();
 
     std::cout << "Finish init" << std::endl;
@@ -67,12 +67,12 @@ int Viewer::init() {
 void Viewer::setup_scene() {
     auto triangle = std::make_unique<Triangle>(glm::vec3{0.f, 5.f, 0.f}, glm::vec3{5.f, 5.f, 0.f}, glm::vec3{5.f, 5.f, 5.f}, glm::vec3{0.8, 0.3, 0.3}, glm::vec3{0.5, 0.5, 0.5});
     m_scene.push_back(std::move(triangle));
-    for (auto i = 0; i < 50; i++) {
-        auto triangle = std::make_unique<Triangle>(glm::ballRand(5.f), glm::ballRand(5.f), glm::ballRand(5.f), glm::vec3{0.8, 0.3, 0.3}, glm::vec3{0.5, 0.5, 0.5});
-        m_scene.push_back(std::move(triangle));
-    }
+    // for (auto i = 0; i < 3; i++) {
+    //     auto triangle = std::make_unique<Triangle>(glm::ballRand(5.f), glm::ballRand(5.f), glm::ballRand(5.f), glm::vec3{0.8, 0.3, 0.3}, glm::vec3{0.5, 0.5, 0.5});
+    //     m_scene.push_back(std::move(triangle));
+    // }
 
-    m_camera = Camera{{0, 0, 0}, {0, 0, 1}, {0, 1, 0}, 45.f, 0.1f, 100.f};
+    m_camera = Camera{{0, 0, 0}, {0, 1, 0}, {0, 0, 1}, 45.f, 0.1f, 100.f};
 }
 
 glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth) {
@@ -140,15 +140,15 @@ void Viewer::mainloop() {
     // Sort by distance to camera
     std::sort(m_scene.begin(), m_scene.end(), [this](const auto &tri1, const auto &tri2){return glm::distance(m_camera.pos, tri1->m_centroid) < glm::distance(m_camera.pos, tri2->m_centroid);});
     for (auto sample_cnt = 0; sample_cnt < 2; sample_cnt++) {
-        for (auto w = 0; w < width; w++) {
-            for (auto h = 0; h < height; h++) {
-                glm::vec3 win_coords{w, h, 0};
+        for (auto x = 0; x < width; x++) {
+            for (auto y = 0; y < height; y++) {
+                glm::vec3 win_coords{x, y, 0};
                 glm::mat4 model{1.0f};
                 glm::vec4 viewport{0, 0, width, height};
                 glm::vec3 object_coords = glm::unProject(win_coords, model * view_matrix, projection_matrix, viewport);
                 glm::vec3 color = intersect_scene(object_coords, m_camera.dir, 0);
-                std::cout << "r: " << color.r << " g: " << color.g << " b: " << color.b << std::endl;
-                m_pixels[h + w * height] = int(color.r * 255) << 16 | int(color.g * 255) << 8 | int(color.b * 255);
+                // std::cout << "r: " << color.r << " g: " << color.g << " b: " << color.b << std::endl;
+                m_pixels[y * width + x] = 0xff << 24 | int(color.r * 255) << 16 | int(color.g * 255) << 8 | int(color.b * 255);
             }
         }
     }
