@@ -76,7 +76,7 @@ void Viewer::setup_scene() {
     m_camera.pos = {0, 0, 0};
     m_camera.dir = {0, 1, 0};
     m_camera.up = {0, 0, 1};
-    m_camera.fov = 45.f;
+    m_camera.fov = 90.f;
     m_camera.near_plane_dist = 0.1f;
     m_camera.far_plane_dist = 100.f;
 }
