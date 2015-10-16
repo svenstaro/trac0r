@@ -130,6 +130,20 @@ void Viewer::mainloop() {
         }
     }
 
+    glm::vec3 cam_velocity{0};
+    const uint8_t *keystates = SDL_GetKeyboardState(0);
+    if (keystates[SDL_SCANCODE_A])
+        cam_velocity.x += -1;
+    else if (keystates[SDL_SCANCODE_D])
+        cam_velocity.x += 1;
+
+    if (keystates[SDL_SCANCODE_W])
+        cam_velocity.y += -1;
+    else if (keystates[SDL_SCANCODE_S])
+        cam_velocity.y += 1;
+
+    m_camera.pos += cam_velocity;
+
     // Rendering here
     int width;
     int height;
