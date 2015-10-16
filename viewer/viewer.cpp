@@ -67,12 +67,17 @@ int Viewer::init() {
 void Viewer::setup_scene() {
     auto triangle = std::make_unique<Triangle>(glm::vec3{0.f, 5.f, 0.f}, glm::vec3{5.f, 5.f, 0.f}, glm::vec3{5.f, 5.f, 5.f}, glm::vec3{0.8, 0.3, 0.3}, glm::vec3{0.5, 0.5, 0.5});
     m_scene.push_back(std::move(triangle));
-    // for (auto i = 0; i < 3; i++) {
+    // for (auto i = 0; i < 2; i++) {
     //     auto triangle = std::make_unique<Triangle>(glm::ballRand(5.f), glm::ballRand(5.f), glm::ballRand(5.f), glm::vec3{0.8, 0.3, 0.3}, glm::vec3{0.5, 0.5, 0.5});
     //     m_scene.push_back(std::move(triangle));
     // }
 
-    m_camera = Camera{{0, 0, 0}, {0, 1, 0}, {0, 0, 1}, 45.f, 0.1f, 100.f};
+    m_camera.pos = {0, 0, 0};
+    m_camera.dir = {0, 1, 0};
+    m_camera.up = {0, 0, 1};
+    m_camera.fov = 45.f;
+    m_camera.near_plane_dist = 0.1f;
+    m_camera.far_plane_dist = 100.f;
 }
 
 glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth) {
@@ -112,6 +117,7 @@ glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int de
 }
 
 void Viewer::mainloop() {
+    // Input
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT) {
