@@ -6,6 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtc/random.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
 #include <algorithm>
@@ -56,7 +57,7 @@ int Viewer::init() {
     }
     
     // Setup scene
-    //SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
     setup_scene();
 
     std::cout << "Finish init" << std::endl;
@@ -153,6 +154,12 @@ void Viewer::mainloop() {
     int mouse_x;
     int mouse_y;
     SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
+
+    m_camera.dir = glm::rotateX(m_camera.dir, mouse_y * 0.001f);
+    m_camera.dir = glm::rotateZ(m_camera.dir, mouse_x * -0.001f);
+
+    std::cout << glm::to_string(m_camera.pos) << std::endl;
+    std::cout << glm::to_string(m_camera.dir) << std::endl;
 
     glm::mat4 projection_matrix = glm::perspective(m_camera.fov, aspect_ratio, m_camera.near_plane_dist, m_camera.far_plane_dist);
     glm::mat4 view_matrix = glm::lookAt(m_camera.pos, m_camera.pos + m_camera.dir, m_camera.up);
