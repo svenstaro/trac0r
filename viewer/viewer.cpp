@@ -81,7 +81,7 @@ void Viewer::setup_scene() {
     m_camera.pos = {0, 0, 0};
     m_camera.dir = {0, 1, 0};
     m_camera.up = {0, 0, 1};
-    m_camera.fov = 90.f;
+    m_camera.fov = glm::radians(90.f);
     m_camera.near_plane_dist = 0.1f;
     m_camera.far_plane_dist = 100.f;
 }
@@ -166,9 +166,9 @@ void Viewer::mainloop() {
     std::cout << glm::to_string(m_camera.pos) << std::endl;
     std::cout << glm::to_string(m_camera.dir) << std::endl;
 
-    glm::mat4 projection_matrix = glm::perspective(
-        m_camera.fov, aspect_ratio, m_camera.near_plane_dist, m_camera.far_plane_dist);
-    glm::mat4 view_matrix = glm::lookAt(m_camera.pos, m_camera.pos + m_camera.dir, m_camera.up);
+    glm::mat4 projection = glm::perspective(m_camera.fov, aspect_ratio, m_camera.near_plane_dist,
+                                            m_camera.far_plane_dist);
+    glm::mat4 view = glm::lookAt(m_camera.pos, m_camera.pos + m_camera.dir, m_camera.up);
 
     // Sort by distance to camera
     std::sort(m_scene.begin(), m_scene.end(), [this](const auto &tri1, const auto &tri2) {
@@ -182,10 +182,8 @@ void Viewer::mainloop() {
                 glm::mat4 model{1.0f};
                 glm::vec4 viewport{0, 0, width, height};
                 glm::vec3 object_coords =
-                    glm::unProject(win_coords, model * view_matrix, projection_matrix, viewport);
+                    glm::unProject(win_coords, model * view, projection, viewport);
                 glm::vec3 color = intersect_scene(object_coords, m_camera.dir, 0);
-                // std::cout << "r: " << color.r << " g: " << color.g << " b: " << color.b <<
-                // std::endl;
                 m_pixels[y * width + x] = 0xff << 24 | int(color.r * 255) << 16 |
                                           int(color.g * 255) << 8 | int(color.b * 255);
             }
