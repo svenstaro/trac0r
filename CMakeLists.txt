@@ -6,7 +6,7 @@ add_definitions("-g -O3 -Wall -Wextra -pedantic -Werror -std=c++14 -Wno-unused-p
 file(GLOB trac0r_sources trac0r/*.cpp)
 file(GLOB trac0r_viewer viewer/*.cpp)
 
-#add_library(trac0r ${trac0r_sources})
+add_library(trac0r ${trac0r_sources})
 add_executable(trac0r_viewer ${trac0r_viewer})
 
 if(${EMSCRIPTEN})
@@ -25,6 +25,6 @@ include_directories(SYSTEM
 )
 
 target_link_libraries(trac0r_viewer
-    #trac0r_sources
+    trac0r
     ${SDL2_LIBRARIES}
 )

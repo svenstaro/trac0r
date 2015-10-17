@@ -3,6 +3,7 @@
 #include <SDL_ttf.h>
 #include <SDL_image.h>
 
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtc/random.hpp>
@@ -29,10 +30,10 @@ int Viewer::init() {
         return 1;
     }
 
-    int width = 600;
-    int height = 400;
+    int screen_width = 600;
+    int screen_height = 400;
 
-    m_window = SDL_CreateWindow("trac0r", 100, 100, width, height, SDL_WINDOW_SHOWN);
+    m_window = SDL_CreateWindow("trac0r", 100, 100, screen_width, screen_height, SDL_WINDOW_SHOWN);
     if (m_window == nullptr) {
         std::cerr << "SDL_CreateWindow error: " << SDL_GetError() << std::endl;
         SDL_Quit();
@@ -43,8 +44,8 @@ int Viewer::init() {
     // SDL_RENDERER_PRESENTVSYNC);
     m_render = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
     m_render_tex = SDL_CreateTexture(m_render, SDL_PIXELFORMAT_ARGB8888,
-                                     SDL_TEXTUREACCESS_STREAMING, width, height);
-    m_pixels.resize(width * height, 0);
+                                     SDL_TEXTUREACCESS_STREAMING, screen_width, screen_height);
+    m_pixels.resize(screen_width * screen_height, 0);
 
     if (m_render == nullptr) {
         SDL_DestroyWindow(m_window);
@@ -60,16 +61,16 @@ int Viewer::init() {
 
     // Setup scene
     SDL_SetRelativeMouseMode(SDL_TRUE);
-    setup_scene();
+    setup_scene(screen_width, screen_height);
 
     std::cout << "Finish init" << std::endl;
 
     return 0;
 }
 
-void Viewer::setup_scene() {
-    auto triangle = std::make_unique<Triangle>(glm::vec3{0.f, 5.f, 0.f}, glm::vec3{0.5f, 5.f, 0.f},
-                                               glm::vec3{0.5f, 5.f, 0.5f}, glm::vec3{0.3, 0.3, 0.3},
+void Viewer::setup_scene(int screen_width, int screen_height) {
+    auto triangle = std::make_unique<Triangle>(glm::vec3{0.f, 0.5f, 5.f}, glm::vec3{0.5f, 0.f, 5.f},
+                                               glm::vec3{0.5f, 0.5f, 5.f}, glm::vec3{0.3, 0.3, 0.3},
                                                glm::vec3{0.2, 0.2, 0.2});
     m_scene.push_back(std::move(triangle));
     // for (auto i = 0; i < 2; i++) {
@@ -78,12 +79,21 @@ void Viewer::setup_scene() {
     //     m_scene.push_back(std::move(triangle));
     // }
 
-    m_camera.pos = {0, 0, 0};
-    m_camera.dir = {0, 1, 0};
-    m_camera.up = {0, 0, 1};
-    m_camera.fov = glm::radians(90.f);
-    m_camera.near_plane_dist = 0.1f;
-    m_camera.far_plane_dist = 100.f;
+    glm::vec3 cam_pos = {0, 0, -1};
+    glm::vec3 cam_dir = {0, 0, 1};
+    glm::vec3 cam_up = {0, 1, 0};
+    auto cam_vertical_fov = glm::radians(90.f);
+    auto cam_near_plane_dist = 0.1f;
+    auto cam_far_plane_dist = 100.f;
+
+    m_camera = Camera{cam_pos,
+                      cam_dir,
+                      cam_up,
+                      cam_vertical_fov,
+                      cam_near_plane_dist,
+                      cam_far_plane_dist,
+                      screen_width,
+                      screen_height};
 }
 
 glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth) {
@@ -148,42 +158,44 @@ void Viewer::mainloop() {
     else if (keystates[SDL_SCANCODE_S])
         cam_velocity.y += -0.2f;
 
-    m_camera.pos += cam_velocity;
+    m_camera.set_pos(m_camera.pos() += cam_velocity);
 
     // Rendering here
     int width;
     int height;
     SDL_GetWindowSize(m_window, &width, &height);
-    auto aspect_ratio = (float)width / (float)height;
 
     int mouse_x;
     int mouse_y;
     SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
 
-    m_camera.dir = glm::rotateX(m_camera.dir, mouse_y * 0.001f);
-    m_camera.dir = glm::rotateZ(m_camera.dir, mouse_x * -0.001f);
+    m_camera.set_dir(glm::rotateX(m_camera.dir(), mouse_y * 0.001f));
+    m_camera.set_dir(glm::rotateZ(m_camera.dir(), mouse_x * -0.001f));
 
-    std::cout << glm::to_string(m_camera.pos) << std::endl;
-    std::cout << glm::to_string(m_camera.dir) << std::endl;
-
-    glm::mat4 projection = glm::perspective(m_camera.fov, aspect_ratio, m_camera.near_plane_dist,
-                                            m_camera.far_plane_dist);
-    glm::mat4 view = glm::lookAt(m_camera.pos, m_camera.pos + m_camera.dir, m_camera.up);
+    std::cout << "Cam Pos: " << glm::to_string(m_camera.pos()) << std::endl;
+    std::cout << "Cam Dir: " << glm::to_string(m_camera.dir()) << std::endl;
 
     // Sort by distance to camera
     std::sort(m_scene.begin(), m_scene.end(), [this](const auto &tri1, const auto &tri2) {
-        return glm::distance(m_camera.pos, tri1->m_centroid) <
-               glm::distance(m_camera.pos, tri2->m_centroid);
+        return glm::distance(m_camera.pos(), tri1->m_centroid) <
+               glm::distance(m_camera.pos(), tri2->m_centroid);
     });
+
+    auto half_height_canvas = glm::tan(m_camera.vertical_fov() / 2) * m_camera.near_plane_dist();
+    auto half_width_canvas = glm::tan(m_camera.horizontal_fov() / 2) * m_camera.near_plane_dist();
+    auto canvas_center_pos = m_camera.pos() + m_camera.dir() * m_camera.near_plane_dist();
+    glm::vec3 canvas_direction_x = glm::normalize(glm::cross(m_camera.dir(), m_camera.up())) * half_width_canvas;
+    glm::vec3 canvas_direction_y = glm::normalize(glm::cross(m_camera.dir(), canvas_direction_x)) * half_height_canvas;
+
     for (auto sample_cnt = 0; sample_cnt < 2; sample_cnt++) {
         for (auto x = 0; x < width; x++) {
             for (auto y = 0; y < height; y++) {
-                glm::vec3 win_coords{x, y, 0};
-                glm::mat4 model{1.0f};
-                glm::vec4 viewport{0, 0, width, height};
-                glm::vec3 object_coords =
-                    glm::unProject(win_coords, model * view, projection, viewport);
-                glm::vec3 color = intersect_scene(object_coords, m_camera.dir, 0);
+                auto cam_x = (y - height / 2.f) / height;
+                auto cam_y = (x - width / 2.f) / width;
+                glm::vec3 world_pos = canvas_center_pos + (cam_x * canvas_direction_x) + (cam_y * canvas_direction_y);
+                glm::vec3 ray_dir = world_pos - m_camera.pos();
+
+                glm::vec3 color = intersect_scene(world_pos, ray_dir, 0);
                 m_pixels[y * width + x] = 0xff << 24 | int(color.r * 255) << 16 |
                                           int(color.g * 255) << 8 | int(color.b * 255);
             }

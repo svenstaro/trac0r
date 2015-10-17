@@ -25,7 +25,7 @@ class Viewer {
     SDL_Window *window();
 
     // Put this stuff somewhere else
-    void setup_scene();
+    void setup_scene(int width, int height);
     glm::vec3 intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth);
 
   private:
