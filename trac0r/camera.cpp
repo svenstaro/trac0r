@@ -11,9 +11,6 @@ Camera::Camera(glm::vec3 pos, glm::vec3 dir, glm::vec3 up, float vertical_fov_de
       m_screen_height(screen_height) {
 
     set_vertical_fov(vertical_fov_degrees);
-
-    // m_camera.canvas_height = glm::tan(m_camera.fov) * m_camera.near_plane_dist;
-    // m_camera.canvas_width = m_
 }
 
 glm::vec3 Camera::pos() {
