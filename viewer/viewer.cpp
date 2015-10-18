@@ -78,8 +78,8 @@ int Viewer::init() {
 }
 
 void Viewer::setup_scene(int screen_width, int screen_height) {
-    auto triangle = std::make_unique<Triangle>(glm::vec3{0.f, 0.5f, 5.f}, glm::vec3{0.5f, 0.f, 5.f},
-                                               glm::vec3{0.5f, 0.5f, 5.f}, glm::vec3{0.3, 0.3, 0.3},
+    auto triangle = std::make_unique<Triangle>(glm::vec3{0.f, 0.f, -0.89f}, glm::vec3{0.07f, 0.f, -0.89f},
+                                               glm::vec3{0.07f, -0.04f, -.89f}, glm::vec3{0.3, 0.3, 0.3},
                                                glm::vec3{0.2, 0.2, 0.2});
     m_scene.push_back(std::move(triangle));
     // for (auto i = 0; i < 2; i++) {
