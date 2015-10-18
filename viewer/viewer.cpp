@@ -78,10 +78,14 @@ int Viewer::init() {
 }
 
 void Viewer::setup_scene(int screen_width, int screen_height) {
-    auto triangle = std::make_unique<Triangle>(glm::vec3{0.f, 0.f, -0.89f}, glm::vec3{0.07f, 0.f, -0.89f},
-                                               glm::vec3{0.07f, -0.04f, -.89f}, glm::vec3{0.3, 0.3, 0.3},
-                                               glm::vec3{0.2, 0.2, 0.2});
-    m_scene.push_back(std::move(triangle));
+    auto triangle1 = std::make_unique<Triangle>(
+        glm::vec3{0.f, 0.f, -0.89f}, glm::vec3{0.07f, 0.f, -0.89f}, glm::vec3{0.07f, -0.04f, -0.89f},
+        glm::vec3{0.3, 0.3, 0.3}, glm::vec3{0.2, 0.2, 0.2});
+    auto triangle2 = std::make_unique<Triangle>(
+        glm::vec3{-0.05f, 0.f, -0.6f}, glm::vec3{-0.005f, 0.f, -0.6f}, glm::vec3{-0.05f, -0.04f, -0.6f},
+        glm::vec3{0.9, 0.3, 0.3}, glm::vec3{0.2, 0.2, 0.4});
+    m_scene.push_back(std::move(triangle1));
+    m_scene.push_back(std::move(triangle2));
     // for (auto i = 0; i < 2; i++) {
     //     auto triangle =
     //         std::make_unique<Triangle>(glm::ballRand(5.f), glm::ballRand(5.f),
@@ -187,7 +191,7 @@ void Viewer::mainloop() {
     if (m_look_mode) {
         SDL_GetRelativeMouseState(&(mouse_pos.x), &(mouse_pos.y));
 
-        m_camera.set_dir(glm::rotateX(m_camera.dir(), mouse_pos.y * 0.001f));
+        m_camera.set_dir(glm::rotateX(m_camera.dir(), mouse_pos.y * -0.001f));
         m_camera.set_dir(glm::rotateY(m_camera.dir(), mouse_pos.x * -0.001f));
     } else if (!m_look_mode) {
         SDL_GetMouseState(&(mouse_pos.x), &(mouse_pos.y));
@@ -204,10 +208,12 @@ void Viewer::mainloop() {
     auto cam_fov_debug_info =
         "Cam FOV (H/V): " + std::to_string(int(glm::degrees(m_camera.horizontal_fov()))) + "/";
     cam_fov_debug_info += std::to_string(int(glm::degrees(m_camera.vertical_fov())));
-    auto cam_canvas_center_pos_info = "Cam Canvas Center: " + glm::to_string(m_camera.canvas_center_pos());
+    auto cam_canvas_center_pos_info =
+        "Cam Canvas Center: " + glm::to_string(m_camera.canvas_center_pos());
     auto mouse_pos_screen_info = "Mouse Pos Screen Space: " + glm::to_string(mouse_pos);
     auto mouse_pos_relative_info = "Mouse Pos Cam Space: " + glm::to_string(mouse_rel_pos);
-    auto mouse_pos_canvas_info = "Mouse Pos Canvas World Space: " + glm::to_string(mouse_canvas_pos);
+    auto mouse_pos_canvas_info =
+        "Mouse Pos Canvas World Space: " + glm::to_string(mouse_canvas_pos);
 
     auto cam_look_debug_tex =
         trac0r::make_text(m_render, m_font, cam_look_debug_info, {200, 100, 100, 200});
