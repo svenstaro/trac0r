@@ -98,7 +98,7 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
     glm::vec3 cam_dir = {0, 0, 1};
     glm::vec3 cam_up = {0, 1, 0};
 
-    m_camera = Camera(cam_pos, cam_dir, cam_up, 90.f, 0.1, 100.f, screen_width, screen_height);
+    m_camera = Camera(cam_pos, cam_dir, cam_up, 45.f, 0.001, 100.f, screen_width, screen_height);
 }
 
 glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth) {
