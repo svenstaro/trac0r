@@ -60,7 +60,7 @@ float Camera::vertical_fov() {
 void Camera::set_vertical_fov(float degrees) {
     // See https://en.wikipedia.org/wiki/Field_of_view_in_video_games
     m_vertical_fov = glm::radians(degrees);
-    m_horizontal_fov = 2 * glm::atan(glm::tan(m_vertical_fov / 2) * (m_screen_width / m_screen_height));
+    m_horizontal_fov = 2 * glm::atan(glm::tan(m_vertical_fov / 2) * ((float)m_screen_width / (float)m_screen_height));
 }
 
 float Camera::horizontal_fov() {

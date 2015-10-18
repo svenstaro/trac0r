@@ -74,26 +74,19 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
                                                glm::vec3{0.2, 0.2, 0.2});
     m_scene.push_back(std::move(triangle));
     // for (auto i = 0; i < 2; i++) {
-    //     auto triangle = std::make_unique<Triangle>(glm::ballRand(5.f), glm::ballRand(5.f),
-    //     glm::ballRand(5.f), glm::vec3{0.8, 0.3, 0.3}, glm::vec3{0.5, 0.5, 0.5});
+    //     auto triangle =
+    //         std::make_unique<Triangle>(glm::ballRand(5.f), glm::ballRand(5.f), glm::ballRand(5.f),
+    //                                    glm::vec3{0.8, 0.3, 0.3}, glm::vec3{0.5, 0.5, 0.5});
     //     m_scene.push_back(std::move(triangle));
     // }
 
     glm::vec3 cam_pos = {0, 0, -1};
     glm::vec3 cam_dir = {0, 0, 1};
     glm::vec3 cam_up = {0, 1, 0};
-    auto cam_vertical_fov = glm::radians(90.f);
-    auto cam_near_plane_dist = 0.1f;
-    auto cam_far_plane_dist = 100.f;
 
-    m_camera = Camera{cam_pos,
-                      cam_dir,
-                      cam_up,
-                      cam_vertical_fov,
-                      cam_near_plane_dist,
-                      cam_far_plane_dist,
-                      screen_width,
-                      screen_height};
+    m_camera = Camera(cam_pos, cam_dir, cam_up, 90.f, 0.1, 100.f, screen_width, screen_height);
+    std::cout << "Vertical FOV: " << m_camera.vertical_fov() << std::endl;
+    std::cout << "Horizontal FOV: " << m_camera.horizontal_fov() << std::endl;
 }
 
 glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth) {
@@ -172,8 +165,8 @@ void Viewer::mainloop() {
     m_camera.set_dir(glm::rotateX(m_camera.dir(), mouse_y * 0.001f));
     m_camera.set_dir(glm::rotateZ(m_camera.dir(), mouse_x * -0.001f));
 
-    std::cout << "Cam Pos: " << glm::to_string(m_camera.pos()) << std::endl;
-    std::cout << "Cam Dir: " << glm::to_string(m_camera.dir()) << std::endl;
+    // std::cout << "Cam Pos: " << glm::to_string(m_camera.pos()) << std::endl;
+    // std::cout << "Cam Dir: " << glm::to_string(m_camera.dir()) << std::endl;
 
     // Sort by distance to camera
     std::sort(m_scene.begin(), m_scene.end(), [this](const auto &tri1, const auto &tri2) {
@@ -184,15 +177,18 @@ void Viewer::mainloop() {
     auto half_height_canvas = glm::tan(m_camera.vertical_fov() / 2) * m_camera.near_plane_dist();
     auto half_width_canvas = glm::tan(m_camera.horizontal_fov() / 2) * m_camera.near_plane_dist();
     auto canvas_center_pos = m_camera.pos() + m_camera.dir() * m_camera.near_plane_dist();
-    glm::vec3 canvas_direction_x = glm::normalize(glm::cross(m_camera.dir(), m_camera.up())) * half_width_canvas;
-    glm::vec3 canvas_direction_y = glm::normalize(glm::cross(m_camera.dir(), canvas_direction_x)) * half_height_canvas;
+    glm::vec3 canvas_direction_x =
+        glm::normalize(glm::cross(m_camera.dir(), m_camera.up())) * half_width_canvas;
+    glm::vec3 canvas_direction_y =
+        glm::normalize(glm::cross(m_camera.dir(), canvas_direction_x)) * half_height_canvas;
 
     for (auto sample_cnt = 0; sample_cnt < 2; sample_cnt++) {
         for (auto x = 0; x < width; x++) {
             for (auto y = 0; y < height; y++) {
                 auto cam_x = (y - height / 2.f) / height;
                 auto cam_y = (x - width / 2.f) / width;
-                glm::vec3 world_pos = canvas_center_pos + (cam_x * canvas_direction_x) + (cam_y * canvas_direction_y);
+                glm::vec3 world_pos =
+                    canvas_center_pos + (cam_x * canvas_direction_x) + (cam_y * canvas_direction_y);
                 glm::vec3 ray_dir = world_pos - m_camera.pos();
 
                 glm::vec3 color = intersect_scene(world_pos, ray_dir, 0);
@@ -215,7 +211,7 @@ void Viewer::mainloop() {
     (void)dt;
     m_last_frame_time = current_time;
 
-    std::cout << "FPS: " << 1. / dt << std::endl;
+    // std::cout << "FPS: " << 1. / dt << std::endl;
 }
 
 SDL_Renderer *Viewer::renderer() {
