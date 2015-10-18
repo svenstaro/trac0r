@@ -79,11 +79,11 @@ int Viewer::init() {
 
 void Viewer::setup_scene(int screen_width, int screen_height) {
     auto triangle1 = std::make_unique<Triangle>(
-        glm::vec3{0.f, 0.f, -0.89f}, glm::vec3{0.07f, 0.f, -0.89f}, glm::vec3{0.07f, -0.04f, -0.89f},
-        glm::vec3{0.3, 0.3, 0.3}, glm::vec3{0.2, 0.2, 0.2});
+        glm::vec3{0.f, 0.f, -0.89f}, glm::vec3{0.07f, 0.f, -0.89f},
+        glm::vec3{0.07f, -0.04f, -0.89f}, glm::vec3{0.3, 0.3, 0.3}, glm::vec3{0.2, 0.2, 0.2});
     auto triangle2 = std::make_unique<Triangle>(
-        glm::vec3{-0.05f, 0.f, -0.6f}, glm::vec3{-0.005f, 0.f, -0.6f}, glm::vec3{-0.05f, -0.04f, -0.6f},
-        glm::vec3{0.9, 0.3, 0.3}, glm::vec3{0.2, 0.2, 0.4});
+        glm::vec3{-0.05f, 0.f, -0.6f}, glm::vec3{-0.005f, 0.f, -0.6f},
+        glm::vec3{-0.05f, -0.04f, -0.6f}, glm::vec3{0.9, 0.3, 0.3}, glm::vec3{0.2, 0.2, 0.4});
     m_scene.push_back(std::move(triangle1));
     m_scene.push_back(std::move(triangle2));
     // for (auto i = 0; i < 2; i++) {
@@ -102,9 +102,7 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
 }
 
 glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth) {
-    const auto MAX_DEPTH = 5;
-
-    if (depth == MAX_DEPTH)
+    if (depth == m_max_depth)
         return {0, 0, 0};
 
     // check all triangles for collision
@@ -138,9 +136,12 @@ glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int de
 }
 
 void Viewer::mainloop() {
+    m_scene_changed = false;
+
     int current_time = SDL_GetTicks();
     double dt = (current_time - m_last_frame_time) / 1000.0;
     m_last_frame_time = current_time;
+    auto fps = 1. / dt;
 
     // Input
     SDL_Event e;
@@ -170,25 +171,37 @@ void Viewer::mainloop() {
 
     glm::vec3 cam_velocity{0};
     const uint8_t *keystates = SDL_GetKeyboardState(0);
-    if (keystates[SDL_SCANCODE_A])
+    if (keystates[SDL_SCANCODE_A]) {
+        m_scene_changed = true;
         cam_velocity.x += -0.01f;
-    else if (keystates[SDL_SCANCODE_D])
+    } else if (keystates[SDL_SCANCODE_D]) {
+        m_scene_changed = true;
         cam_velocity.x += 0.01f;
+    }
 
-    if (keystates[SDL_SCANCODE_SPACE])
+    if (keystates[SDL_SCANCODE_SPACE]) {
+        m_scene_changed = true;
         cam_velocity.y += 0.01f;
-    else if (keystates[SDL_SCANCODE_LCTRL])
+    } else if (keystates[SDL_SCANCODE_LCTRL]) {
+        m_scene_changed = true;
         cam_velocity.y += -0.01f;
+    }
 
-    if (keystates[SDL_SCANCODE_Q])
+    if (keystates[SDL_SCANCODE_Q]) {
+        m_scene_changed = true;
         m_camera.set_up(glm::rotateZ(m_camera.up(), 0.1f));
-    else if (keystates[SDL_SCANCODE_E])
+    } else if (keystates[SDL_SCANCODE_E]) {
+        m_scene_changed = true;
         m_camera.set_up(glm::rotateZ(m_camera.up(), -0.1f));
+    }
 
-    if (keystates[SDL_SCANCODE_W])
+    if (keystates[SDL_SCANCODE_W]) {
+        m_scene_changed = true;
         cam_velocity.z += 0.01f;
-    else if (keystates[SDL_SCANCODE_S])
+    } else if (keystates[SDL_SCANCODE_S]) {
+        m_scene_changed = true;
         cam_velocity.z += -0.01f;
+    }
 
     m_camera.set_pos(m_camera.pos() += cam_velocity);
 
@@ -200,18 +213,32 @@ void Viewer::mainloop() {
     glm::ivec2 mouse_pos;
     if (m_look_mode) {
         SDL_GetRelativeMouseState(&(mouse_pos.x), &(mouse_pos.y));
+        if (mouse_pos.x != 0) {
+            m_scene_changed = true;
+            m_camera.set_dir(glm::rotateY(m_camera.dir(), mouse_pos.x * 0.001f));
+        }
 
-        m_camera.set_dir(glm::rotateX(m_camera.dir(), mouse_pos.y * 0.001f));
-        m_camera.set_dir(glm::rotateY(m_camera.dir(), mouse_pos.x * 0.001f));
+        if (mouse_pos.y != 0) {
+            m_scene_changed = true;
+            m_camera.set_dir(glm::rotateX(m_camera.dir(), mouse_pos.y * 0.001f));
+        }
+
     } else if (!m_look_mode) {
         SDL_GetMouseState(&(mouse_pos.x), &(mouse_pos.y));
+    }
+
+    if (m_scene_changed) {
+        m_samples_accumulated = 0;
     }
 
     // Lots of debug info
     glm::vec2 mouse_rel_pos = m_camera.screenspace_to_camspace(mouse_pos.x, mouse_pos.y);
     glm::vec3 mouse_canvas_pos = m_camera.camspace_to_worldspace(mouse_rel_pos);
 
-    auto fps_debug_info = "FPS: " + std::to_string(int(1. / dt));
+    auto fps_debug_info = "FPS: " + std::to_string(int(fps));
+    fps_debug_info += " RPS: " + std::to_string(int(fps * m_max_samples * width * height * m_max_depth));
+    auto scene_changing_info = "Samples : " + std::to_string(m_samples_accumulated);
+    scene_changing_info += " Scene Changing: " + std::to_string(m_scene_changed);
     auto cam_look_debug_info = "Cam Look Mode: " + std::to_string(m_look_mode);
     auto cam_pos_debug_info = "Cam Pos: " + glm::to_string(m_camera.pos());
     auto cam_dir_debug_info = "Cam Dir: " + glm::to_string(m_camera.dir());
@@ -226,6 +253,8 @@ void Viewer::mainloop() {
     auto mouse_pos_canvas_info =
         "Mouse Pos Canvas World Space: " + glm::to_string(mouse_canvas_pos);
 
+    auto fps_debug_tex = trac0r::make_text(m_render, m_font, fps_debug_info, {200, 100, 100, 200});
+    auto scene_changing_tex = trac0r::make_text(m_render, m_font, scene_changing_info, {200, 100, 100, 200});
     auto cam_look_debug_tex =
         trac0r::make_text(m_render, m_font, cam_look_debug_info, {200, 100, 100, 200});
     auto cam_pos_debug_tex =
@@ -236,7 +265,6 @@ void Viewer::mainloop() {
         trac0r::make_text(m_render, m_font, cam_up_debug_info, {200, 100, 100, 200});
     auto cam_fov_debug_tex =
         trac0r::make_text(m_render, m_font, cam_fov_debug_info, {200, 100, 100, 200});
-    auto fps_debug_tex = trac0r::make_text(m_render, m_font, fps_debug_info, {200, 100, 100, 200});
     auto cam_canvas_center_pos_tex =
         trac0r::make_text(m_render, m_font, cam_canvas_center_pos_info, {200, 100, 100, 200});
     auto mouse_pos_screen_tex =
@@ -252,38 +280,46 @@ void Viewer::mainloop() {
                glm::distance(m_camera.pos(), tri2->m_centroid);
     });
 
-    for (auto sample_cnt = 0; sample_cnt < 2; sample_cnt++) {
+    m_samples_accumulated += 1;
+    // for (auto sample_cnt = 0; sample_cnt < m_max_samples; sample_cnt++) {
         for (auto x = 0; x < width; x++) {
             for (auto y = 0; y < height; y++) {
                 glm::vec2 rel_pos = m_camera.screenspace_to_camspace(x, y);
                 glm::vec3 world_pos = m_camera.camspace_to_worldspace(rel_pos);
                 glm::vec3 ray_dir = glm::normalize(world_pos - m_camera.pos());
 
-                glm::vec3 color = intersect_scene(world_pos, ray_dir, 0);
-                m_pixels[y * width + x] = 0xff << 24 | int(color.r * 255) << 16 |
-                                          int(color.g * 255) << 8 | int(color.b * 255);
+                glm::vec3 result_color = intersect_scene(world_pos, ray_dir, 0);
+                glm::vec4 new_color = glm::vec4(1, result_color);
+                glm::vec4 old_color = trac0r::unpack_color_argb_to_vec4(m_pixels[y * width + x]);
+
+                new_color = (old_color * float(m_samples_accumulated - 1) + new_color) / float(m_samples_accumulated);
+                new_color.a = 1.f;
+                m_pixels[y * width + x] = trac0r::pack_color_argb(new_color);
             }
         }
-    }
+    // }
 
     SDL_RenderClear(m_render);
     SDL_UpdateTexture(m_render_tex, 0, m_pixels.data(), width * sizeof(uint32_t));
     SDL_RenderCopy(m_render, m_render_tex, 0, 0);
 
     trac0r::render_text(m_render, fps_debug_tex, 10, 10);
-    trac0r::render_text(m_render, cam_look_debug_tex, 10, 25);
-    trac0r::render_text(m_render, cam_pos_debug_tex, 10, 40);
-    trac0r::render_text(m_render, cam_dir_debug_tex, 10, 55);
-    trac0r::render_text(m_render, cam_up_debug_tex, 10, 70);
-    trac0r::render_text(m_render, cam_fov_debug_tex, 10, 85);
-    trac0r::render_text(m_render, cam_canvas_center_pos_tex, 10, 100);
-    trac0r::render_text(m_render, mouse_pos_screen_tex, 10, 115);
-    trac0r::render_text(m_render, mouse_pos_relative_tex, 10, 130);
-    trac0r::render_text(m_render, mouse_pos_canvas_tex, 10, 145);
+    trac0r::render_text(m_render, scene_changing_tex, 10, 25);
+    trac0r::render_text(m_render, cam_look_debug_tex, 10, 40);
+    trac0r::render_text(m_render, cam_pos_debug_tex, 10, 55);
+    trac0r::render_text(m_render, cam_dir_debug_tex, 10, 70);
+    trac0r::render_text(m_render, cam_up_debug_tex, 10, 85);
+    trac0r::render_text(m_render, cam_fov_debug_tex, 10, 100);
+    trac0r::render_text(m_render, cam_canvas_center_pos_tex, 10, 115);
+    trac0r::render_text(m_render, mouse_pos_screen_tex, 10, 130);
+    trac0r::render_text(m_render, mouse_pos_relative_tex, 10, 145);
+    trac0r::render_text(m_render, mouse_pos_canvas_tex, 10, 160);
+    trac0r::render_text(m_render, mouse_pos_canvas_tex, 10, 175);
 
     SDL_RenderPresent(m_render);
 
     SDL_DestroyTexture(fps_debug_tex);
+    SDL_DestroyTexture(scene_changing_tex);
     SDL_DestroyTexture(cam_look_debug_tex);
     SDL_DestroyTexture(cam_pos_debug_tex);
     SDL_DestroyTexture(cam_dir_debug_tex);

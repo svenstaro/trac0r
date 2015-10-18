@@ -30,6 +30,10 @@ class Viewer {
     glm::vec3 intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth);
 
   private:
+    bool m_scene_changed = false;
+    int m_samples_accumulated = 0;
+    int m_max_samples = 2;
+    int m_max_depth = 5;
     bool m_running = true;
     bool m_look_mode = false;
     int m_last_frame_time = 0;
