@@ -193,27 +193,18 @@ void Viewer::mainloop() {
         SDL_GetMouseState(&(mouse_pos.x), &(mouse_pos.y));
     }
 
-    // Canvas calculation
-    auto half_height_canvas = glm::tan(m_camera.vertical_fov() / 2) * m_camera.near_plane_dist();
-    auto half_width_canvas = glm::tan(m_camera.horizontal_fov() / 2) * m_camera.near_plane_dist();
-    auto canvas_center_pos = m_camera.pos() + m_camera.dir() * m_camera.near_plane_dist();
-    glm::vec3 canvas_dir_x =
-        glm::normalize(glm::cross(m_camera.dir(), m_camera.up())) * half_width_canvas;
-    glm::vec3 canvas_dir_y =
-        glm::normalize(glm::cross(m_camera.dir(), canvas_dir_x)) * half_height_canvas;
-
     // Lots of debug info
     glm::vec2 mouse_rel_pos = m_camera.screenspace_to_camspace(mouse_pos.x, mouse_pos.y);
-    glm::vec3 mouse_canvas_pos = m_camera.camspace_to_worldspace(mouse_rel_pos, canvas_center_pos,
-                                                                 canvas_dir_x, canvas_dir_y);
+    glm::vec3 mouse_canvas_pos = m_camera.camspace_to_worldspace(mouse_rel_pos);
 
+    auto fps_debug_info = "FPS: " + std::to_string(int(1. / dt));
     auto cam_look_debug_info = "Cam Look Mode: " + std::to_string(m_look_mode);
     auto cam_pos_debug_info = "Cam Pos: " + glm::to_string(m_camera.pos());
     auto cam_dir_debug_info = "Cam Dir: " + glm::to_string(m_camera.dir());
     auto cam_fov_debug_info =
         "Cam FOV (H/V): " + std::to_string(glm::degrees(m_camera.horizontal_fov())) + "/";
     cam_fov_debug_info += std::to_string(glm::degrees(m_camera.vertical_fov()));
-    auto fps_debug_info = "FPS: " + std::to_string(int(1. / dt));
+    auto cam_canvas_center_pos_info = "Cam Canvas Center: " + glm::to_string(m_camera.canvas_center_pos());
     auto mouse_pos_screen_info = "Mouse Pos Screen Space: " + glm::to_string(mouse_pos);
     auto mouse_pos_relative_info = "Mouse Pos Cam Space: " + glm::to_string(mouse_rel_pos);
     auto mouse_pos_canvas_info = "Mouse Pos World Space: " + glm::to_string(mouse_canvas_pos);
@@ -227,6 +218,8 @@ void Viewer::mainloop() {
     auto cam_fov_debug_tex =
         trac0r::make_text(m_render, m_font, cam_fov_debug_info, {200, 100, 100, 200});
     auto fps_debug_tex = trac0r::make_text(m_render, m_font, fps_debug_info, {200, 100, 100, 200});
+    auto cam_canvas_center_pos_tex =
+        trac0r::make_text(m_render, m_font, cam_canvas_center_pos_info, {200, 100, 100, 200});
     auto mouse_pos_screen_tex =
         trac0r::make_text(m_render, m_font, mouse_pos_screen_info, {200, 100, 100, 200});
     auto mouse_pos_relative_tex =
@@ -244,8 +237,7 @@ void Viewer::mainloop() {
         for (auto x = 0; x < width; x++) {
             for (auto y = 0; y < height; y++) {
                 glm::vec2 rel_pos = m_camera.screenspace_to_camspace(x, y);
-                glm::vec3 world_pos = m_camera.camspace_to_worldspace(rel_pos, canvas_center_pos,
-                                                                      canvas_dir_x, canvas_dir_y);
+                glm::vec3 world_pos = m_camera.camspace_to_worldspace(rel_pos);
                 glm::vec3 ray_dir = world_pos - m_camera.pos();
 
                 glm::vec3 color = intersect_scene(world_pos, ray_dir, 0);
@@ -259,22 +251,24 @@ void Viewer::mainloop() {
     SDL_UpdateTexture(m_render_tex, 0, m_pixels.data(), width * sizeof(uint32_t));
     SDL_RenderCopy(m_render, m_render_tex, 0, 0);
 
-    trac0r::render_text(m_render, cam_look_debug_tex, 10, 10);
-    trac0r::render_text(m_render, cam_pos_debug_tex, 10, 25);
-    trac0r::render_text(m_render, cam_dir_debug_tex, 10, 40);
-    trac0r::render_text(m_render, cam_fov_debug_tex, 10, 55);
-    trac0r::render_text(m_render, fps_debug_tex, 10, 70);
-    trac0r::render_text(m_render, mouse_pos_screen_tex, 10, 85);
-    trac0r::render_text(m_render, mouse_pos_relative_tex, 10, 100);
-    trac0r::render_text(m_render, mouse_pos_canvas_tex, 10, 115);
+    trac0r::render_text(m_render, fps_debug_tex, 10, 10);
+    trac0r::render_text(m_render, cam_look_debug_tex, 10, 25);
+    trac0r::render_text(m_render, cam_pos_debug_tex, 10, 40);
+    trac0r::render_text(m_render, cam_dir_debug_tex, 10, 55);
+    trac0r::render_text(m_render, cam_fov_debug_tex, 10, 70);
+    trac0r::render_text(m_render, cam_canvas_center_pos_tex, 10, 85);
+    trac0r::render_text(m_render, mouse_pos_screen_tex, 10, 100);
+    trac0r::render_text(m_render, mouse_pos_relative_tex, 10, 115);
+    trac0r::render_text(m_render, mouse_pos_canvas_tex, 10, 130);
 
     SDL_RenderPresent(m_render);
 
+    SDL_DestroyTexture(fps_debug_tex);
     SDL_DestroyTexture(cam_look_debug_tex);
     SDL_DestroyTexture(cam_pos_debug_tex);
     SDL_DestroyTexture(cam_dir_debug_tex);
     SDL_DestroyTexture(cam_fov_debug_tex);
-    SDL_DestroyTexture(fps_debug_tex);
+    SDL_DestroyTexture(cam_canvas_center_pos_tex);
     SDL_DestroyTexture(mouse_pos_screen_tex);
     SDL_DestroyTexture(mouse_pos_relative_tex);
     SDL_DestroyTexture(mouse_pos_canvas_tex);

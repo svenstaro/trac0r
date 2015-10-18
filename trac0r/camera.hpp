@@ -31,10 +31,15 @@ class Camera {
 
     float aspect_ratio() const;
 
+    float canvas_width() const;
+    float canvas_height() const;
+    glm::vec3 canvas_center_pos() const;
+    glm::vec3 canvas_dir_x() const;
+    glm::vec3 canvas_dir_y() const;
+
     glm::vec2 screenspace_to_camspace(int x, int y) const;
 
-    glm::vec3 camspace_to_worldspace(glm::vec2 rel_pos, glm::vec3 canvas_center_pos,
-                                     glm::vec3 canvas_dir_x, glm::vec3 canvas_dir_y) const;
+    glm::vec3 camspace_to_worldspace(glm::vec2 rel_pos) const;
 
   private:
     glm::vec3 m_pos;

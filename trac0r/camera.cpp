@@ -73,14 +73,32 @@ float Camera::aspect_ratio() const {
     return m_screen_width / m_screen_height;
 }
 
+float Camera::canvas_width() const {
+    return 2 * glm::tan(m_horizontal_fov / 2) * m_near_plane_dist;
+}
+
+float Camera::canvas_height() const {
+    return 2 * glm::tan(m_vertical_fov / 2) * m_near_plane_dist;
+}
+
+glm::vec3 Camera::canvas_center_pos() const {
+    return m_pos + m_dir * m_near_plane_dist;
+}
+
+glm::vec3 Camera::canvas_dir_x() const {
+    return glm::abs(glm::normalize(glm::cross(m_dir, m_up)) * (canvas_width() / 2));
+}
+
+glm::vec3 Camera::canvas_dir_y() const {
+    return glm::abs(glm::normalize(glm::cross(m_dir, canvas_dir_x())) * (canvas_height() / 2));
+}
+
 glm::vec2 Camera::screenspace_to_camspace(int x, int y) const {
     auto rel_x = (x - m_screen_width / 2.f) / m_screen_width;
-    auto rel_y = (y - m_screen_height / 2.f) / m_screen_height;
+    auto rel_y = -(y - m_screen_height / 2.f) / m_screen_height;
     return {rel_x, rel_y};
 }
 
-glm::vec3 Camera::camspace_to_worldspace(glm::vec2 rel_pos, glm::vec3 canvas_center_pos,
-                                         glm::vec3 canvas_dir_x, glm::vec3 canvas_dir_y) const {
-    auto canvas_pos = canvas_center_pos + (rel_pos.x * canvas_dir_x) + (rel_pos.y * canvas_dir_y);
-    return canvas_pos;
+glm::vec3 Camera::camspace_to_worldspace(glm::vec2 rel_pos) const {
+    return canvas_center_pos() + (rel_pos.x * canvas_dir_x()) + (rel_pos.y * canvas_dir_y());
 }
