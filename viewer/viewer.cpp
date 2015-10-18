@@ -202,12 +202,12 @@ void Viewer::mainloop() {
     auto cam_pos_debug_info = "Cam Pos: " + glm::to_string(m_camera.pos());
     auto cam_dir_debug_info = "Cam Dir: " + glm::to_string(m_camera.dir());
     auto cam_fov_debug_info =
-        "Cam FOV (H/V): " + std::to_string(glm::degrees(m_camera.horizontal_fov())) + "/";
-    cam_fov_debug_info += std::to_string(glm::degrees(m_camera.vertical_fov()));
+        "Cam FOV (H/V): " + std::to_string(int(glm::degrees(m_camera.horizontal_fov()))) + "/";
+    cam_fov_debug_info += std::to_string(int(glm::degrees(m_camera.vertical_fov())));
     auto cam_canvas_center_pos_info = "Cam Canvas Center: " + glm::to_string(m_camera.canvas_center_pos());
     auto mouse_pos_screen_info = "Mouse Pos Screen Space: " + glm::to_string(mouse_pos);
     auto mouse_pos_relative_info = "Mouse Pos Cam Space: " + glm::to_string(mouse_rel_pos);
-    auto mouse_pos_canvas_info = "Mouse Pos World Space: " + glm::to_string(mouse_canvas_pos);
+    auto mouse_pos_canvas_info = "Mouse Pos Canvas World Space: " + glm::to_string(mouse_canvas_pos);
 
     auto cam_look_debug_tex =
         trac0r::make_text(m_render, m_font, cam_look_debug_info, {200, 100, 100, 200});
