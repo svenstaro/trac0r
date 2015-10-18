@@ -5,6 +5,7 @@
 #include "trac0r/triangle.hpp"
 
 #include <SDL.h>
+#include <SDL_ttf.h>
 
 #include <array>
 #include <memory>
@@ -30,11 +31,13 @@ class Viewer {
 
   private:
     bool m_running = true;
+    bool m_look_mode = false;
     int m_last_frame_time = 0;
 
     SDL_Renderer *m_render;
     SDL_Window *m_window;
     SDL_Texture *m_render_tex;
+    TTF_Font *m_font;
 
     // Put this stuff somewhere else
     std::vector<std::unique_ptr<Triangle>> m_scene;

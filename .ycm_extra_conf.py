@@ -24,6 +24,7 @@ flags = [
 '-x',
 'c++',
 '-I/usr/include/SDL2',
+'-Itrac0r',
 '-I',
 '.',
 ]

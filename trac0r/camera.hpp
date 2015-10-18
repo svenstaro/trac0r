@@ -9,27 +9,32 @@ class Camera {
     Camera(glm::vec3 pos, glm::vec3 dir, glm::vec3 up, float vertical_fov, float near_plane_dist,
            float far_plane_dist, int screen_width, int screen_height);
 
-    glm::vec3 pos();
+    glm::vec3 pos() const;
     void set_pos(glm::vec3 pos);
 
-    glm::vec3 dir();
+    glm::vec3 dir() const;
     void set_dir(glm::vec3 dir);
 
-    glm::vec3 up();
+    glm::vec3 up() const;
     void set_up(glm::vec3 up);
 
-    float near_plane_dist();
+    float near_plane_dist() const;
     void set_near_plane_dist(float dist);
 
-    float far_plane_dist();
+    float far_plane_dist() const;
     void set_far_plane_dist(float dist);
 
-    float vertical_fov();
+    float vertical_fov() const;
     void set_vertical_fov(float degrees);
 
-    float horizontal_fov();
+    float horizontal_fov() const;
 
-    float aspect_ratio();
+    float aspect_ratio() const;
+
+    glm::vec2 screenspace_to_camspace(int x, int y) const;
+
+    glm::vec3 camspace_to_worldspace(glm::vec2 rel_pos, glm::vec3 canvas_center_pos,
+                                     glm::vec3 canvas_dir_x, glm::vec3 canvas_dir_y) const;
 
   private:
     glm::vec3 m_pos;
