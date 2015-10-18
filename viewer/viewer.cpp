@@ -175,6 +175,16 @@ void Viewer::mainloop() {
     else if (keystates[SDL_SCANCODE_D])
         cam_velocity.x += 0.01f;
 
+    if (keystates[SDL_SCANCODE_SPACE])
+        cam_velocity.y += 0.01f;
+    else if (keystates[SDL_SCANCODE_LCTRL])
+        cam_velocity.y += -0.01f;
+
+    if (keystates[SDL_SCANCODE_Q])
+        m_camera.set_up(glm::rotateZ(m_camera.up(), 0.1f));
+    else if (keystates[SDL_SCANCODE_E])
+        m_camera.set_up(glm::rotateZ(m_camera.up(), -0.1f));
+
     if (keystates[SDL_SCANCODE_W])
         cam_velocity.z += 0.01f;
     else if (keystates[SDL_SCANCODE_S])
@@ -205,6 +215,7 @@ void Viewer::mainloop() {
     auto cam_look_debug_info = "Cam Look Mode: " + std::to_string(m_look_mode);
     auto cam_pos_debug_info = "Cam Pos: " + glm::to_string(m_camera.pos());
     auto cam_dir_debug_info = "Cam Dir: " + glm::to_string(m_camera.dir());
+    auto cam_up_debug_info = "Cam Up: " + glm::to_string(m_camera.up());
     auto cam_fov_debug_info =
         "Cam FOV (H/V): " + std::to_string(int(glm::degrees(m_camera.horizontal_fov()))) + "/";
     cam_fov_debug_info += std::to_string(int(glm::degrees(m_camera.vertical_fov())));
@@ -221,6 +232,8 @@ void Viewer::mainloop() {
         trac0r::make_text(m_render, m_font, cam_pos_debug_info, {200, 100, 100, 200});
     auto cam_dir_debug_tex =
         trac0r::make_text(m_render, m_font, cam_dir_debug_info, {200, 100, 100, 200});
+    auto cam_up_debug_tex =
+        trac0r::make_text(m_render, m_font, cam_up_debug_info, {200, 100, 100, 200});
     auto cam_fov_debug_tex =
         trac0r::make_text(m_render, m_font, cam_fov_debug_info, {200, 100, 100, 200});
     auto fps_debug_tex = trac0r::make_text(m_render, m_font, fps_debug_info, {200, 100, 100, 200});
@@ -244,7 +257,7 @@ void Viewer::mainloop() {
             for (auto y = 0; y < height; y++) {
                 glm::vec2 rel_pos = m_camera.screenspace_to_camspace(x, y);
                 glm::vec3 world_pos = m_camera.camspace_to_worldspace(rel_pos);
-                glm::vec3 ray_dir = world_pos - m_camera.pos();
+                glm::vec3 ray_dir = glm::normalize(world_pos - m_camera.pos());
 
                 glm::vec3 color = intersect_scene(world_pos, ray_dir, 0);
                 m_pixels[y * width + x] = 0xff << 24 | int(color.r * 255) << 16 |
@@ -261,11 +274,12 @@ void Viewer::mainloop() {
     trac0r::render_text(m_render, cam_look_debug_tex, 10, 25);
     trac0r::render_text(m_render, cam_pos_debug_tex, 10, 40);
     trac0r::render_text(m_render, cam_dir_debug_tex, 10, 55);
-    trac0r::render_text(m_render, cam_fov_debug_tex, 10, 70);
-    trac0r::render_text(m_render, cam_canvas_center_pos_tex, 10, 85);
-    trac0r::render_text(m_render, mouse_pos_screen_tex, 10, 100);
-    trac0r::render_text(m_render, mouse_pos_relative_tex, 10, 115);
-    trac0r::render_text(m_render, mouse_pos_canvas_tex, 10, 130);
+    trac0r::render_text(m_render, cam_up_debug_tex, 10, 70);
+    trac0r::render_text(m_render, cam_fov_debug_tex, 10, 85);
+    trac0r::render_text(m_render, cam_canvas_center_pos_tex, 10, 100);
+    trac0r::render_text(m_render, mouse_pos_screen_tex, 10, 115);
+    trac0r::render_text(m_render, mouse_pos_relative_tex, 10, 130);
+    trac0r::render_text(m_render, mouse_pos_canvas_tex, 10, 145);
 
     SDL_RenderPresent(m_render);
 
@@ -273,6 +287,7 @@ void Viewer::mainloop() {
     SDL_DestroyTexture(cam_look_debug_tex);
     SDL_DestroyTexture(cam_pos_debug_tex);
     SDL_DestroyTexture(cam_dir_debug_tex);
+    SDL_DestroyTexture(cam_up_debug_tex);
     SDL_DestroyTexture(cam_fov_debug_tex);
     SDL_DestroyTexture(cam_canvas_center_pos_tex);
     SDL_DestroyTexture(mouse_pos_screen_tex);
