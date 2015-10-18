@@ -191,8 +191,8 @@ void Viewer::mainloop() {
     if (m_look_mode) {
         SDL_GetRelativeMouseState(&(mouse_pos.x), &(mouse_pos.y));
 
-        m_camera.set_dir(glm::rotateX(m_camera.dir(), mouse_pos.y * -0.001f));
-        m_camera.set_dir(glm::rotateY(m_camera.dir(), mouse_pos.x * -0.001f));
+        m_camera.set_dir(glm::rotateX(m_camera.dir(), mouse_pos.y * 0.001f));
+        m_camera.set_dir(glm::rotateY(m_camera.dir(), mouse_pos.x * 0.001f));
     } else if (!m_look_mode) {
         SDL_GetMouseState(&(mouse_pos.x), &(mouse_pos.y));
     }
