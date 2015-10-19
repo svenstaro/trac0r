@@ -38,6 +38,10 @@ void Camera::set_up(glm::vec3 up) {
     m_up = up;
 }
 
+glm::vec3 Camera::right() const {
+    return glm::normalize(glm::cross(m_up, m_dir));;
+}
+
 float Camera::near_plane_dist() const {
     return m_near_plane_dist;
 }
@@ -86,15 +90,15 @@ glm::vec3 Camera::canvas_center_pos() const {
 }
 
 glm::vec3 Camera::canvas_dir_x() const {
-    return glm::abs(glm::normalize(glm::cross(m_dir, m_up)) * (canvas_width() / 2));
+    return glm::normalize(glm::cross(m_dir, m_up)) * (canvas_width() / 2);
 }
 
 glm::vec3 Camera::canvas_dir_y() const {
-    return glm::abs(glm::normalize(glm::cross(m_dir, canvas_dir_x())) * (canvas_height() / 2));
+    return glm::normalize(m_up) * (canvas_height() / 2);
 }
 
 glm::vec2 Camera::screenspace_to_camspace(int x, int y) const {
-    auto rel_x = (x - m_screen_width / 2.f) / m_screen_width;
+    auto rel_x = -(x - m_screen_width / 2.f) / m_screen_width;
     auto rel_y = -(y - m_screen_height / 2.f) / m_screen_height;
     return {rel_x, rel_y};
 }

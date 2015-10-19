@@ -18,6 +18,8 @@ class Camera {
     glm::vec3 up() const;
     void set_up(glm::vec3 up);
 
+    glm::vec3 right() const;
+
     float near_plane_dist() const;
     void set_near_plane_dist(float dist);
 
