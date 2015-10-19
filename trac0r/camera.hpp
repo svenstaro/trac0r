@@ -6,7 +6,7 @@
 class Camera {
   public:
     Camera();
-    Camera(glm::vec3 pos, glm::vec3 dir, glm::vec3 up, float vertical_fov, float near_plane_dist,
+    Camera(glm::vec3 pos, glm::vec3 dir, glm::vec3 world_up, float vertical_fov, float near_plane_dist,
            float far_plane_dist, int screen_width, int screen_height);
 
     glm::vec3 pos() const;
@@ -15,10 +15,11 @@ class Camera {
     glm::vec3 dir() const;
     void set_dir(glm::vec3 dir);
 
-    glm::vec3 up() const;
-    void set_up(glm::vec3 up);
+    glm::vec3 world_up() const;
+    void set_world_up(glm::vec3 dir);
 
     glm::vec3 right() const;
+    glm::vec3 up() const;
 
     float near_plane_dist() const;
     void set_near_plane_dist(float dist);
@@ -63,7 +64,7 @@ class Camera {
   private:
     glm::vec3 m_pos;
     glm::vec3 m_dir;
-    glm::vec3 m_up;
+    glm::vec3 m_world_up;
     float m_near_plane_dist;
     float m_far_plane_dist;
     int m_screen_width;

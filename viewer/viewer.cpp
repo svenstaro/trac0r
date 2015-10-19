@@ -186,10 +186,10 @@ void Viewer::mainloop() {
 
     if (keystates[SDL_SCANCODE_Q]) {
         m_scene_changed = true;
-        m_camera.set_up(glm::rotateZ(m_camera.up(), 0.1f));
+        m_camera.set_world_up(glm::rotateZ(m_camera.up(), 0.1f));
     } else if (keystates[SDL_SCANCODE_E]) {
         m_scene_changed = true;
-        m_camera.set_up(glm::rotateZ(m_camera.up(), -0.1f));
+        m_camera.set_world_up(glm::rotateZ(m_camera.up(), -0.1f));
     }
 
     if (keystates[SDL_SCANCODE_W]) {
@@ -218,7 +218,6 @@ void Viewer::mainloop() {
         if (mouse_pos.y != 0) {
             m_scene_changed = true;
             m_camera.set_dir(glm::rotateX(m_camera.dir(), mouse_pos.y * 0.001f));
-            m_camera.set_up(glm::rotateX(m_camera.up(), mouse_pos.y * 0.001f));
         }
 
     } else if (!m_look_mode) {
