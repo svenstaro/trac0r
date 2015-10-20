@@ -96,9 +96,9 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
 
     glm::vec3 cam_pos = {0, 0, -1};
     glm::vec3 cam_dir = {0, 0, 1};
-    glm::vec3 cam_up = {0, 1, 0};
+    glm::vec3 world_up = {0, 1, 0};
 
-    m_camera = Camera(cam_pos, cam_dir, cam_up, 45.f, 0.001, 100.f, screen_width, screen_height);
+    m_camera = Camera(cam_pos, cam_dir, world_up, 45.f, 0.001, 100.f, screen_width, screen_height);
 }
 
 glm::vec4 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth) {
@@ -166,24 +166,28 @@ void Viewer::mainloop() {
         }
     }
 
-    glm::vec3 cam_velocity{0};
+    float cam_speed = 0.01f;
+
+    // Left/right
     const uint8_t *keystates = SDL_GetKeyboardState(0);
     if (keystates[SDL_SCANCODE_A]) {
         m_scene_changed = true;
-        cam_velocity.x += -0.01f;
+        m_camera.set_pos(m_camera.pos() - m_camera.right() * cam_speed);
     } else if (keystates[SDL_SCANCODE_D]) {
+        m_camera.set_pos(m_camera.pos() + m_camera.right() * cam_speed);
         m_scene_changed = true;
-        cam_velocity.x += 0.01f;
     }
 
+    // Up/down
     if (keystates[SDL_SCANCODE_SPACE]) {
         m_scene_changed = true;
-        cam_velocity.y += 0.01f;
+        m_camera.set_pos(m_camera.pos() + glm::vec3{0, 1, 0} * cam_speed);
     } else if (keystates[SDL_SCANCODE_LCTRL]) {
         m_scene_changed = true;
-        cam_velocity.y += -0.01f;
+        m_camera.set_pos(m_camera.pos() - glm::vec3{0, 1, 0} * cam_speed);
     }
 
+    // Roll
     if (keystates[SDL_SCANCODE_Q]) {
         m_scene_changed = true;
         m_camera.set_world_up(glm::rotateZ(m_camera.up(), 0.1f));
@@ -192,15 +196,14 @@ void Viewer::mainloop() {
         m_camera.set_world_up(glm::rotateZ(m_camera.up(), -0.1f));
     }
 
+    // Front/back
     if (keystates[SDL_SCANCODE_W]) {
         m_scene_changed = true;
-        cam_velocity.z += 0.01f;
+        m_camera.set_pos(m_camera.pos() + m_camera.dir() * cam_speed);
     } else if (keystates[SDL_SCANCODE_S]) {
         m_scene_changed = true;
-        cam_velocity.z += -0.01f;
+        m_camera.set_pos(m_camera.pos() - m_camera.dir() * cam_speed);
     }
-
-    m_camera.set_pos(m_camera.pos() += cam_velocity);
 
     // Rendering here
     int width;
