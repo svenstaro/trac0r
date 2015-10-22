@@ -11,7 +11,7 @@ add_executable(trac0r_viewer ${trac0r_viewer})
 
 if(${EMSCRIPTEN})
     set(CROSS_COMPILING ON)
-    add_definitions("-Oz -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_SDL_TTF=2 -Wno-warn-absolute-paths")
+    add_definitions("-Oz -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_SDL_TTF=2")
     set(CMAKE_CXX_LINK_FLAGS "-O3 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_SDL_TTF=2 -s TOTAL_MEMORY=32000000 --preload-file ../res -o index.html")
 else()
     include(FindPkgConfig)

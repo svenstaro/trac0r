@@ -1,5 +1,6 @@
 #include "viewer.hpp"
 
+#include "trac0r/mesh.hpp"
 #include "trac0r/utils.hpp"
 
 #include <SDL_ttf.h>
@@ -84,8 +85,21 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
     auto triangle2 = std::make_unique<Triangle>(
         glm::vec3{-0.05f, 0.f, -0.6f}, glm::vec3{-0.005f, 0.f, -0.6f},
         glm::vec3{-0.05f, -0.04f, -0.6f}, glm::vec3{0.9, 0.3, 0.3}, glm::vec3{0.2, 0.2, 0.4});
+
+    auto floor = Mesh::make_plane({0, -0.1f, -1}, {0, 1, 0}, {1, 1});
+    auto box = Mesh::make_box({0.2f, -0.05f, -1}, {0, 1, 0}, {0.1f, 0.1f, 0.1f});
+
     m_scene.push_back(std::move(triangle1));
     m_scene.push_back(std::move(triangle2));
+
+    for (auto& tri : floor->triangles()) {
+        m_scene.push_back(std::move(tri));
+    }
+
+    for (auto& tri : box->triangles()) {
+        m_scene.push_back(std::move(tri));
+    }
+
     // for (auto i = 0; i < 2; i++) {
     //     auto triangle =
     //         std::make_unique<Triangle>(glm::ballRand(5.f), glm::ballRand(5.f),
