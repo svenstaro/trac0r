@@ -226,15 +226,17 @@ void Viewer::mainloop() {
 
     glm::ivec2 mouse_pos;
     if (m_look_mode) {
+        // Yaw
         SDL_GetRelativeMouseState(&(mouse_pos.x), &(mouse_pos.y));
         if (mouse_pos.x != 0) {
             m_scene_changed = true;
             m_camera.set_dir(glm::rotateY(m_camera.dir(), mouse_pos.x * 0.001f));
         }
 
+        // Pitch
         if (mouse_pos.y != 0) {
             m_scene_changed = true;
-            m_camera.set_dir(glm::rotateX(m_camera.dir(), mouse_pos.y * 0.001f));
+            m_camera.set_dir(glm::rotate(m_camera.dir(), mouse_pos.y * 0.001f, glm::cross(m_camera.up(), m_camera.dir())));
         }
 
     } else if (!m_look_mode) {
