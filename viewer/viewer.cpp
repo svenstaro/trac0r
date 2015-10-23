@@ -134,14 +134,17 @@ glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int de
 
         if (collided) {
             glm::vec3 new_ray_pos = ray_pos + ray_dir * bary_pos.z;
+
+            // Find new random direction for diffuse reflection
             auto new_ray_dir = tri->m_normal;
             auto half_pi = glm::half_pi<float>();
             auto pi = glm::pi<float>();
             new_ray_dir = glm::rotate(tri->m_normal, glm::linearRand(-half_pi, half_pi), glm::cross(tri->m_normal, ray_dir));
             new_ray_dir = glm::rotate(new_ray_dir, glm::linearRand(-pi, pi), tri->m_normal);
-
             float cos_theta = glm::dot(new_ray_dir, tri->m_normal);
             glm::vec3 bdrf = 2.f * tri->m_reflectance * cos_theta;
+
+            // Send new ray in new direction
             glm::vec3 reflected = intersect_scene(new_ray_pos, new_ray_dir, depth + 1);
 
             ret_color = tri->m_emittance + (bdrf * reflected);
