@@ -1,3 +1,6 @@
+# [submodule "glm"]
+# 	path = glm
+# 	url = git@github.com:g-truc/glm.git
 [submodule "glm"]
 	path = glm
-	url = git@github.com:g-truc/glm.git
+	url = git@github.com:svenstaro/glm.git
