@@ -15,12 +15,12 @@ class Mesh {
 
     static std::unique_ptr<Mesh> make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size) {
         auto new_mesh = std::make_unique<Mesh>(pos, orientation);
-        auto p1 = glm::vec3{pos.x - size.x / 2, pos.y - size.y / 2, pos.z - size.z / 2};
-        auto p2 = glm::vec3{pos.x - size.x / 2, pos.y + size.y / 2, pos.z - size.z / 2};
+        auto p1 = glm::vec3{pos.x - size.x / 2, pos.y + size.y / 2, pos.z - size.z / 2};
+        auto p2 = glm::vec3{pos.x - size.x / 2, pos.y - size.y / 2, pos.z - size.z / 2};
         auto p3 = glm::vec3{pos.x + size.x / 2, pos.y - size.y / 2, pos.z - size.z / 2};
         auto p4 = glm::vec3{pos.x + size.x / 2, pos.y + size.y / 2, pos.z - size.z / 2};
-        auto p5 = glm::vec3{pos.x - size.x / 2, pos.y - size.y / 2, pos.z + size.z / 2};
-        auto p6 = glm::vec3{pos.x - size.x / 2, pos.y + size.y / 2, pos.z + size.z / 2};
+        auto p5 = glm::vec3{pos.x - size.x / 2, pos.y + size.y / 2, pos.z + size.z / 2};
+        auto p6 = glm::vec3{pos.x - size.x / 2, pos.y - size.y / 2, pos.z + size.z / 2};
         auto p7 = glm::vec3{pos.x + size.x / 2, pos.y - size.y / 2, pos.z + size.z / 2};
         auto p8 = glm::vec3{pos.x + size.x / 2, pos.y + size.y / 2, pos.z + size.z / 2};
 
