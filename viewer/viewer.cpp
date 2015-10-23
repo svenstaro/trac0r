@@ -136,8 +136,9 @@ glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int de
             glm::vec3 new_ray_pos = ray_pos + ray_dir * bary_pos.z;
             auto new_ray_dir = tri->m_normal;
             auto half_pi = glm::half_pi<float>();
-            new_ray_dir = glm::rotateX(tri->m_normal, glm::linearRand(-half_pi, half_pi));
-            new_ray_dir = glm::rotateZ(tri->m_normal, glm::linearRand(-half_pi, half_pi));
+            auto pi = glm::pi<float>();
+            new_ray_dir = glm::rotate(tri->m_normal, glm::linearRand(-half_pi, half_pi), glm::cross(tri->m_normal, ray_dir));
+            new_ray_dir = glm::rotate(new_ray_dir, glm::linearRand(-pi, pi), tri->m_normal);
             
             float cos_theta = glm::dot(new_ray_dir, tri->m_normal);
             glm::vec3 bdrf = 2.f * tri->m_reflectance * cos_theta;
