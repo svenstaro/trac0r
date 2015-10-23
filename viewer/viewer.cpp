@@ -7,11 +7,12 @@
 #include <SDL_image.h>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/intersect.hpp>
 #include <glm/gtc/random.hpp>
-#include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/intersect.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include <algorithm>
 #include <iostream>
@@ -115,30 +116,30 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
     m_camera = Camera(cam_pos, cam_dir, world_up, 45.f, 0.001, 100.f, screen_width, screen_height);
 }
 
-glm::vec4 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth) {
+glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth) {
     if (depth == m_max_depth)
-        return {0, 0, 0, 1.f};
+        return {0, 0, 0};
 
     // check all triangles for collision
     bool collided = false;
-    glm::vec4 ret_color{0.f, 0.f, 0.f, 1.f};
+    glm::vec3 ret_color{0.f, 0.f, 0.f};
     for (const auto &tri : m_scene) {
         glm::vec3 bary_pos;
         collided =
             glm::intersectRayTriangle(ray_pos, ray_dir, tri->m_v1, tri->m_v2, tri->m_v3, bary_pos);
 
         if (collided) {
-            // glm::vec3 new_ray_pos = ray_pos + ray_dir * bary_pos.z;
-            // auto new_ray_dir = tri->m_normal;
-            // new_ray_dir = glm::rotateX(tri->m_normal, glm::linearRand(-90.f, 90.f));
-            // new_ray_dir = glm::rotateZ(tri->m_normal, glm::linearRand(-90.f, 90.f));
-            //
-            // float cos_theta = glm::dot(new_ray_dir, tri->m_normal);
-            // glm::vec3 brdf = 2.f * tri->m_reflectance * cos_theta;
-            // glm::vec3 reflected = intersect_scene(new_ray_pos, new_ray_dir, depth + 1);
-            //
-            // ret_color = tri->m_emittance + (brdf * reflected);
-            ret_color = {0.7f, 0.0f, 0.7f, 1.f};
+            glm::vec3 new_ray_pos = ray_pos + ray_dir * bary_pos.z;
+            auto new_ray_dir = tri->m_normal;
+            auto half_pi = glm::half_pi<float>();
+            new_ray_dir = glm::rotateX(tri->m_normal, glm::linearRand(-half_pi, half_pi));
+            new_ray_dir = glm::rotateZ(tri->m_normal, glm::linearRand(-half_pi, half_pi));
+            
+            float cos_theta = glm::dot(new_ray_dir, tri->m_normal);
+            glm::vec3 bdrf = 2.f * tri->m_reflectance * cos_theta;
+            glm::vec3 reflected = intersect_scene(new_ray_pos, new_ray_dir, depth + 1);
+            
+            ret_color = tri->m_emittance + (bdrf * reflected);
             break;
         }
     }
@@ -304,12 +305,12 @@ void Viewer::mainloop() {
                 glm::vec3 world_pos = m_camera.camspace_to_worldspace(rel_pos);
                 glm::vec3 ray_dir = glm::normalize(world_pos - m_camera.pos());
 
-                glm::vec4 result_color = intersect_scene(world_pos, ray_dir, 0);
+                glm::vec3 result_color = intersect_scene(world_pos, ray_dir, 0);
                 // glm::vec4 old_color = trac0r::unpack_color_argb_to_vec4(m_pixels[y * width + x]);
 
                 // new_color = (old_color * float(m_samples_accumulated - 1) + new_color) / float(m_samples_accumulated);
                 // m_pixels[y * width + x] = trac0r::pack_color_argb(new_color);
-                m_pixels[y * width + x] = trac0r::pack_color_argb(result_color);
+                m_pixels[y * width + x] = trac0r::pack_color_argb(glm::vec4(result_color, 1.f));
             }
         }
     // }

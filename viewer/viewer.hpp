@@ -27,7 +27,7 @@ class Viewer {
 
     // Put this stuff somewhere else
     void setup_scene(int width, int height);
-    glm::vec4 intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth);
+    glm::vec3 intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth);
 
   private:
     bool m_scene_changed = false;
