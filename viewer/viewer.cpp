@@ -86,12 +86,16 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
     auto triangle2 = std::make_unique<Triangle>(
         glm::vec3{-0.05f, 0.f, -0.6f}, glm::vec3{-0.005f, 0.f, -0.6f},
         glm::vec3{-0.05f, -0.04f, -0.6f}, glm::vec3{0.9, 0.3, 0.3}, glm::vec3{0.2, 0.2, 0.4});
+    auto triangle3 = std::make_unique<Triangle>(
+        glm::vec3{-0.05f, 0.f, -0.6f}, glm::vec3{-0.005f, 0.f, -0.6f},
+        glm::vec3{-0.05f, -0.04f, -0.6f}, glm::vec3{0.9, 0.3, 0.3}, glm::vec3{0.2, 0.2, 0.4});
 
     auto floor = Mesh::make_plane({0, -0.1f, -1}, {0, 1, 0}, {1, 1});
     auto box = Mesh::make_box({0.2f, -0.05f, -1}, {0, 1, 0}, {0.1f, 0.1f, 0.1f});
 
     m_scene.push_back(std::move(triangle1));
     m_scene.push_back(std::move(triangle2));
+    m_scene.push_back(std::move(triangle3));
 
     for (auto& tri : floor->triangles()) {
         m_scene.push_back(std::move(tri));
@@ -306,11 +310,11 @@ void Viewer::mainloop() {
                 glm::vec3 ray_dir = glm::normalize(world_pos - m_camera.pos());
 
                 glm::vec3 result_color = intersect_scene(world_pos, ray_dir, 0);
-                // glm::vec4 old_color = trac0r::unpack_color_argb_to_vec4(m_pixels[y * width + x]);
+                glm::vec4 new_color = glm::vec4(result_color, 1.f);
+                glm::vec4 old_color = trac0r::unpack_color_argb_to_vec4(m_pixels[y * width + x]);
 
-                // new_color = (old_color * float(m_samples_accumulated - 1) + new_color) / float(m_samples_accumulated);
-                // m_pixels[y * width + x] = trac0r::pack_color_argb(new_color);
-                m_pixels[y * width + x] = trac0r::pack_color_argb(glm::vec4(result_color, 1.f));
+                new_color = (old_color * float(m_samples_accumulated - 1) + new_color) / float(m_samples_accumulated);
+                m_pixels[y * width + x] = trac0r::pack_color_argb(new_color);
             }
         }
     // }
