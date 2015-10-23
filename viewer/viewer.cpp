@@ -87,8 +87,8 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
         glm::vec3{-0.05f, 0.f, -0.6f}, glm::vec3{-0.005f, 0.f, -0.6f},
         glm::vec3{-0.05f, -0.04f, -0.6f}, glm::vec3{0.9, 0.3, 0.3}, glm::vec3{0.2, 0.2, 0.4});
     auto triangle3 = std::make_unique<Triangle>(
-        glm::vec3{-0.05f, 0.f, -0.6f}, glm::vec3{-0.005f, 0.f, -0.6f},
-        glm::vec3{-0.05f, -0.04f, -0.6f}, glm::vec3{0.9, 0.3, 0.3}, glm::vec3{0.2, 0.2, 0.4});
+        glm::vec3{-0.05f, 0.f, -0.9f}, glm::vec3{-0.005f, 0.f, -0.9f},
+        glm::vec3{-0.05f, -0.04f, -0.8f}, glm::vec3{5., 5., 5.}, glm::vec3{0.8, 0.8, 0.8});
 
     auto floor = Mesh::make_plane({0, -0.1f, -1}, {0, 1, 0}, {1, 1});
     auto box = Mesh::make_box({0.2f, -0.05f, -1}, {0, 1, 0}, {0.1f, 0.1f, 0.1f});
