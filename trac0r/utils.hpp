@@ -92,7 +92,7 @@ glm::vec4 unpack_color_rgbb_to_vec4(uint32_t packed_color_rgba) {
 }
 
 glm::vec4 unpack_color_argb_to_vec4(uint32_t packed_color_argb) {
-    glm::i8vec4 unpacked_color;
+    glm::vec4 unpacked_color;
     unpacked_color.a = (packed_color_argb >> 24 & 0xFF) / 255.f;
     unpacked_color.r = (packed_color_argb >> 16 & 0xFF) / 255.f;
     unpacked_color.g = (packed_color_argb >> 8 & 0xFF) / 255.f;
