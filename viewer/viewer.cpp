@@ -312,7 +312,6 @@ void Viewer::mainloop() {
                 glm::vec3 result_color = intersect_scene(world_pos, ray_dir, 0);
                 glm::vec4 new_color = glm::vec4(result_color, 1.f);
                 glm::vec4 old_color = trac0r::unpack_color_argb_to_vec4(m_pixels[y * width + x]);
-
                 new_color = (old_color * float(m_samples_accumulated - 1) + new_color) / float(m_samples_accumulated);
                 m_pixels[y * width + x] = trac0r::pack_color_argb(new_color);
             }

@@ -6,6 +6,7 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 
+#include <cmath>
 #include <string>
 #include <iostream>
 
@@ -50,14 +51,16 @@ uint32_t pack_color_rgba(glm::i8vec4 color) {
 }
 
 uint32_t pack_color_rgba(glm::vec4 color) {
-    uint32_t packed_color = int(color.r * 255) << 24 | int(color.g * 255) << 16 |
-                            int(color.b * 255) << 8 | int(color.a * 255);
+    uint32_t packed_color = int(std::round(color.r * 255)) << 24 |
+                            int(std::round(color.g * 255)) << 16 |
+                            int(std::round(color.b * 255)) << 8 | int(std::round(color.a * 255));
     return packed_color;
 }
 
 uint32_t pack_color_argb(glm::vec4 color) {
-    uint32_t packed_color = int(color.a * 255) << 24 | int(color.r * 255) << 16 |
-                            int(color.g * 255) << 8 | int(color.b * 255);
+    uint32_t packed_color = int(std::round(color.a * 255)) << 24 |
+                            int(std::round(color.r * 255)) << 16 |
+                            int(std::round(color.g * 255)) << 8 | int(std::round(color.b * 255));
     return packed_color;
 }
 
