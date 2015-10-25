@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 project(trac0r)
+include(ExternalProject)
 
 add_definitions("-g -O3 -Wall -Wextra -pedantic -Werror -std=c++14 -Wno-unused-parameter")
 
@@ -19,6 +20,18 @@ else()
     include(FindPkgConfig)
     pkg_check_modules(SDL2 REQUIRED sdl2 SDL2_image SDL2_ttf)
 endif()
+
+ExternalProject_Add(glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/external/glm
+    INSTALL_COMMAND ""
+)
+
+ExternalProject_Add(cppformat
+    GIT_REPOSITORY https://github.com/cppformat/cppformat.git
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/external/cppformat
+    INSTALL_COMMAND ""
+)
 
 include_directories(SYSTEM
     ${SDL2_INCLUDE_DIRS}

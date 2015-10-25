@@ -31,5 +31,6 @@
 *.pyc
 
 # Build dirs
+external/
 build/
 build-web/
