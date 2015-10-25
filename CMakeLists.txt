@@ -24,8 +24,12 @@ endif()
 ExternalProject_Add(glm
     GIT_REPOSITORY https://github.com/g-truc/glm.git
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/external/glm
+    BUILD_COMMAND ""
     INSTALL_COMMAND ""
 )
+
+ExternalProject_Get_Property(glm source_dir)
+set(glm_INCLUDE_DIR ${source_dir})
 
 ExternalProject_Add(cppformat
     GIT_REPOSITORY https://github.com/cppformat/cppformat.git
@@ -33,18 +37,29 @@ ExternalProject_Add(cppformat
     INSTALL_COMMAND ""
 )
 
+ExternalProject_Get_Property(cppformat source_dir)
+set(cppformat_INCLUDE_DIR ${source_dir})
+
+ExternalProject_Get_Property(cppformat binary_dir)
+set(cppformat_LIBRARIES ${binary_dir})
+
+add_dependencies(trac0r glm cppformat)
+
 include_directories(SYSTEM
     ${SDL2_INCLUDE_DIRS}
-    glm/
+    ${glm_INCLUDE_DIR}
+    ${cppformat_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}
 )
 
 target_link_libraries(trac0r_viewer
     trac0r
+    ${cppformat_LIBRARIES}
     ${SDL2_LIBRARIES}
 )
 
 target_link_libraries(trac0r_tests
     trac0r
+    ${cppformat_LIBRARIES}
     ${SDL2_LIBRARIES}
 )
