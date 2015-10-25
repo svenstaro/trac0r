@@ -30,6 +30,55 @@ void render_text(SDL_Renderer *renderer, SDL_Texture *texture, int pos_x, int po
     SDL_RenderCopy(renderer, texture, 0, &rect);
 }
 
+// Möller-Trumbore intersection algorithm
+// (see https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm)
+bool intersect_ray_triangle(const glm::vec3 &origin, const glm::vec3 &dir, const glm::vec3 &v0, glm::vec3 &v1, glm::vec3 &v2, float &dist) {
+    // Calculate edges of triangle from v0.
+    auto e0 = v1 - v0;
+    auto e1 = v2 - v0;
+
+    // Calculate determinant to check whether the ray is in the newly calculated plane made up from e0 and e1.
+    auto p = glm::cross(dir, e1);
+    auto det = glm::dot(e0, p);
+
+    // Check whether determinant is close to 0. If that is the case, the ray is in the same plane as the triangle itself which means that they can't collide. This effectively disables backface culling for which we would instead only check whether det < epsilon.
+    auto epsilon = std::numeric_limits<float>::epsilon();
+    if (det > -epsilon && det < epsilon)
+        return false;
+
+    auto inv_det = 1.f / det;
+
+    // Calculate distance from v0 to ray origin
+    auto tdist = origin - v0;
+
+    // Calculate u parameter and test bound
+    auto u = glm::dot(tdist, p) * inv_det;
+
+    // Check whether the intersection lies outside of the triangle
+    if (u < 0.f || u > 1.f)
+        return false;
+
+    // Prepare to test v parameter
+    auto q = glm::cross(tdist, e0);
+
+    // Calculate v parameter and test bound
+    auto v = glm::dot(dir, q) * inv_det;
+
+    // Check whether the intersection lies outside of the triangle
+    if (v < 0.f || v > 1.f)
+        return false;
+
+    auto t = glm::dot(e1, q) * inv_det;
+
+    if (t > epsilon) {
+        dist = t;
+        return true;
+    }
+
+    // If we end up here, there was no hit
+    return 0;
+}
+
 uint32_t pack_color_argb(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
     uint32_t new_color = a << 24 | r << 16 | g << 8 | b;
     return new_color;

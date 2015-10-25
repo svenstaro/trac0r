@@ -37,18 +37,15 @@ ExternalProject_Add(cppformat
     INSTALL_COMMAND ""
 )
 
-ExternalProject_Get_Property(cppformat source_dir)
-set(cppformat_INCLUDE_DIR ${source_dir})
-
 ExternalProject_Get_Property(cppformat binary_dir)
-set(cppformat_LIBRARIES ${binary_dir})
+set(cppformat_LIBRARIES ${binary_dir}/libcppformat.a)
 
 add_dependencies(trac0r glm cppformat)
 
 include_directories(SYSTEM
     ${SDL2_INCLUDE_DIRS}
     ${glm_INCLUDE_DIR}
-    ${cppformat_INCLUDE_DIR}
+    external/
     ${CMAKE_SOURCE_DIR}
 )
 

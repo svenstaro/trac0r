@@ -14,6 +14,8 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/string_cast.hpp>
 
+#include <cppformat/format.h>
+
 #include <algorithm>
 #include <iostream>
 
@@ -28,7 +30,7 @@ Viewer::~Viewer() {
 }
 
 int Viewer::init() {
-    std::cout << "Start init" << std::endl;
+    fmt::print("Start init\n");
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
         std::cerr << "SDL_Init error: " << SDL_GetError() << std::endl;
@@ -74,7 +76,7 @@ int Viewer::init() {
     // Setup scene
     setup_scene(screen_width, screen_height);
 
-    std::cout << "Finish init" << std::endl;
+    fmt::print("Finish init\n");
 
     return 0;
 }
@@ -128,12 +130,12 @@ glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int de
     bool collided = false;
     glm::vec3 ret_color{0.f, 0.f, 0.f};
     for (const auto &tri : m_scene) {
-        glm::vec3 bary_pos;
+        float dist_to_col;
         collided =
-            glm::intersectRayTriangle(ray_pos, ray_dir, tri->m_v1, tri->m_v2, tri->m_v3, bary_pos);
+            trac0r::intersect_ray_triangle(ray_pos, ray_dir, tri->m_v1, tri->m_v2, tri->m_v3, dist_to_col);
 
         if (collided) {
-            glm::vec3 new_ray_pos = ray_pos + ray_dir * bary_pos.z;
+            glm::vec3 new_ray_pos = ray_pos + ray_dir * dist_to_col;
 
             // Find new random direction for diffuse reflection
             auto new_ray_dir = tri->m_normal;
