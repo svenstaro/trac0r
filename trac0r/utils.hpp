@@ -32,16 +32,20 @@ void render_text(SDL_Renderer *renderer, SDL_Texture *texture, int pos_x, int po
 
 // Möller-Trumbore intersection algorithm
 // (see https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm)
-bool intersect_ray_triangle(const glm::vec3 &origin, const glm::vec3 &dir, const glm::vec3 &v0, glm::vec3 &v1, glm::vec3 &v2, float &dist) {
+bool intersect_ray_triangle(const glm::vec3 &origin, const glm::vec3 &dir, const glm::vec3 &v0,
+                            glm::vec3 &v1, glm::vec3 &v2, float &dist) {
     // Calculate edges of triangle from v0.
     auto e0 = v1 - v0;
     auto e1 = v2 - v0;
 
-    // Calculate determinant to check whether the ray is in the newly calculated plane made up from e0 and e1.
+    // Calculate determinant to check whether the ray is in the newly calculated plane made up from
+    // e0 and e1.
     auto pvec = glm::cross(dir, e1);
     auto det = glm::dot(e0, pvec);
 
-    // Check whether determinant is close to 0. If that is the case, the ray is in the same plane as the triangle itself which means that they can't collide. This effectively disables backface culling for which we would instead only check whether det < epsilon.
+    // Check whether determinant is close to 0. If that is the case, the ray is in the same plane as
+    // the triangle itself which means that they can't collide. This effectively disables backface
+    // culling for which we would instead only check whether det < epsilon.
     auto epsilon = std::numeric_limits<float>::epsilon();
     if (det > -epsilon && det < epsilon)
         return false;
