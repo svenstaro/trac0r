@@ -76,7 +76,7 @@ bool intersect_ray_triangle(const glm::vec3 &origin, const glm::vec3 &dir, const
     }
 
     // If we end up here, there was no hit
-    return 0;
+    return false;
 }
 
 uint32_t pack_color_argb(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
