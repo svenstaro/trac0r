@@ -65,7 +65,7 @@ bool intersect_ray_triangle(const glm::vec3 &origin, const glm::vec3 &dir, const
     auto v = glm::dot(dir, qvec) * inv_det;
 
     // Check whether the intersection lies outside of the triangle
-    if (v < 0.f || v > 1.f)
+    if (v < 0.f || u + v > 1.f)
         return false;
 
     auto t = glm::dot(e1, qvec) * inv_det;
