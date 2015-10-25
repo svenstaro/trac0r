@@ -49,17 +49,17 @@ bool intersect_ray_triangle(const glm::vec3 &origin, const glm::vec3 &dir, const
     auto inv_det = 1.f / det;
 
     // Calculate distance from v0 to ray origin
-    auto tdist = origin - v0;
+    auto tvec = origin - v0;
 
     // Calculate u parameter and test bound
-    auto u = glm::dot(tdist, pvec) * inv_det;
+    auto u = glm::dot(tvec, pvec) * inv_det;
 
     // Check whether the intersection lies outside of the triangle
     if (u < 0.f || u > 1.f)
         return false;
 
     // Prepare to test v parameter
-    auto qvec = glm::cross(tdist, e0);
+    auto qvec = glm::cross(tvec, e0);
 
     // Calculate v parameter and test bound
     auto v = glm::dot(dir, qvec) * inv_det;
