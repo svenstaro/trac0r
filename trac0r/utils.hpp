@@ -1,6 +1,8 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
+#include <cppformat/format.h>
+
 #include <glm/glm.hpp>
 
 #include <SDL.h>
@@ -8,7 +10,6 @@
 
 #include <cmath>
 #include <string>
-#include <iostream>
 
 namespace trac0r {
 
