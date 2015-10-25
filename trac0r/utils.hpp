@@ -38,8 +38,8 @@ bool intersect_ray_triangle(const glm::vec3 &origin, const glm::vec3 &dir, const
     auto e1 = v2 - v0;
 
     // Calculate determinant to check whether the ray is in the newly calculated plane made up from e0 and e1.
-    auto p = glm::cross(dir, e1);
-    auto det = glm::dot(e0, p);
+    auto pvec = glm::cross(dir, e1);
+    auto det = glm::dot(e0, pvec);
 
     // Check whether determinant is close to 0. If that is the case, the ray is in the same plane as the triangle itself which means that they can't collide. This effectively disables backface culling for which we would instead only check whether det < epsilon.
     auto epsilon = std::numeric_limits<float>::epsilon();
@@ -52,23 +52,23 @@ bool intersect_ray_triangle(const glm::vec3 &origin, const glm::vec3 &dir, const
     auto tdist = origin - v0;
 
     // Calculate u parameter and test bound
-    auto u = glm::dot(tdist, p) * inv_det;
+    auto u = glm::dot(tdist, pvec) * inv_det;
 
     // Check whether the intersection lies outside of the triangle
     if (u < 0.f || u > 1.f)
         return false;
 
     // Prepare to test v parameter
-    auto q = glm::cross(tdist, e0);
+    auto qvec = glm::cross(tdist, e0);
 
     // Calculate v parameter and test bound
-    auto v = glm::dot(dir, q) * inv_det;
+    auto v = glm::dot(dir, qvec) * inv_det;
 
     // Check whether the intersection lies outside of the triangle
     if (v < 0.f || v > 1.f)
         return false;
 
-    auto t = glm::dot(e1, q) * inv_det;
+    auto t = glm::dot(e1, qvec) * inv_det;
 
     if (t > epsilon) {
         dist = t;
