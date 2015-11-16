@@ -99,11 +99,11 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
     m_scene.push_back(std::move(triangle2));
     m_scene.push_back(std::move(triangle3));
 
-    for (auto& tri : floor->triangles()) {
+    for (auto &tri : floor->triangles()) {
         m_scene.push_back(std::move(tri));
     }
 
-    for (auto& tri : box->triangles()) {
+    for (auto &tri : box->triangles()) {
         m_scene.push_back(std::move(tri));
     }
 
@@ -131,8 +131,8 @@ glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int de
     glm::vec3 ret_color{0.f, 0.f, 0.f};
     for (const auto &tri : m_scene) {
         float dist_to_col;
-        collided =
-            trac0r::intersect_ray_triangle(ray_pos, ray_dir, tri->m_v1, tri->m_v2, tri->m_v3, dist_to_col);
+        collided = trac0r::intersect_ray_triangle(ray_pos, ray_dir, tri->m_v1, tri->m_v2, tri->m_v3,
+                                                  dist_to_col);
 
         if (collided) {
             glm::vec3 new_ray_pos = ray_pos + ray_dir * dist_to_col;
@@ -142,7 +142,8 @@ glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int de
             auto new_ray_dir = normal;
             auto half_pi = glm::half_pi<float>();
             auto pi = glm::pi<float>();
-            new_ray_dir = glm::rotate(normal, glm::linearRand(-half_pi, half_pi), glm::cross(normal, ray_dir));
+            new_ray_dir = glm::rotate(normal, glm::linearRand(-half_pi, half_pi),
+                                      glm::cross(normal, ray_dir));
             new_ray_dir = glm::rotate(new_ray_dir, glm::linearRand(-pi, pi), normal);
             float cos_theta = glm::dot(new_ray_dir, normal);
             glm::vec3 bdrf = 2.f * tri->m_reflectance * cos_theta;
@@ -248,7 +249,8 @@ void Viewer::mainloop() {
         // Pitch
         if (mouse_pos.y != 0) {
             m_scene_changed = true;
-            m_camera.set_dir(glm::rotate(m_camera.dir(), mouse_pos.y * 0.001f, glm::cross(m_camera.up(), m_camera.dir())));
+            m_camera.set_dir(glm::rotate(m_camera.dir(), mouse_pos.y * 0.001f,
+                                         glm::cross(m_camera.up(), m_camera.dir())));
         }
 
     } else if (!m_look_mode) {
@@ -264,7 +266,8 @@ void Viewer::mainloop() {
     glm::vec3 mouse_canvas_pos = m_camera.camspace_to_worldspace(mouse_rel_pos);
 
     auto fps_debug_info = "FPS: " + std::to_string(int(fps));
-    fps_debug_info += " RPS: " + std::to_string(int(fps * m_max_samples * width * height * m_max_depth));
+    fps_debug_info +=
+        " RPS: " + std::to_string(int(fps * m_max_samples * width * height * m_max_depth));
     auto scene_changing_info = "Samples : " + std::to_string(m_samples_accumulated);
     scene_changing_info += " Scene Changing: " + std::to_string(m_scene_changed);
     auto cam_look_debug_info = "Cam Look Mode: " + std::to_string(m_look_mode);
@@ -282,7 +285,8 @@ void Viewer::mainloop() {
         "Mouse Pos Canvas World Space: " + glm::to_string(mouse_canvas_pos);
 
     auto fps_debug_tex = trac0r::make_text(m_render, m_font, fps_debug_info, {200, 100, 100, 200});
-    auto scene_changing_tex = trac0r::make_text(m_render, m_font, scene_changing_info, {200, 100, 100, 200});
+    auto scene_changing_tex =
+        trac0r::make_text(m_render, m_font, scene_changing_info, {200, 100, 100, 200});
     auto cam_look_debug_tex =
         trac0r::make_text(m_render, m_font, cam_look_debug_info, {200, 100, 100, 200});
     auto cam_pos_debug_tex =
@@ -309,21 +313,20 @@ void Viewer::mainloop() {
     });
 
     m_samples_accumulated += 1;
-    // for (auto sample_cnt = 0; sample_cnt < m_max_samples; sample_cnt++) {
-        for (auto x = 0; x < width; x++) {
-            for (auto y = 0; y < height; y++) {
-                glm::vec2 rel_pos = m_camera.screenspace_to_camspace(x, y);
-                glm::vec3 world_pos = m_camera.camspace_to_worldspace(rel_pos);
-                glm::vec3 ray_dir = glm::normalize(world_pos - m_camera.pos());
+    for (auto x = 0; x < width; x++) {
+        for (auto y = 0; y < height; y++) {
+            glm::vec2 rel_pos = m_camera.screenspace_to_camspace(x, y);
+            glm::vec3 world_pos = m_camera.camspace_to_worldspace(rel_pos);
+            glm::vec3 ray_dir = glm::normalize(world_pos - m_camera.pos());
 
-                glm::vec3 result_color = intersect_scene(world_pos, ray_dir, 0);
-                glm::vec4 new_color = glm::vec4(result_color, 1.f);
-                glm::vec4 old_color = trac0r::unpack_color_argb_to_vec4(m_pixels[y * width + x]);
-                new_color = (old_color * float(m_samples_accumulated - 1) + new_color) / float(m_samples_accumulated);
-                m_pixels[y * width + x] = trac0r::pack_color_argb(new_color);
-            }
+            glm::vec3 result_color = intersect_scene(world_pos, ray_dir, 0);
+            glm::vec4 new_color = glm::vec4(result_color, 1.f);
+            glm::vec4 old_color = trac0r::unpack_color_argb_to_vec4(m_pixels[y * width + x]);
+            new_color = (old_color * float(m_samples_accumulated - 1) + new_color) /
+                        float(m_samples_accumulated);
+            m_pixels[y * width + x] = trac0r::pack_color_argb(new_color);
         }
-    // }
+    }
 
     SDL_RenderClear(m_render);
     SDL_UpdateTexture(m_render_tex, 0, m_pixels.data(), width * sizeof(uint32_t));
