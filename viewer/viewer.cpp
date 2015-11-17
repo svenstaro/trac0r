@@ -82,27 +82,14 @@ int Viewer::init() {
 }
 
 void Viewer::setup_scene(int screen_width, int screen_height) {
-    auto triangle1 = std::make_unique<Triangle>(
-        glm::vec3{0.f, 0.f, -0.89f}, glm::vec3{0.07f, 0.f, -0.89f}, glm::vec3{0.07f, -0.04f, -0.89f},
-        glm::vec3{0.3, 0.3, 0.3}, glm::vec3{0.2, 0.2, 0.2});
-    auto triangle2 = std::make_unique<Triangle>(
-        glm::vec3{-0.05f, 0.f, -0.6f}, glm::vec3{-0.005f, 0.f, -0.6f}, glm::vec3{-0.05f, -0.04f, -0.6f},
-        glm::vec3{0.9, 0.9, 0.9}, glm::vec3{0.4, 0.4, 0.4});
-    auto triangle3 = std::make_unique<Triangle>(
-        glm::vec3{-0.05f, 0.f, -0.9f}, glm::vec3{-0.005f, 0.f, -0.9f}, glm::vec3{-0.05f, -0.04f, -0.8f},
-        glm::vec3{1., 0., 0.}, glm::vec3{0.8, 0.8, 0.8});
-
-    auto wall_left = Mesh::make_plane({-0.5f, 0.4f, -1}, {1, 0, 0}, {1, 1});
-    auto wall_right = Mesh::make_plane({0.5f, 0.4f, -1}, {-1, 0, 0}, {1, 1});
-    auto wall_back = Mesh::make_plane({0, 0.4f, -0.5}, {0, 0, 1}, {1, 1});
-    auto wall_top = Mesh::make_plane({0, 0.9f, -1}, {0, 1, 0}, {1, 1});
-    auto wall_bottom = Mesh::make_plane({0, -0.1f, -1}, {0, 1, 0}, {1, 1});
-    auto box1 = Mesh::make_box({0.2f, -0.05f, -1}, {0, 1, 0}, {0.1f, 0.1f, 0.1f});
-    auto box2 = Mesh::make_box({-0.1f, -0.05f, -1}, {0, 1, 0}, {0.1f, 0.1f, 0.1f});
-
-    m_scene.push_back(std::move(triangle1));
-    m_scene.push_back(std::move(triangle2));
-    m_scene.push_back(std::move(triangle3));
+    auto wall_left = Mesh::make_plane({-0.5f, 0.4f, 0}, {1, 0, 0}, {1, 1}, {0, 0, 0}, {1, 0, 0});
+    auto wall_right = Mesh::make_plane({0.5f, 0.4f, 0}, {-1, 0, 0}, {1, 1}, {0, 0, 0}, {0, 1, 0});
+    auto wall_back = Mesh::make_plane({0, 0.4f, 0.5}, {0, 0, 1}, {1, 1});
+    auto wall_top = Mesh::make_plane({0, 0.9f, 0}, {0, 1, 0}, {1, 1});
+    auto wall_bottom = Mesh::make_plane({0, -0.1f, 0}, {0, 1, 0}, {1, 1});
+    auto lamp = Mesh::make_plane({0, 0.85f, -0.1}, {0, 1, 0}, {0.8, 0.8}, {3, 3, 3}, {1, 1, 1});
+    auto box1 = Mesh::make_box({0.2f, 0.1f, 0}, {0.3, 0.1, 0.5}, {0.2f, 0.5f, 0.2f});
+    auto box2 = Mesh::make_box({-0.2f, 0.05f, 0}, {0.3, -0.4, -0.9}, {0.3f, 0.4f, 0.3f});
 
     std::vector<std::unique_ptr<Mesh>> objects;
     objects.push_back(std::move(wall_left));
@@ -110,6 +97,7 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
     objects.push_back(std::move(wall_top));
     objects.push_back(std::move(wall_back));
     objects.push_back(std::move(wall_bottom));
+    objects.push_back(std::move(lamp));
     objects.push_back(std::move(box1));
     objects.push_back(std::move(box2));
 
@@ -119,19 +107,11 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
         }
     }
 
-    // for (auto i = 0; i < 2; i++) {
-    //     auto triangle =
-    //         std::make_unique<Triangle>(glm::ballRand(5.f), glm::ballRand(5.f),
-    //         glm::ballRand(5.f),
-    //                                    glm::vec3{0.8, 0.3, 0.3}, glm::vec3{0.5, 0.5, 0.5});
-    //     m_scene.push_back(std::move(triangle));
-    // }
-
-    glm::vec3 cam_pos = {0, 0, -1};
+    glm::vec3 cam_pos = {0, 0.31, -1.2};
     glm::vec3 cam_dir = {0, 0, 1};
     glm::vec3 world_up = {0, 1, 0};
 
-    m_camera = Camera(cam_pos, cam_dir, world_up, 45.f, 0.001, 100.f, screen_width, screen_height);
+    m_camera = Camera(cam_pos, cam_dir, world_up, 90.f, 0.001, 100.f, screen_width, screen_height);
 }
 
 glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth) {
@@ -143,7 +123,8 @@ glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int de
     glm::vec3 ret_color{0.f, 0.f, 0.f};
     for (const auto &tri : m_scene) {
         float dist_to_col;
-        collided = trac0r::intersect_ray_triangle(ray_pos, ray_dir, tri->m_v1, tri->m_v2, tri->m_v3, dist_to_col);
+        collided = trac0r::intersect_ray_triangle(ray_pos, ray_dir, tri->m_v1, tri->m_v2, tri->m_v3,
+                                                  dist_to_col);
 
         if (collided) {
             glm::vec3 impact_pos = ray_pos + ray_dir * dist_to_col;
@@ -164,7 +145,7 @@ glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int de
 
             // Emitter sample
             // TODO
-            //glm::vec3 illumination;
+            // glm::vec3 illumination;
 
             auto normal = tri->m_normal * -glm::sign(glm::dot(tri->m_normal, ray_dir));
             // Find new random direction for diffuse reflection
@@ -341,9 +322,12 @@ void Viewer::mainloop() {
                glm::distance(m_camera.pos(), tri2->m_centroid);
     });
 
+    // For speeding up (but we'll lose quality)
+    auto x_stride = 3;
+    auto y_stride = 3;
     m_samples_accumulated += 1;
-    for (auto x = 0; x < width; x++) {
-        for (auto y = 0; y < height; y++) {
+    for (auto x = 0; x < width; x += x_stride) {
+        for (auto y = 0; y < height; y += y_stride) {
             glm::vec2 rel_pos = m_camera.screenspace_to_camspace(x, y);
             glm::vec3 world_pos = m_camera.camspace_to_worldspace(rel_pos);
             glm::vec3 ray_dir = glm::normalize(world_pos - m_camera.pos());
@@ -353,7 +337,15 @@ void Viewer::mainloop() {
             glm::vec4 old_color = trac0r::unpack_color_argb_to_vec4(m_pixels[y * width + x]);
             new_color = (old_color * float(m_samples_accumulated - 1) + new_color) /
                         float(m_samples_accumulated);
-            m_pixels[y * width + x] = trac0r::pack_color_argb(new_color);
+
+            // This is just for speeding up
+            // We're basically drawing really bix pixels here
+            uint32_t packed_color = trac0r::pack_color_argb(new_color);
+            for (auto u = 0; u < x_stride; u++) {
+                for (auto v = 0; v < y_stride; v++) {
+                    m_pixels[(y + v) * width + (x + u)] = packed_color;
+                }
+            }
         }
     }
 
