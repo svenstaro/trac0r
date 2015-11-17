@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 project(trac0r)
 include(ExternalProject)
 
-add_definitions("-O2 -march=native -mtune=native -Wall -Wextra -pedantic -Werror -std=c++14 -Wno-unused-parameter")
+add_definitions("-O2 -Wall -Wextra -pedantic -Werror -std=c++14 -Wno-unused-parameter")
 #set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -flto")
 
 set(cppformat external/cppformat/format.cc)
