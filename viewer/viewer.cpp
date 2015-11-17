@@ -188,6 +188,21 @@ void Viewer::mainloop() {
             if (e.key.keysym.sym == SDLK_ESCAPE) {
                 shutdown();
             }
+            if (e.key.keysym.sym == SDLK_F3) {
+                m_debug = !m_debug;
+            }
+            if (e.key.keysym.sym == SDLK_1) {
+                m_x_stride = 1;
+                m_y_stride = 1;
+            }
+            if (e.key.keysym.sym == SDLK_2) {
+                m_x_stride = 2;
+                m_y_stride = 2;
+            }
+            if (e.key.keysym.sym == SDLK_3) {
+                m_x_stride = 4;
+                m_y_stride = 4;
+            }
         }
 
         if (e.type == SDL_MOUSEBUTTONDOWN) {
@@ -323,11 +338,9 @@ void Viewer::mainloop() {
     });
 
     // For speeding up (but we'll lose quality)
-    auto x_stride = 2;
-    auto y_stride = 2;
     m_samples_accumulated += 1;
-    for (auto x = 0; x < width; x += x_stride) {
-        for (auto y = 0; y < height; y += y_stride) {
+    for (auto x = 0; x < width; x += m_x_stride) {
+        for (auto y = 0; y < height; y += m_y_stride) {
             glm::vec2 rel_pos = m_camera.screenspace_to_camspace(x, y);
             glm::vec3 world_pos = m_camera.camspace_to_worldspace(rel_pos);
             glm::vec3 ray_dir = glm::normalize(world_pos - m_camera.pos());
@@ -341,8 +354,8 @@ void Viewer::mainloop() {
             // This is just for speeding up
             // We're basically drawing really big pixels here
             uint32_t packed_color = trac0r::pack_color_argb(new_color);
-            for (auto u = 0; u < x_stride; u++) {
-                for (auto v = 0; v < y_stride; v++) {
+            for (auto u = 0; u < m_x_stride; u++) {
+                for (auto v = 0; v < m_y_stride; v++) {
                     m_pixels[(y + v) * width + (x + u)] = packed_color;
                 }
             }
@@ -353,17 +366,19 @@ void Viewer::mainloop() {
     SDL_UpdateTexture(m_render_tex, 0, m_pixels.data(), width * sizeof(uint32_t));
     SDL_RenderCopy(m_render, m_render_tex, 0, 0);
 
-    trac0r::render_text(m_render, fps_debug_tex, 10, 10);
-    trac0r::render_text(m_render, scene_changing_tex, 10, 25);
-    trac0r::render_text(m_render, cam_look_debug_tex, 10, 40);
-    trac0r::render_text(m_render, cam_pos_debug_tex, 10, 55);
-    trac0r::render_text(m_render, cam_dir_debug_tex, 10, 70);
-    trac0r::render_text(m_render, cam_up_debug_tex, 10, 85);
-    trac0r::render_text(m_render, cam_fov_debug_tex, 10, 100);
-    trac0r::render_text(m_render, cam_canvas_center_pos_tex, 10, 115);
-    trac0r::render_text(m_render, mouse_pos_screen_tex, 10, 130);
-    trac0r::render_text(m_render, mouse_pos_relative_tex, 10, 145);
-    trac0r::render_text(m_render, mouse_pos_canvas_tex, 10, 160);
+    if (m_debug) {
+        trac0r::render_text(m_render, fps_debug_tex, 10, 10);
+        trac0r::render_text(m_render, scene_changing_tex, 10, 25);
+        trac0r::render_text(m_render, cam_look_debug_tex, 10, 40);
+        trac0r::render_text(m_render, cam_pos_debug_tex, 10, 55);
+        trac0r::render_text(m_render, cam_dir_debug_tex, 10, 70);
+        trac0r::render_text(m_render, cam_up_debug_tex, 10, 85);
+        trac0r::render_text(m_render, cam_fov_debug_tex, 10, 100);
+        trac0r::render_text(m_render, cam_canvas_center_pos_tex, 10, 115);
+        trac0r::render_text(m_render, mouse_pos_screen_tex, 10, 130);
+        trac0r::render_text(m_render, mouse_pos_relative_tex, 10, 145);
+        trac0r::render_text(m_render, mouse_pos_canvas_tex, 10, 160);
+    }
 
     SDL_RenderPresent(m_render);
 

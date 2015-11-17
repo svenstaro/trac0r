@@ -38,6 +38,9 @@ class Viewer {
     bool m_running = true;
     bool m_look_mode = false;
     int m_last_frame_time = 0;
+    bool m_debug = true;
+    int m_x_stride = 2;
+    int m_y_stride = 2;
 
     SDL_Renderer *m_render;
     SDL_Window *m_window;
