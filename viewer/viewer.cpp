@@ -339,7 +339,7 @@ void Viewer::mainloop() {
                         float(m_samples_accumulated);
 
             // This is just for speeding up
-            // We're basically drawing really bix pixels here
+            // We're basically drawing really big pixels here
             uint32_t packed_color = trac0r::pack_color_argb(new_color);
             for (auto u = 0; u < x_stride; u++) {
                 for (auto v = 0; v < y_stride; v++) {
