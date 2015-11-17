@@ -203,7 +203,7 @@ void Viewer::mainloop() {
         }
     }
 
-    float cam_speed = 0.01f;
+    float cam_speed = .8f * dt;
 
     // Left/right
     const uint8_t *keystates = SDL_GetKeyboardState(0);
@@ -323,8 +323,8 @@ void Viewer::mainloop() {
     });
 
     // For speeding up (but we'll lose quality)
-    auto x_stride = 3;
-    auto y_stride = 3;
+    auto x_stride = 2;
+    auto y_stride = 2;
     m_samples_accumulated += 1;
     for (auto x = 0; x < width; x += x_stride) {
         for (auto y = 0; y < height; y += y_stride) {
