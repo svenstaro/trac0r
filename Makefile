@@ -18,6 +18,10 @@ web:
 webrun:
 	emrun build-web/index.html
 
+webpublish: web
+	cp build-web/index.* ~/prj/trac0r-pages
+	cd ~/prj/trac0r-pages; git commit -am "Update"; git push
+
 clean:
 	rm -rf build
 	rm -rf build-web
