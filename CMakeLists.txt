@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 project(trac0r)
 include(ExternalProject)
 
-add_definitions("-g -O3 -Wall -Wextra -pedantic -Werror -std=c++14 -Wno-unused-parameter")
+add_definitions("-D_GLIBCXX_PARALLEL -O3 -march=native -mtune=native -Wall -Wextra -pedantic -Werror -std=c++14 -Wno-unused-parameter")
 
 set(cppformat external/cppformat/format.cc)
 file(GLOB trac0r_sources trac0r/*.cpp ${cppformat})

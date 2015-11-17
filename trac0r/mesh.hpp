@@ -4,25 +4,30 @@
 #include "triangle.hpp"
 
 #include <glm/glm.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 
 #include <memory>
 #include <vector>
 
 class Mesh {
   public:
-    Mesh(glm::vec3 pos, glm::vec3 orientation) : m_pos(pos), m_orientation(orientation) {
+    Mesh(glm::vec3 pos) : m_pos(pos) {
     }
 
     static std::unique_ptr<Mesh> make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size) {
-        auto new_mesh = std::make_unique<Mesh>(pos, orientation);
-        auto p1 = glm::vec3{pos.x - size.x / 2, pos.y + size.y / 2, pos.z - size.z / 2};
-        auto p2 = glm::vec3{pos.x - size.x / 2, pos.y - size.y / 2, pos.z - size.z / 2};
-        auto p3 = glm::vec3{pos.x + size.x / 2, pos.y - size.y / 2, pos.z - size.z / 2};
-        auto p4 = glm::vec3{pos.x + size.x / 2, pos.y + size.y / 2, pos.z - size.z / 2};
-        auto p5 = glm::vec3{pos.x - size.x / 2, pos.y + size.y / 2, pos.z + size.z / 2};
-        auto p6 = glm::vec3{pos.x - size.x / 2, pos.y - size.y / 2, pos.z + size.z / 2};
-        auto p7 = glm::vec3{pos.x + size.x / 2, pos.y - size.y / 2, pos.z + size.z / 2};
-        auto p8 = glm::vec3{pos.x + size.x / 2, pos.y + size.y / 2, pos.z + size.z / 2};
+        auto new_mesh = std::make_unique<Mesh>(pos);
+        new_mesh->m_pos = pos;
+        new_mesh->m_orientation = orientation;
+        new_mesh->m_scale = size;
+
+        auto p1 = glm::vec3{-0.5f,  0.5f, -0.5f};
+        auto p2 = glm::vec3{-0.5f, -0.5f, -0.5f};
+        auto p3 = glm::vec3{ 0.5f, -0.5f, -0.5f};
+        auto p4 = glm::vec3{ 0.5f,  0.5f, -0.5f};
+        auto p5 = glm::vec3{-0.5f,  0.5f,  0.5f};
+        auto p6 = glm::vec3{-0.5f, -0.5f,  0.5f};
+        auto p7 = glm::vec3{ 0.5f, -0.5f,  0.5f};
+        auto p8 = glm::vec3{ 0.5f,  0.5f,  0.5f};
 
         // front face
         auto t1 = std::make_unique<Triangle>(p1, p2, p3, glm::vec3{0.3, 0.3, 0.3},
@@ -73,15 +78,32 @@ class Mesh {
         new_mesh->add_triangle(t11);
         new_mesh->add_triangle(t12);
 
+        glm::mat4 translate = glm::translate(pos);
+        glm::mat4 rotation = glm::mat4(1);
+        glm::mat4 scale = glm::scale(size);
+        glm::mat4 model = translate * rotation * scale;
+
+        for (auto &tri : new_mesh->m_triangles) {
+            tri->m_v1 = glm::vec3(model * glm::vec4(tri->m_v1, 1));
+            tri->m_v2 = glm::vec3(model * glm::vec4(tri->m_v2, 1));
+            tri->m_v3 = glm::vec3(model * glm::vec4(tri->m_v3, 1));
+            tri->update();
+        }
+
         return new_mesh;
     }
 
     static std::unique_ptr<Mesh> make_plane(glm::vec3 pos, glm::vec3 orientation, glm::vec2 size) {
-        auto new_mesh = std::make_unique<Mesh>(pos, orientation);
-        auto p1 = glm::vec3{pos.x - size.x / 2, pos.y, pos.z + size.y / 2};
-        auto p2 = glm::vec3{pos.x - size.x / 2, pos.y, pos.z - size.y / 2};
-        auto p3 = glm::vec3{pos.x + size.x / 2, pos.y, pos.z - size.y / 2};
-        auto p4 = glm::vec3{pos.x + size.x / 2, pos.y, pos.z + size.y / 2};
+        auto new_mesh = std::make_unique<Mesh>(pos);
+        new_mesh->m_pos = pos;
+        new_mesh->m_orientation = orientation;
+        new_mesh->m_scale = glm::vec3(size.x, 0, size.y);
+
+        auto p1 = glm::vec3{-0.5f, 0,  0.5f};
+        auto p2 = glm::vec3{-0.5f, 0, -0.5f};
+        auto p3 = glm::vec3{ 0.5f, 0, -0.5f};
+        auto p4 = glm::vec3{ 0.5f, 0,  0.5f};
+
         auto triangle_left = std::make_unique<Triangle>(p1, p2, p3, glm::vec3{0.3, 0.3, 0.3},
                                                         glm::vec3{0.2, 0.2, 0.2});
 
@@ -90,6 +112,18 @@ class Mesh {
 
         new_mesh->add_triangle(triangle_left);
         new_mesh->add_triangle(triangle_right);
+
+        glm::mat4 translate = glm::translate(pos);
+        glm::mat4 rotation = glm::orientation(orientation, {0, 1, 0});
+        glm::mat4 scale = glm::scale(new_mesh->m_scale);
+        glm::mat4 model = translate * rotation * scale;
+
+        for (auto &tri : new_mesh->m_triangles) {
+            tri->m_v1 = glm::vec3(model * glm::vec4(tri->m_v1, 1));
+            tri->m_v2 = glm::vec3(model * glm::vec4(tri->m_v2, 1));
+            tri->m_v3 = glm::vec3(model * glm::vec4(tri->m_v3, 1));
+            tri->update();
+        }
 
         return new_mesh;
     }
@@ -102,10 +136,6 @@ class Mesh {
         return m_pos;
     }
 
-    const glm::vec3 orientation() const {
-        return m_orientation;
-    }
-
     std::vector<std::unique_ptr<Triangle>> &triangles() {
         return m_triangles;
     }
@@ -113,6 +143,7 @@ class Mesh {
   private:
     glm::vec3 m_pos;
     glm::vec3 m_orientation;
+    glm::vec3 m_scale;
     std::vector<std::unique_ptr<Triangle>> m_triangles;
 };
 

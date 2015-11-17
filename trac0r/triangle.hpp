@@ -7,13 +7,26 @@
 struct Triangle {
     Triangle(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 emittance, glm::vec3 reflectance)
         : m_v1(v1), m_v2(v2), m_v3(v3), m_emittance(emittance), m_reflectance(reflectance) {
-        m_normal = glm::triangleNormal(v1, v2, v3);
-
-        m_centroid.x = v1.x + v2.x + v3.x;
-        m_centroid.y = v1.y + v2.y + v3.y;
-        m_centroid.z = v1.z + v2.z + v3.z;
-        m_centroid /= 3;
+        update();
     }
+
+    // Update cached geometry data
+    void update() {
+        m_normal = glm::triangleNormal(m_v1, m_v2, m_v3);
+
+        m_centroid.x = m_v1.x + m_v2.x + m_v3.x;
+        m_centroid.y = m_v1.y + m_v2.y + m_v3.y;
+        m_centroid.z = m_v1.z + m_v2.z + m_v3.z;
+        m_centroid /= 3;
+
+        // Heron's formula
+        auto a = glm::length(m_v1 - m_v2);
+        auto b = glm::length(m_v2 - m_v3);
+        auto c = glm::length(m_v3 - m_v1);
+        auto s = (a + b + c) / 2.f;
+        m_area = glm::sqrt(s * (s - a) * (s - b) * (s - c));
+    }
+
     glm::vec3 m_v1;
     glm::vec3 m_v2;
     glm::vec3 m_v3;
@@ -21,6 +34,7 @@ struct Triangle {
     glm::vec3 m_reflectance;
     glm::vec3 m_normal;
     glm::vec3 m_centroid;
+    float m_area;
 };
 
 #endif /* end of include guard: TRIANGLE_HPP */

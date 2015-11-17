@@ -83,28 +83,40 @@ int Viewer::init() {
 
 void Viewer::setup_scene(int screen_width, int screen_height) {
     auto triangle1 = std::make_unique<Triangle>(
-        glm::vec3{0.f, 0.f, -0.89f}, glm::vec3{0.07f, 0.f, -0.89f},
-        glm::vec3{0.07f, -0.04f, -0.89f}, glm::vec3{0.3, 0.3, 0.3}, glm::vec3{0.2, 0.2, 0.2});
+        glm::vec3{0.f, 0.f, -0.89f}, glm::vec3{0.07f, 0.f, -0.89f}, glm::vec3{0.07f, -0.04f, -0.89f},
+        glm::vec3{0.3, 0.3, 0.3}, glm::vec3{0.2, 0.2, 0.2});
     auto triangle2 = std::make_unique<Triangle>(
-        glm::vec3{-0.05f, 0.f, -0.6f}, glm::vec3{-0.005f, 0.f, -0.6f},
-        glm::vec3{-0.05f, -0.04f, -0.6f}, glm::vec3{0.9, 0.9, 0.9}, glm::vec3{0.4, 0.4, 0.4});
+        glm::vec3{-0.05f, 0.f, -0.6f}, glm::vec3{-0.005f, 0.f, -0.6f}, glm::vec3{-0.05f, -0.04f, -0.6f},
+        glm::vec3{0.9, 0.9, 0.9}, glm::vec3{0.4, 0.4, 0.4});
     auto triangle3 = std::make_unique<Triangle>(
-        glm::vec3{-0.05f, 0.f, -0.9f}, glm::vec3{-0.005f, 0.f, -0.9f},
-        glm::vec3{-0.05f, -0.04f, -0.8f}, glm::vec3{1., 0., 0.}, glm::vec3{0.8, 0.8, 0.8});
+        glm::vec3{-0.05f, 0.f, -0.9f}, glm::vec3{-0.005f, 0.f, -0.9f}, glm::vec3{-0.05f, -0.04f, -0.8f},
+        glm::vec3{1., 0., 0.}, glm::vec3{0.8, 0.8, 0.8});
 
-    auto floor = Mesh::make_plane({0, -0.1f, -1}, {0, 1, 0}, {1, 1});
-    auto box = Mesh::make_box({0.2f, -0.05f, -1}, {0, 1, 0}, {0.1f, 0.1f, 0.1f});
+    auto wall_left = Mesh::make_plane({-0.5f, 0.4f, -1}, {1, 0, 0}, {1, 1});
+    auto wall_right = Mesh::make_plane({0.5f, 0.4f, -1}, {-1, 0, 0}, {1, 1});
+    auto wall_back = Mesh::make_plane({0, 0.4f, -0.5}, {0, 0, 1}, {1, 1});
+    auto wall_top = Mesh::make_plane({0, 0.9f, -1}, {0, 1, 0}, {1, 1});
+    auto wall_bottom = Mesh::make_plane({0, -0.1f, -1}, {0, 1, 0}, {1, 1});
+    auto box1 = Mesh::make_box({0.2f, -0.05f, -1}, {0, 1, 0}, {0.1f, 0.1f, 0.1f});
+    auto box2 = Mesh::make_box({-0.1f, -0.05f, -1}, {0, 1, 0}, {0.1f, 0.1f, 0.1f});
 
     m_scene.push_back(std::move(triangle1));
     m_scene.push_back(std::move(triangle2));
     m_scene.push_back(std::move(triangle3));
 
-    for (auto &tri : floor->triangles()) {
-        m_scene.push_back(std::move(tri));
-    }
+    std::vector<std::unique_ptr<Mesh>> objects;
+    objects.push_back(std::move(wall_left));
+    objects.push_back(std::move(wall_right));
+    objects.push_back(std::move(wall_top));
+    objects.push_back(std::move(wall_back));
+    objects.push_back(std::move(wall_bottom));
+    objects.push_back(std::move(box1));
+    objects.push_back(std::move(box2));
 
-    for (auto &tri : box->triangles()) {
-        m_scene.push_back(std::move(tri));
+    for (auto &object : objects) {
+        for (auto &tri : object->triangles()) {
+            m_scene.push_back(std::move(tri));
+        }
     }
 
     // for (auto i = 0; i < 2; i++) {
@@ -131,11 +143,28 @@ glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int de
     glm::vec3 ret_color{0.f, 0.f, 0.f};
     for (const auto &tri : m_scene) {
         float dist_to_col;
-        collided = trac0r::intersect_ray_triangle(ray_pos, ray_dir, tri->m_v1, tri->m_v2, tri->m_v3,
-                                                  dist_to_col);
+        collided = trac0r::intersect_ray_triangle(ray_pos, ray_dir, tri->m_v1, tri->m_v2, tri->m_v3, dist_to_col);
 
         if (collided) {
-            glm::vec3 new_ray_pos = ray_pos + ray_dir * dist_to_col;
+            glm::vec3 impact_pos = ray_pos + ray_dir * dist_to_col;
+
+            // Get the local radiance only on first bounce
+            glm::vec3 local_radiance(0);
+            if (depth == 0) {
+                // auto ray = ray_pos - impact_pos;
+                // float dist2 = glm::dot(ray, ray);
+                // auto cos_area = glm::dot(-ray_dir, tri->m_normal) * tri->m_area;
+                // auto solid_angle = cos_area / glm::max(dist2, 1e-6f);
+                //
+                // if (cos_area > 0.0)
+                //     local_radiance = tri->m_emittance * solid_angle;
+                local_radiance = tri->m_emittance;
+            }
+            local_radiance = tri->m_emittance;
+
+            // Emitter sample
+            // TODO
+            //glm::vec3 illumination;
 
             auto normal = tri->m_normal * -glm::sign(glm::dot(tri->m_normal, ray_dir));
             // Find new random direction for diffuse reflection
@@ -149,9 +178,9 @@ glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int de
             glm::vec3 bdrf = 2.f * tri->m_reflectance * cos_theta;
 
             // Send new ray in new direction
-            glm::vec3 reflected = intersect_scene(new_ray_pos, new_ray_dir, depth + 1);
+            glm::vec3 reflected = intersect_scene(impact_pos, new_ray_dir, depth + 1);
 
-            ret_color = tri->m_emittance + (bdrf * reflected);
+            ret_color = local_radiance + (bdrf * reflected);
             break;
         }
     }
