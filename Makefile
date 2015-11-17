@@ -16,7 +16,7 @@ web:
 	cd build-web; /usr/lib/emscripten/emcmake cmake ..; make
 
 webrun:
-	cd build-web; python -m http.server
+	emrun build-web/index.html
 
 clean:
 	rm -rf build
