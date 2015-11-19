@@ -111,7 +111,8 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
     glm::vec3 cam_dir = {0, 0, 1};
     glm::vec3 world_up = {0, 1, 0};
 
-    m_camera = trac0r::Camera(cam_pos, cam_dir, world_up, 90.f, 0.001, 100.f, screen_width, screen_height);
+    m_camera =
+        trac0r::Camera(cam_pos, cam_dir, world_up, 90.f, 0.001, 100.f, screen_width, screen_height);
 }
 
 void Viewer::mainloop() {
@@ -289,7 +290,8 @@ void Viewer::mainloop() {
         auto mouse_pos_canvas_info =
             "Mouse Pos Canvas World Space: " + glm::to_string(mouse_canvas_pos);
 
-        auto fps_debug_tex = trac0r::make_text(m_render, m_font, fps_debug_info, {200, 100, 100, 200});
+        auto fps_debug_tex =
+            trac0r::make_text(m_render, m_font, fps_debug_info, {200, 100, 100, 200});
         auto scene_changing_tex =
             trac0r::make_text(m_render, m_font, scene_changing_info, {200, 100, 100, 200});
         auto cam_look_debug_tex =
@@ -339,7 +341,7 @@ void Viewer::mainloop() {
     SDL_RenderPresent(m_render);
 
     fmt::print("    {:<15} {:>10.3f} ms\n", "Rendering", timer.elapsed());
-    fmt::print("    {:<15} {:>10.3f} ms\n\n", "=> Budget", 1000.f/60.f - total.elapsed());
+    fmt::print("    {:<15} {:>10.3f} ms\n\n", "=> Budget", 1000.f / 60.f - total.elapsed());
 }
 
 SDL_Renderer *Viewer::renderer() {
