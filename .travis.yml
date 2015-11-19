@@ -1,0 +1,23 @@
+sudo: required
+language: cpp
+services:
+    - docker
+
+before_install:
+    - docker pull pritunl/archlinux
+
+matrix:
+  include:
+    - env: COMPILER="gcc"
+    - env: COMPILER="clang"
+    - env: COMPILER="emscripten"
+
+script:
+    PACKAGES='base-devel emscripten sdl2 sdl2_gfx sdl2_image sdl2_mixer sdl2_ttf cmake clang';
+    if [[ $COMPILER = 'gcc' ]]; then
+        docker run -v ${TRAVIS_BUILD_DIR}:/tmp pritunl/archlinux bash -c "pacman -Syu --noconfirm ${PACKAGES}; cd /tmp; make";
+    elif [[ $COMPILER = 'clang' ]]; then
+        docker run -v ${TRAVIS_BUILD_DIR}:/tmp pritunl/archlinux bash -c "pacman -Syu --noconfirm ${PACKAGES}; cd /tmp; make clang";
+    elif [[ $COMPILER = 'emscripten' ]]; then
+        docker run -v ${TRAVIS_BUILD_DIR}:/tmp pritunl/archlinux bash -c "pacman -Syu --noconfirm ${PACKAGES}; cd /tmp; make web; make web";
+    fi
