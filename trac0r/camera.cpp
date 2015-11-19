@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 
+namespace trac0r {
+
 Camera::Camera() {
 }
 
@@ -109,4 +111,6 @@ glm::vec2 Camera::screenspace_to_camspace(int x, int y) const {
 
 glm::vec3 Camera::camspace_to_worldspace(glm::vec2 rel_pos) const {
     return canvas_center_pos() + (rel_pos.x * canvas_dir_x()) + (rel_pos.y * canvas_dir_y());
+}
+
 }

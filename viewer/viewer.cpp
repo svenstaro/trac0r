@@ -7,17 +7,15 @@
 #include <SDL_image.h>
 
 #include <glm/glm.hpp>
-#include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/random.hpp>
 #include <glm/gtx/intersect.hpp>
-#include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/string_cast.hpp>
 
 #include <cppformat/format.h>
 
 #include <algorithm>
 #include <iostream>
+#include <memory>
 
 Viewer::~Viewer() {
     TTF_CloseFont(m_font);
@@ -75,6 +73,7 @@ int Viewer::init() {
 
     // Setup scene
     setup_scene(screen_width, screen_height);
+    m_renderer = std::make_unique<trac0r::Renderer>(m_camera, m_scene);
 
     fmt::print("Finish init\n");
 
@@ -103,7 +102,7 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
 
     for (auto &object : objects) {
         for (auto &tri : object->triangles()) {
-            m_scene.push_back(std::move(tri));
+            m_scene.add_triangle(tri);
         }
     }
 
@@ -111,62 +110,7 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
     glm::vec3 cam_dir = {0, 0, 1};
     glm::vec3 world_up = {0, 1, 0};
 
-    m_camera = Camera(cam_pos, cam_dir, world_up, 90.f, 0.001, 100.f, screen_width, screen_height);
-}
-
-glm::vec3 Viewer::intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth) {
-    if (depth == m_max_depth)
-        return {0, 0, 0};
-
-    // check all triangles for collision
-    bool collided = false;
-    glm::vec3 ret_color{0.f, 0.f, 0.f};
-    for (const auto &tri : m_scene) {
-        float dist_to_col;
-        collided = trac0r::intersect_ray_triangle(ray_pos, ray_dir, tri->m_v1, tri->m_v2, tri->m_v3,
-                                                  dist_to_col);
-
-        if (collided) {
-            glm::vec3 impact_pos = ray_pos + ray_dir * dist_to_col;
-
-            // Get the local radiance only on first bounce
-            glm::vec3 local_radiance(0);
-            if (depth == 0) {
-                // auto ray = ray_pos - impact_pos;
-                // float dist2 = glm::dot(ray, ray);
-                // auto cos_area = glm::dot(-ray_dir, tri->m_normal) * tri->m_area;
-                // auto solid_angle = cos_area / glm::max(dist2, 1e-6f);
-                //
-                // if (cos_area > 0.0)
-                //     local_radiance = tri->m_emittance * solid_angle;
-                local_radiance = tri->m_emittance;
-            }
-            local_radiance = tri->m_emittance;
-
-            // Emitter sample
-            // TODO
-            // glm::vec3 illumination;
-
-            auto normal = tri->m_normal * -glm::sign(glm::dot(tri->m_normal, ray_dir));
-            // Find new random direction for diffuse reflection
-            auto new_ray_dir = normal;
-            auto half_pi = glm::half_pi<float>();
-            auto pi = glm::pi<float>();
-            new_ray_dir = glm::rotate(normal, glm::linearRand(-half_pi, half_pi),
-                                      glm::cross(normal, ray_dir));
-            new_ray_dir = glm::rotate(new_ray_dir, glm::linearRand(-pi, pi), normal);
-            float cos_theta = glm::dot(new_ray_dir, normal);
-            glm::vec3 bdrf = 2.f * tri->m_reflectance * cos_theta;
-
-            // Send new ray in new direction
-            glm::vec3 reflected = intersect_scene(impact_pos, new_ray_dir, depth + 1);
-
-            ret_color = local_radiance + (bdrf * reflected);
-            break;
-        }
-    }
-
-    return ret_color;
+    m_camera = trac0r::Camera(cam_pos, cam_dir, world_up, 90.f, 0.001, 100.f, screen_width, screen_height);
 }
 
 void Viewer::mainloop() {
@@ -291,8 +235,6 @@ void Viewer::mainloop() {
     glm::vec3 mouse_canvas_pos = m_camera.camspace_to_worldspace(mouse_rel_pos);
 
     auto fps_debug_info = "FPS: " + std::to_string(int(fps));
-    fps_debug_info +=
-        " RPS: " + std::to_string(int(fps * m_max_samples * width * height * m_max_depth));
     auto scene_changing_info = "Samples : " + std::to_string(m_samples_accumulated);
     scene_changing_info += " Scene Changing: " + std::to_string(m_scene_changed);
     auto cam_look_debug_info = "Cam Look Mode: " + std::to_string(m_look_mode);
@@ -331,22 +273,12 @@ void Viewer::mainloop() {
     auto mouse_pos_canvas_tex =
         trac0r::make_text(m_render, m_font, mouse_pos_canvas_info, {200, 100, 100, 200});
 
-    // Sort by distance to camera
-    std::sort(m_scene.begin(), m_scene.end(), [this](const auto &tri1, const auto &tri2) {
-        return glm::distance(m_camera.pos(), tri1->m_centroid) <
-               glm::distance(m_camera.pos(), tri2->m_centroid);
-    });
-
-    // For speeding up (but we'll lose quality)
+    m_scene.rebuild(m_camera);
     m_samples_accumulated += 1;
     for (auto x = 0; x < width; x += m_x_stride) {
         for (auto y = 0; y < height; y += m_y_stride) {
-            glm::vec2 rel_pos = m_camera.screenspace_to_camspace(x, y);
-            glm::vec3 world_pos = m_camera.camspace_to_worldspace(rel_pos);
-            glm::vec3 ray_dir = glm::normalize(world_pos - m_camera.pos());
+            glm::vec4 new_color = m_renderer->get_color(x, y);
 
-            glm::vec3 result_color = intersect_scene(world_pos, ray_dir, 0);
-            glm::vec4 new_color = glm::vec4(result_color, 1.f);
             glm::vec4 old_color = trac0r::unpack_color_argb_to_vec4(m_pixels[y * width + x]);
             new_color = (old_color * float(m_samples_accumulated - 1) + new_color) /
                         float(m_samples_accumulated);

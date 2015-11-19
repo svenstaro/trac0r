@@ -3,6 +3,8 @@
 
 #include <glm/glm.hpp>
 
+namespace trac0r {
+
 class Camera {
   public:
     Camera();
@@ -73,5 +75,7 @@ class Camera {
     float m_vertical_fov;
     float m_horizontal_fov;
 };
+
+}
 
 #endif /* end of include guard: CAMERA_HPP */

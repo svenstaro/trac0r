@@ -3,6 +3,8 @@
 
 #include "trac0r/camera.hpp"
 #include "trac0r/triangle.hpp"
+#include "trac0r/renderer.hpp"
+#include "trac0r/scene.hpp"
 
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -27,13 +29,10 @@ class Viewer {
 
     // Put this stuff somewhere else
     void setup_scene(int width, int height);
-    glm::vec3 intersect_scene(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth);
 
   private:
     bool m_scene_changed = false;
     int m_samples_accumulated = 0;
-    int m_max_samples = 2;
-    int m_max_depth = 5;
     glm::vec3 m_scene_up = {0, 1, 0};
     bool m_running = true;
     bool m_look_mode = false;
@@ -47,10 +46,11 @@ class Viewer {
     SDL_Texture *m_render_tex;
     TTF_Font *m_font;
 
-    // Put this stuff somewhere else
-    std::vector<std::unique_ptr<Triangle>> m_scene;
-    Camera m_camera;
     std::vector<uint32_t> m_pixels;
+
+    trac0r::Camera m_camera;
+    trac0r::Scene m_scene;
+    std::unique_ptr<trac0r::Renderer> m_renderer;
 };
 
 #endif /* end of include guard: VIEWER_HPP */

@@ -6,13 +6,13 @@ add_definitions("-O2 -Wall -Wextra -pedantic -Werror -std=c++14 -Wno-unused-para
 #set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -flto")
 
 set(cppformat external/cppformat/format.cc)
-file(GLOB trac0r_sources trac0r/*.cpp ${cppformat})
-file(GLOB trac0r_tests tests/*.cpp)
-file(GLOB trac0r_viewer viewer/*.cpp)
+file(GLOB trac0r_library_src trac0r/*.cpp ${cppformat})
+file(GLOB trac0r_tests_src tests/*.cpp)
+file(GLOB trac0r_viewer_src viewer/*.cpp)
 
-add_library(trac0r ${trac0r_sources})
-add_executable(trac0r_viewer ${trac0r_viewer})
-add_executable(trac0r_tests ${trac0r_tests})
+add_library(trac0r_library ${trac0r_library_src})
+add_executable(trac0r_viewer ${trac0r_viewer_src})
+add_executable(trac0r_tests ${trac0r_tests_src})
 
 if(${EMSCRIPTEN})
     set(CROSS_COMPILING ON)
@@ -31,11 +31,11 @@ include_directories(SYSTEM
 )
 
 target_link_libraries(trac0r_viewer
-    trac0r
+    trac0r_library
     ${SDL2_LIBRARIES}
 )
 
 target_link_libraries(trac0r_tests
-    trac0r
+    trac0r_library
     ${SDL2_LIBRARIES}
 )
