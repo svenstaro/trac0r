@@ -2,6 +2,7 @@
 
 #include "trac0r/mesh.hpp"
 #include "trac0r/utils.hpp"
+#include "trac0r/timer.hpp"
 
 #include <SDL_ttf.h>
 #include <SDL_image.h>
@@ -114,7 +115,12 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
 }
 
 void Viewer::mainloop() {
+    Timer timer;
+    Timer total;
+
+    fmt::print("Rendering frame {}\n", m_frame);
     m_scene_changed = false;
+    m_frame++;
 
     int current_time = SDL_GetTicks();
     double dt = (current_time - m_last_frame_time) / 1000.0;
@@ -230,50 +236,11 @@ void Viewer::mainloop() {
         m_samples_accumulated = 0;
     }
 
-    // Lots of debug info
-    glm::vec2 mouse_rel_pos = m_camera.screenspace_to_camspace(mouse_pos.x, mouse_pos.y);
-    glm::vec3 mouse_canvas_pos = m_camera.camspace_to_worldspace(mouse_rel_pos);
-
-    auto fps_debug_info = "FPS: " + std::to_string(int(fps));
-    auto scene_changing_info = "Samples : " + std::to_string(m_samples_accumulated);
-    scene_changing_info += " Scene Changing: " + std::to_string(m_scene_changed);
-    auto cam_look_debug_info = "Cam Look Mode: " + std::to_string(m_look_mode);
-    auto cam_pos_debug_info = "Cam Pos: " + glm::to_string(m_camera.pos());
-    auto cam_dir_debug_info = "Cam Dir: " + glm::to_string(m_camera.dir());
-    auto cam_up_debug_info = "Cam Up: " + glm::to_string(m_camera.up());
-    auto cam_fov_debug_info =
-        "Cam FOV (H/V): " + std::to_string(int(glm::degrees(m_camera.horizontal_fov()))) + "/";
-    cam_fov_debug_info += std::to_string(int(glm::degrees(m_camera.vertical_fov())));
-    auto cam_canvas_center_pos_info =
-        "Cam Canvas Center: " + glm::to_string(m_camera.canvas_center_pos());
-    auto mouse_pos_screen_info = "Mouse Pos Screen Space: " + glm::to_string(mouse_pos);
-    auto mouse_pos_relative_info = "Mouse Pos Cam Space: " + glm::to_string(mouse_rel_pos);
-    auto mouse_pos_canvas_info =
-        "Mouse Pos Canvas World Space: " + glm::to_string(mouse_canvas_pos);
-
-    auto fps_debug_tex = trac0r::make_text(m_render, m_font, fps_debug_info, {200, 100, 100, 200});
-    auto scene_changing_tex =
-        trac0r::make_text(m_render, m_font, scene_changing_info, {200, 100, 100, 200});
-    auto cam_look_debug_tex =
-        trac0r::make_text(m_render, m_font, cam_look_debug_info, {200, 100, 100, 200});
-    auto cam_pos_debug_tex =
-        trac0r::make_text(m_render, m_font, cam_pos_debug_info, {200, 100, 100, 200});
-    auto cam_dir_debug_tex =
-        trac0r::make_text(m_render, m_font, cam_dir_debug_info, {200, 100, 100, 200});
-    auto cam_up_debug_tex =
-        trac0r::make_text(m_render, m_font, cam_up_debug_info, {200, 100, 100, 200});
-    auto cam_fov_debug_tex =
-        trac0r::make_text(m_render, m_font, cam_fov_debug_info, {200, 100, 100, 200});
-    auto cam_canvas_center_pos_tex =
-        trac0r::make_text(m_render, m_font, cam_canvas_center_pos_info, {200, 100, 100, 200});
-    auto mouse_pos_screen_tex =
-        trac0r::make_text(m_render, m_font, mouse_pos_screen_info, {200, 100, 100, 200});
-    auto mouse_pos_relative_tex =
-        trac0r::make_text(m_render, m_font, mouse_pos_relative_info, {200, 100, 100, 200});
-    auto mouse_pos_canvas_tex =
-        trac0r::make_text(m_render, m_font, mouse_pos_canvas_info, {200, 100, 100, 200});
+    fmt::print("    {:<15} {:>10.3f} ms\n", "Input handling", timer.elapsed());
 
     m_scene.rebuild(m_camera);
+    fmt::print("    {:<15} {:=10.3f} ms\n", "Scene rebuild", timer.elapsed());
+
     m_samples_accumulated += 1;
     for (auto x = 0; x < width; x += m_x_stride) {
         for (auto y = 0; y < height; y += m_y_stride) {
@@ -294,11 +261,56 @@ void Viewer::mainloop() {
         }
     }
 
+    fmt::print("    {:<15} {:>10.3f} ms\n", "Path tracing", timer.elapsed());
+
     SDL_RenderClear(m_render);
     SDL_UpdateTexture(m_render_tex, 0, m_pixels.data(), width * sizeof(uint32_t));
     SDL_RenderCopy(m_render, m_render_tex, 0, 0);
 
     if (m_debug) {
+        // Lots of debug info
+        glm::vec2 mouse_rel_pos = m_camera.screenspace_to_camspace(mouse_pos.x, mouse_pos.y);
+        glm::vec3 mouse_canvas_pos = m_camera.camspace_to_worldspace(mouse_rel_pos);
+
+        auto fps_debug_info = "FPS: " + std::to_string(int(fps));
+        auto scene_changing_info = "Samples : " + std::to_string(m_samples_accumulated);
+        scene_changing_info += " Scene Changing: " + std::to_string(m_scene_changed);
+        auto cam_look_debug_info = "Cam Look Mode: " + std::to_string(m_look_mode);
+        auto cam_pos_debug_info = "Cam Pos: " + glm::to_string(m_camera.pos());
+        auto cam_dir_debug_info = "Cam Dir: " + glm::to_string(m_camera.dir());
+        auto cam_up_debug_info = "Cam Up: " + glm::to_string(m_camera.up());
+        auto cam_fov_debug_info =
+            "Cam FOV (H/V): " + std::to_string(int(glm::degrees(m_camera.horizontal_fov()))) + "/";
+        cam_fov_debug_info += std::to_string(int(glm::degrees(m_camera.vertical_fov())));
+        auto cam_canvas_center_pos_info =
+            "Cam Canvas Center: " + glm::to_string(m_camera.canvas_center_pos());
+        auto mouse_pos_screen_info = "Mouse Pos Screen Space: " + glm::to_string(mouse_pos);
+        auto mouse_pos_relative_info = "Mouse Pos Cam Space: " + glm::to_string(mouse_rel_pos);
+        auto mouse_pos_canvas_info =
+            "Mouse Pos Canvas World Space: " + glm::to_string(mouse_canvas_pos);
+
+        auto fps_debug_tex = trac0r::make_text(m_render, m_font, fps_debug_info, {200, 100, 100, 200});
+        auto scene_changing_tex =
+            trac0r::make_text(m_render, m_font, scene_changing_info, {200, 100, 100, 200});
+        auto cam_look_debug_tex =
+            trac0r::make_text(m_render, m_font, cam_look_debug_info, {200, 100, 100, 200});
+        auto cam_pos_debug_tex =
+            trac0r::make_text(m_render, m_font, cam_pos_debug_info, {200, 100, 100, 200});
+        auto cam_dir_debug_tex =
+            trac0r::make_text(m_render, m_font, cam_dir_debug_info, {200, 100, 100, 200});
+        auto cam_up_debug_tex =
+            trac0r::make_text(m_render, m_font, cam_up_debug_info, {200, 100, 100, 200});
+        auto cam_fov_debug_tex =
+            trac0r::make_text(m_render, m_font, cam_fov_debug_info, {200, 100, 100, 200});
+        auto cam_canvas_center_pos_tex =
+            trac0r::make_text(m_render, m_font, cam_canvas_center_pos_info, {200, 100, 100, 200});
+        auto mouse_pos_screen_tex =
+            trac0r::make_text(m_render, m_font, mouse_pos_screen_info, {200, 100, 100, 200});
+        auto mouse_pos_relative_tex =
+            trac0r::make_text(m_render, m_font, mouse_pos_relative_info, {200, 100, 100, 200});
+        auto mouse_pos_canvas_tex =
+            trac0r::make_text(m_render, m_font, mouse_pos_canvas_info, {200, 100, 100, 200});
+
         trac0r::render_text(m_render, fps_debug_tex, 10, 10);
         trac0r::render_text(m_render, scene_changing_tex, 10, 25);
         trac0r::render_text(m_render, cam_look_debug_tex, 10, 40);
@@ -310,21 +322,24 @@ void Viewer::mainloop() {
         trac0r::render_text(m_render, mouse_pos_screen_tex, 10, 130);
         trac0r::render_text(m_render, mouse_pos_relative_tex, 10, 145);
         trac0r::render_text(m_render, mouse_pos_canvas_tex, 10, 160);
+
+        SDL_DestroyTexture(fps_debug_tex);
+        SDL_DestroyTexture(scene_changing_tex);
+        SDL_DestroyTexture(cam_look_debug_tex);
+        SDL_DestroyTexture(cam_pos_debug_tex);
+        SDL_DestroyTexture(cam_dir_debug_tex);
+        SDL_DestroyTexture(cam_up_debug_tex);
+        SDL_DestroyTexture(cam_fov_debug_tex);
+        SDL_DestroyTexture(cam_canvas_center_pos_tex);
+        SDL_DestroyTexture(mouse_pos_screen_tex);
+        SDL_DestroyTexture(mouse_pos_relative_tex);
+        SDL_DestroyTexture(mouse_pos_canvas_tex);
     }
 
     SDL_RenderPresent(m_render);
 
-    SDL_DestroyTexture(fps_debug_tex);
-    SDL_DestroyTexture(scene_changing_tex);
-    SDL_DestroyTexture(cam_look_debug_tex);
-    SDL_DestroyTexture(cam_pos_debug_tex);
-    SDL_DestroyTexture(cam_dir_debug_tex);
-    SDL_DestroyTexture(cam_up_debug_tex);
-    SDL_DestroyTexture(cam_fov_debug_tex);
-    SDL_DestroyTexture(cam_canvas_center_pos_tex);
-    SDL_DestroyTexture(mouse_pos_screen_tex);
-    SDL_DestroyTexture(mouse_pos_relative_tex);
-    SDL_DestroyTexture(mouse_pos_canvas_tex);
+    fmt::print("    {:<15} {:>10.3f} ms\n", "Rendering", timer.elapsed());
+    fmt::print("    {:<15} {:>10.3f} ms\n\n", "=> Budget", 1000.f/60.f - total.elapsed());
 }
 
 SDL_Renderer *Viewer::renderer() {

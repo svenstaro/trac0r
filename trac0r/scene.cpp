@@ -73,10 +73,11 @@ glm::vec3 Scene::intersect(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth) co
 void Scene::rebuild(const Camera &camera) {
     // Sort by distance to camera
     // TODO: Temporary until we get a proper acceleration structure
-    std::sort(m_triangles.begin(), m_triangles.end(), [&camera](const auto &tri1, const auto &tri2) {
-        return glm::distance(camera.pos(), tri1->m_centroid) <
-               glm::distance(camera.pos(), tri2->m_centroid);
-    });
+    std::sort(m_triangles.begin(), m_triangles.end(),
+              [&camera](const auto &tri1, const auto &tri2) {
+                  return glm::distance(camera.pos(), tri1->m_centroid) <
+                         glm::distance(camera.pos(), tri2->m_centroid);
+              });
 }
 
 }

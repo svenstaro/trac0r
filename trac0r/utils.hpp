@@ -14,7 +14,7 @@
 namespace trac0r {
 
 inline SDL_Texture *make_text(SDL_Renderer *renderer, TTF_Font *font, std::string text,
-                       const SDL_Color &color) {
+                              const SDL_Color &color) {
     auto text_surface = TTF_RenderText_Blended(font, text.c_str(), color);
     auto text_tex = SDL_CreateTextureFromSurface(renderer, text_surface);
     SDL_FreeSurface(text_surface);
@@ -33,8 +33,8 @@ inline void render_text(SDL_Renderer *renderer, SDL_Texture *texture, int pos_x,
 
 // Möller-Trumbore intersection algorithm
 // (see https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm)
-inline bool intersect_ray_triangle(const glm::vec3 &origin, const glm::vec3 &dir, const glm::vec3 &v0,
-                            glm::vec3 &v1, glm::vec3 &v2, float &dist) {
+inline bool intersect_ray_triangle(const glm::vec3 &origin, const glm::vec3 &dir,
+                                   const glm::vec3 &v0, glm::vec3 &v1, glm::vec3 &v2, float &dist) {
     // Calculate edges of triangle from v0.
     auto e0 = v1 - v0;
     auto e1 = v2 - v0;

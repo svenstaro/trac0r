@@ -40,6 +40,7 @@ class Viewer {
     bool m_debug = true;
     int m_x_stride = 2;
     int m_y_stride = 2;
+    int m_frame = 0;
 
     SDL_Renderer *m_render;
     SDL_Window *m_window;
