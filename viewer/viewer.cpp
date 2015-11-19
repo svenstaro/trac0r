@@ -139,7 +139,7 @@ void Viewer::mainloop() {
             if (e.key.keysym.sym == SDLK_ESCAPE) {
                 shutdown();
             }
-            if (e.key.keysym.sym == SDLK_F3) {
+            if (e.key.keysym.sym == SDLK_b) {
                 m_debug = !m_debug;
             }
             if (e.key.keysym.sym == SDLK_1) {
