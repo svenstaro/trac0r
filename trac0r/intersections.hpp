@@ -66,6 +66,7 @@ namespace trac0r {
 //     return tmax > glm::max(tmin, 0.0);
 // }
 
+// From http://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection
 inline bool intersect_ray_aabb(const glm::vec3 &origin, const glm::vec3 &dir, const AABB &aabb) {
     float tmin, tmax, tymin, tymax, tzmin, tzmax;
 
