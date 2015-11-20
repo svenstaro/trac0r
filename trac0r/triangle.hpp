@@ -7,11 +7,11 @@
 struct Triangle {
     Triangle(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 emittance, glm::vec3 reflectance)
         : m_v1(v1), m_v2(v2), m_v3(v3), m_emittance(emittance), m_reflectance(reflectance) {
-        update();
+        rebuild();
     }
 
-    // Update cached geometry data
-    void update() {
+    // rebuild cached geometry data
+    void rebuild() {
         m_normal = glm::triangleNormal(m_v1, m_v2, m_v3);
 
         m_centroid.x = m_v1.x + m_v2.x + m_v3.x;

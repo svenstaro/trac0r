@@ -1,6 +1,6 @@
 #include "viewer.hpp"
 
-#include "trac0r/mesh.hpp"
+#include "trac0r/shape.hpp"
 #include "trac0r/utils.hpp"
 #include "trac0r/timer.hpp"
 
@@ -11,6 +11,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 
 #include <cppformat/format.h>
 
@@ -82,30 +83,26 @@ int Viewer::init() {
 }
 
 void Viewer::setup_scene(int screen_width, int screen_height) {
-    auto wall_left = Mesh::make_plane({-0.5f, 0.4f, 0}, {1, 0, 0}, {1, 1}, {0, 0, 0}, {1, 0, 0});
-    auto wall_right = Mesh::make_plane({0.5f, 0.4f, 0}, {-1, 0, 0}, {1, 1}, {0, 0, 0}, {0, 1, 0});
-    auto wall_back = Mesh::make_plane({0, 0.4f, 0.5}, {0, 0, 1}, {1, 1});
-    auto wall_top = Mesh::make_plane({0, 0.9f, 0}, {0, 1, 0}, {1, 1});
-    auto wall_bottom = Mesh::make_plane({0, -0.1f, 0}, {0, 1, 0}, {1, 1});
-    auto lamp = Mesh::make_plane({0, 0.85f, -0.1}, {0, 1, 0}, {0.8, 0.8}, {3, 3, 3}, {1, 1, 1});
-    auto box1 = Mesh::make_box({0.2f, 0.1f, 0}, {0.3, 0.1, 0.5}, {0.2f, 0.5f, 0.2f});
-    auto box2 = Mesh::make_box({-0.2f, 0.05f, 0}, {0.3, -0.4, -0.9}, {0.3f, 0.4f, 0.3f});
+    auto wall_left =
+        trac0r::Shape::make_plane({-0.5f, 0.4f, 0}, {1, 0, 0}, {1, 1}, {0, 0, 0}, {1, 0, 0});
+    auto wall_right =
+        trac0r::Shape::make_plane({0.5f, 0.4f, 0}, {-1, 0, 0}, {1, 1}, {0, 0, 0}, {0, 1, 0});
+    auto wall_back = trac0r::Shape::make_plane({0, 0.4f, 0.5}, {0, 0, 1}, {1, 1});
+    auto wall_top = trac0r::Shape::make_plane({0, 0.9f, 0}, {0, 1, 0}, {1, 1});
+    auto wall_bottom = trac0r::Shape::make_plane({0, -0.1f, 0}, {0, 1, 0}, {1, 1});
+    auto lamp =
+        trac0r::Shape::make_plane({0, 0.85f, -0.1}, {0, 1, 0}, {0.8, 0.8}, {3, 3, 3}, {1, 1, 1});
+    auto box1 = trac0r::Shape::make_box({0.2f, 0.1f, 0}, {0.3, 0.1, 0.5}, {0.2f, 0.5f, 0.2f});
+    auto box2 = trac0r::Shape::make_box({-0.2f, 0.05f, 0}, {0.3, -0.4, -0.9}, {0.3f, 0.4f, 0.3f});
 
-    std::vector<std::unique_ptr<Mesh>> objects;
-    objects.push_back(std::move(wall_left));
-    objects.push_back(std::move(wall_right));
-    objects.push_back(std::move(wall_top));
-    objects.push_back(std::move(wall_back));
-    objects.push_back(std::move(wall_bottom));
-    objects.push_back(std::move(lamp));
-    objects.push_back(std::move(box1));
-    objects.push_back(std::move(box2));
-
-    for (auto &object : objects) {
-        for (auto &tri : object->triangles()) {
-            m_scene.add_triangle(tri);
-        }
-    }
+    m_scene.add_shape(wall_left);
+    m_scene.add_shape(wall_right);
+    m_scene.add_shape(wall_back);
+    m_scene.add_shape(wall_top);
+    m_scene.add_shape(wall_bottom);
+    m_scene.add_shape(lamp);
+    m_scene.add_shape(box1);
+    m_scene.add_shape(box2);
 
     glm::vec3 cam_pos = {0, 0.31, -1.2};
     glm::vec3 cam_dir = {0, 0, 1};
@@ -119,7 +116,8 @@ void Viewer::mainloop() {
     Timer timer;
     Timer total;
 
-    fmt::print("Rendering frame {}\n", m_frame);
+    if (m_print_perf)
+        fmt::print("Rendering frame {}\n", m_frame);
     m_scene_changed = false;
     m_frame++;
 
@@ -237,10 +235,13 @@ void Viewer::mainloop() {
         m_samples_accumulated = 0;
     }
 
-    fmt::print("    {:<15} {:>10.3f} ms\n", "Input handling", timer.elapsed());
+    if (m_print_perf)
+        fmt::print("    {:<15} {:>10.3f} ms\n", "Input handling", timer.elapsed());
 
     m_scene.rebuild(m_camera);
-    fmt::print("    {:<15} {:=10.3f} ms\n", "Scene rebuild", timer.elapsed());
+
+    if (m_print_perf)
+        fmt::print("    {:<15} {:=10.3f} ms\n", "Scene rebuild", timer.elapsed());
 
     m_samples_accumulated += 1;
     for (auto x = 0; x < width; x += m_x_stride) {
@@ -262,7 +263,8 @@ void Viewer::mainloop() {
         }
     }
 
-    fmt::print("    {:<15} {:>10.3f} ms\n", "Path tracing", timer.elapsed());
+    if (m_print_perf)
+        fmt::print("    {:<15} {:>10.3f} ms\n", "Path tracing", timer.elapsed());
 
     SDL_RenderClear(m_render);
     SDL_UpdateTexture(m_render_tex, 0, m_pixels.data(), width * sizeof(uint32_t));
@@ -340,8 +342,10 @@ void Viewer::mainloop() {
 
     SDL_RenderPresent(m_render);
 
-    fmt::print("    {:<15} {:>10.3f} ms\n", "Rendering", timer.elapsed());
-    fmt::print("    {:<15} {:>10.3f} ms\n\n", "=> Budget", 1000.f / 60.f - total.elapsed());
+    if (m_print_perf) {
+        fmt::print("    {:<15} {:>10.3f} ms\n", "Rendering", timer.elapsed());
+        fmt::print("    {:<15} {:>10.3f} ms\n\n", "=> Budget", 1000.f / 60.f - total.elapsed());
+    }
 }
 
 SDL_Renderer *Viewer::renderer() {

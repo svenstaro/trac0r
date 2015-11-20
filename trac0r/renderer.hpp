@@ -12,6 +12,7 @@ class Renderer {
     glm::vec4 get_color(unsigned x, unsigned y) const;
 
   private:
+    int m_max_depth = 5;
     const Camera &m_camera;
     const Scene &m_scene;
 };
