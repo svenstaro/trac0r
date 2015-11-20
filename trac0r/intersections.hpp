@@ -44,6 +44,7 @@ namespace trac0r {
 //     return true;
 // }
 
+// From http://tavianator.com/fast-branchless-raybounding-box-intersections-part-2-nans/
 // inline bool intersect_ray_aabb(const glm::vec3 &origin, const glm::vec3 &dir,
 //                                const AABB &aabb) {
 //     glm::vec3 dir_inv = 1.f / dir;
