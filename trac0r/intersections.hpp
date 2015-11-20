@@ -65,43 +65,43 @@ namespace trac0r {
 //     return tmax > glm::max(tmin, 0.0);
 // }
 
-// TODO This method is really slow. Use a faster method instead.
-inline bool intersect_ray_aabb(const glm::vec3 &origin, const glm::vec3 &dir,
-                               const AABB &aabb) {
-    float tmin = (aabb.min().x - origin.x) / dir.x; 
-    float tmax = (aabb.max().x - origin.x) / dir.x; 
- 
-    if (tmin > tmax) std::swap(tmin, tmax); 
- 
-    float tymin = (aabb.min().y - origin.y) / dir.y; 
-    float tymax = (aabb.max().y - origin.y) / dir.y; 
- 
-    if (tymin > tymax) std::swap(tymin, tymax); 
- 
-    if ((tmin > tymax) || (tymin > tmax)) 
-        return false; 
- 
-    if (tymin > tmin) 
-        tmin = tymin; 
- 
-    if (tymax < tmax) 
-        tmax = tymax; 
- 
-    float tzmin = (aabb.min().z - origin.z) / dir.z; 
-    float tzmax = (aabb.max().z - origin.z) / dir.z; 
- 
-    if (tzmin > tzmax) std::swap(tzmin, tzmax); 
- 
-    if ((tmin > tzmax) || (tzmin > tmax)) 
-        return false; 
- 
-    if (tzmin > tmin) 
-        tmin = tzmin; 
- 
-    if (tzmax < tmax) 
-        tmax = tzmax; 
- 
-    return true; 
+inline bool intersect_ray_aabb(const glm::vec3 &origin, const glm::vec3 &dir, const AABB &aabb) {
+    float tmin, tmax, tymin, tymax, tzmin, tzmax;
+
+    glm::vec3 bounds[2];
+    bounds[0] = aabb.min();
+    bounds[1] = aabb.max();
+
+    glm::vec3 invdir = 1.f / dir;
+    glm::i8vec3 sign;
+
+    sign.x = (invdir.x < 0);
+    sign.y = (invdir.y < 0);
+    sign.z = (invdir.z < 0);
+
+    tmin = (bounds[sign.x].x - origin.x) * invdir.x;
+    tmax = (bounds[1 - sign.x].x - origin.x) * invdir.x;
+    tymin = (bounds[sign.y].y - origin.y) * invdir.y;
+    tymax = (bounds[1 - sign.y].y - origin.y) * invdir.y;
+
+    if ((tmin > tymax) || (tymin > tmax))
+        return false;
+    if (tymin > tmin)
+        tmin = tymin;
+    if (tymax < tmax)
+        tmax = tymax;
+
+    tzmin = (bounds[sign.z].z - origin.z) * invdir.z;
+    tzmax = (bounds[1 - sign.z].z - origin.z) * invdir.z;
+
+    if ((tmin > tzmax) || (tzmin > tmax))
+        return false;
+    if (tzmin > tmin)
+        tmin = tzmin;
+    if (tzmax < tmax)
+        tmax = tzmax;
+
+    return true;
 }
 
 // Möller-Trumbore intersection algorithm

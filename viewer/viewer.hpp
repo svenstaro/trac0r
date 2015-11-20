@@ -38,7 +38,7 @@ class Viewer {
     bool m_look_mode = false;
     int m_last_frame_time = 0;
     bool m_debug = true;
-    bool m_print_perf = false;
+    bool m_print_perf = true;
     int m_x_stride = 2;
     int m_y_stride = 2;
     int m_frame = 0;
