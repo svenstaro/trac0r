@@ -13,7 +13,7 @@
 #include <memory>
 #include <vector>
 
-// Right-handed coordinate system where Z is up and Y is depth (Blender-like)
+// Right-handed coordinate system where Y is up and Z is depth
 
 class Viewer {
   public:
