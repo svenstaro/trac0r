@@ -41,15 +41,15 @@ glm::vec3 FlatStructure::intersect(const Ray &ray, int depth, int max_depth) con
                         //
                         // if (cos_area > 0.0)
                         //     local_radiance = tri->m_emittance * solid_angle;
-                        local_radiance = tri->m_emittance;
+                        local_radiance = tri.m_emittance;
                     }
-                    local_radiance = tri->m_emittance;
+                    local_radiance = tri.m_emittance;
 
                     // Emitter sample
                     // TODO
                     // glm::vec3 illumination;
 
-                    auto normal = tri->m_normal * -glm::sign(glm::dot(tri->m_normal, ray.m_dir));
+                    auto normal = tri.m_normal * -glm::sign(glm::dot(tri.m_normal, ray.m_dir));
                     // Find new random direction for diffuse reflection
                     auto new_ray_dir = normal;
                     auto half_pi = glm::half_pi<float>();
@@ -58,7 +58,7 @@ glm::vec3 FlatStructure::intersect(const Ray &ray, int depth, int max_depth) con
                                               glm::cross(normal, ray.m_dir));
                     new_ray_dir = glm::rotate(new_ray_dir, glm::linearRand(-pi, pi), normal);
                     float cos_theta = glm::dot(new_ray_dir, normal);
-                    glm::vec3 bdrf = 2.f * tri->m_reflectance * cos_theta;
+                    glm::vec3 bdrf = 2.f * tri.m_reflectance * cos_theta;
 
                     // Send new ray in new direction
                     Ray new_ray(impact_pos, new_ray_dir);

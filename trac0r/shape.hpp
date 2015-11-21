@@ -22,8 +22,8 @@ class Shape {
 
     const AABB &aabb() const;
 
-    std::vector<std::unique_ptr<Triangle>> &triangles();
-    void add_triangle(std::unique_ptr<Triangle> &triangle);
+    std::vector<Triangle> &triangles();
+    void add_triangle(const Triangle triangle);
 
     static std::unique_ptr<Shape> make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size,
                                            glm::vec3 reflectance = {0, 0, 0},
@@ -38,7 +38,7 @@ class Shape {
     glm::vec3 m_orientation;
     glm::vec3 m_scale;
     AABB m_aabb;
-    std::vector<std::unique_ptr<Triangle>> m_triangles;
+    std::vector<Triangle> m_triangles;
     
   private:
     void rebuild();
