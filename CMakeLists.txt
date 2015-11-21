@@ -14,6 +14,10 @@ add_library(trac0r_library ${trac0r_library_src})
 add_executable(trac0r_viewer ${trac0r_viewer_src})
 add_executable(trac0r_tests ${trac0r_tests_src})
 
+if(${BENCHMARK})
+    add_definitions("-DBENCHMARK")
+endif()
+
 if(${EMSCRIPTEN})
     set(CROSS_COMPILING ON)
     add_definitions("-O3 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_SDL_TTF=2")

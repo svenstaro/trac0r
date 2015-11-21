@@ -16,7 +16,7 @@ namespace trac0r {
 class Scene {
   public:
     Scene();
-    void add_shape(std::unique_ptr<Shape> &shape);
+    void add_shape(Shape &shape);
     glm::vec3 intersect(const Ray &ray, int depth, int max_depth) const;
     void rebuild(const Camera &camera);
 

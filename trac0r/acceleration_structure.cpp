@@ -4,11 +4,11 @@ namespace trac0r {
 
 AccelerationStructure::~AccelerationStructure() {}
 
-void AccelerationStructure::add_shape(std::unique_ptr<Shape> &&shape) {
-    m_shapes.push_back(std::move(shape));
+void AccelerationStructure::add_shape(Shape &shape) {
+    m_shapes.push_back(shape);
 }
 
-std::vector<std::unique_ptr<Shape>> &AccelerationStructure::shapes() {
+std::vector<Shape> &AccelerationStructure::shapes() {
     return m_shapes;
 }
 

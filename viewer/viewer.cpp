@@ -126,6 +126,11 @@ void Viewer::mainloop() {
     m_last_frame_time = current_time;
     auto fps = 1. / dt;
 
+#ifdef BENCHMARK
+    if (m_frame > m_max_frames)
+        shutdown();
+#endif
+
     // Input
     SDL_Event e;
     while (SDL_PollEvent(&e)) {

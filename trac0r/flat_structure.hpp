@@ -16,7 +16,7 @@ class FlatStructure final : public AccelerationStructure {
     void rebuild(const Camera &camera) override;
 
   private:
-    std::vector<std::unique_ptr<Triangle>> m_triangles;
+    std::vector<Triangle> m_triangles;
 };
 }
 

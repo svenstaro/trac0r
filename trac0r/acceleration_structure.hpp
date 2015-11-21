@@ -15,13 +15,13 @@ namespace trac0r {
 class AccelerationStructure {
 public:
     virtual ~AccelerationStructure() = 0;
-    void add_shape(std::unique_ptr<Shape> &&shape);
-    std::vector<std::unique_ptr<Shape>> &shapes();
+    void add_shape(Shape &shape);
+    std::vector<Shape> &shapes();
     virtual glm::vec3 intersect(const Ray &ray, int depth, int max_depth) const = 0;
     virtual void rebuild(const Camera &camera) = 0;
 
 protected:
-    std::vector<std::unique_ptr<Shape>> m_shapes;
+    std::vector<Shape> m_shapes;
 };
 
 }

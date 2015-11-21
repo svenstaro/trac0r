@@ -15,8 +15,8 @@ Scene::Scene() {
     m_accel = std::make_unique<FlatStructure>();
 }
 
-void Scene::add_shape(std::unique_ptr<Shape> &shape) {
-    m_accel->add_shape(std::move(shape));    
+void Scene::add_shape(Shape &shape) {
+    m_accel->add_shape(shape);    
 }
 
 glm::vec3 Scene::intersect(const Ray &ray, int depth, int max_depth) const {

@@ -23,8 +23,8 @@ glm::vec3 FlatStructure::intersect(const Ray &ray, int depth, int max_depth) con
     // TODO: We get like 2x better performance here if we loop over a flat structure of triangles
     // instead of looping over all shapes and for each shape over all triangles
     for (const auto &shape : m_shapes) {
-        if (intersect_ray_aabb(ray, shape->aabb())) {
-            for (const auto &tri : shape->triangles()) {
+        if (intersect_ray_aabb(ray, shape.aabb())) {
+            for (auto &tri : shape.triangles()) {
                 float dist_to_col;
                 collided = intersect_ray_triangle(ray, tri, dist_to_col);
 

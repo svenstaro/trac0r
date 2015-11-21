@@ -36,16 +36,20 @@ std::vector<Triangle> &Shape::triangles() {
     return m_triangles;
 }
 
+const std::vector<Triangle> &Shape::triangles() const {
+    return m_triangles;
+}
+
 void Shape::add_triangle(const Triangle triangle) {
     m_triangles.push_back(triangle);
 }
 
-std::unique_ptr<Shape> Shape::make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size,
+Shape Shape::make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size,
                                        glm::vec3 reflectance, glm::vec3 emittance) {
-    auto new_shape = std::make_unique<Shape>();
-    new_shape->set_pos(pos);
-    new_shape->set_orientation(glm::normalize(orientation));
-    new_shape->set_scale(size);
+    Shape new_shape;
+    new_shape.set_pos(pos);
+    new_shape.set_orientation(glm::normalize(orientation));
+    new_shape.set_scale(size);
 
     auto p1 = glm::vec3{-0.5f, 0.5f, -0.5f};
     auto p2 = glm::vec3{-0.5f, -0.5f, -0.5f};
@@ -80,42 +84,42 @@ std::unique_ptr<Shape> Shape::make_box(glm::vec3 pos, glm::vec3 orientation, glm
     auto t11 = Triangle(p6, p3, p2, reflectance, emittance);
     auto t12 = Triangle(p3, p7, p6, reflectance, emittance);
 
-    new_shape->add_triangle(t1);
-    new_shape->add_triangle(t2);
-    new_shape->add_triangle(t3);
-    new_shape->add_triangle(t4);
-    new_shape->add_triangle(t5);
-    new_shape->add_triangle(t6);
-    new_shape->add_triangle(t7);
-    new_shape->add_triangle(t8);
-    new_shape->add_triangle(t9);
-    new_shape->add_triangle(t10);
-    new_shape->add_triangle(t11);
-    new_shape->add_triangle(t12);
+    new_shape.add_triangle(t1);
+    new_shape.add_triangle(t2);
+    new_shape.add_triangle(t3);
+    new_shape.add_triangle(t4);
+    new_shape.add_triangle(t5);
+    new_shape.add_triangle(t6);
+    new_shape.add_triangle(t7);
+    new_shape.add_triangle(t8);
+    new_shape.add_triangle(t9);
+    new_shape.add_triangle(t10);
+    new_shape.add_triangle(t11);
+    new_shape.add_triangle(t12);
 
     glm::mat4 translate = glm::translate(pos);
     glm::mat4 rotation = glm::orientation(orientation, {0, 1, 0});
     glm::mat4 scale = glm::scale(size);
     glm::mat4 model = translate * rotation * scale;
 
-    for (auto &tri : new_shape->triangles()) {
+    for (auto &tri : new_shape.triangles()) {
         tri.m_v1 = glm::vec3(model * glm::vec4(tri.m_v1, 1));
         tri.m_v2 = glm::vec3(model * glm::vec4(tri.m_v2, 1));
         tri.m_v3 = glm::vec3(model * glm::vec4(tri.m_v3, 1));
         tri.rebuild();
     }
 
-    new_shape->rebuild();
+    new_shape.rebuild();
 
     return new_shape;
 }
 
-std::unique_ptr<Shape> Shape::make_plane(glm::vec3 pos, glm::vec3 orientation, glm::vec2 size,
+Shape Shape::make_plane(glm::vec3 pos, glm::vec3 orientation, glm::vec2 size,
                                          glm::vec3 reflectance, glm::vec3 emittance) {
-    auto new_shape = std::make_unique<Shape>();
-    new_shape->set_pos(pos);
-    new_shape->set_orientation(glm::normalize(orientation));
-    new_shape->set_scale(glm::vec3(size.x, 0, size.y));
+    Shape new_shape;
+    new_shape.set_pos(pos);
+    new_shape.set_orientation(glm::normalize(orientation));
+    new_shape.set_scale(glm::vec3(size.x, 0, size.y));
 
     auto p1 = glm::vec3{-0.5f, 0, 0.5f};
     auto p2 = glm::vec3{-0.5f, 0, -0.5f};
@@ -125,22 +129,22 @@ std::unique_ptr<Shape> Shape::make_plane(glm::vec3 pos, glm::vec3 orientation, g
     auto triangle_left = Triangle(p1, p2, p3, reflectance, emittance);
     auto triangle_right = Triangle(p1, p4, p3, reflectance, emittance);
 
-    new_shape->add_triangle(triangle_left);
-    new_shape->add_triangle(triangle_right);
+    new_shape.add_triangle(triangle_left);
+    new_shape.add_triangle(triangle_right);
 
     glm::mat4 translate = glm::translate(pos);
     glm::mat4 rotation = glm::orientation(orientation, {0, 1, 0});
-    glm::mat4 scale = glm::scale(new_shape->scale());
+    glm::mat4 scale = glm::scale(new_shape.scale());
     glm::mat4 model = translate * rotation * scale;
 
-    for (auto &tri : new_shape->triangles()) {
+    for (auto &tri : new_shape.triangles()) {
         tri.m_v1 = glm::vec3(model * glm::vec4(tri.m_v1, 1));
         tri.m_v2 = glm::vec3(model * glm::vec4(tri.m_v2, 1));
         tri.m_v3 = glm::vec3(model * glm::vec4(tri.m_v3, 1));
         tri.rebuild();
     }
 
-    new_shape->rebuild();
+    new_shape.rebuild();
 
     return new_shape;
 }
