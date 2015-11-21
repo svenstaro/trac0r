@@ -21,6 +21,8 @@ glm::vec3 FlatStructure::intersect(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int d
     // check all triangles for collision
     bool collided = false;
     glm::vec3 ret_color{0.f, 0.f, 0.f};
+    // TODO: We get like 2x better performance here if we loop over a flat structure of triangles
+    // instead of looping over all shapes and for each shape over all triangles
     for (auto &shape : m_shapes) {
         if (intersect_ray_aabb(ray_pos, ray_dir, shape->aabb())) {
             for (auto &tri : shape->triangles()) {
@@ -74,12 +76,19 @@ glm::vec3 FlatStructure::intersect(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int d
 }
 
 void FlatStructure::rebuild(const Camera &camera) {
-    // Sort by distance to camera
-    // This is obviously broken but it works well enough for now
-    //     std::sort(m_triangles.begin(), m_triangles.end(),
-    //               [&camera](const auto &tri1, const auto &tri2) {
-    //                   return glm::distance(camera.pos(), tri1->m_centroid) <
-    //                          glm::distance(camera.pos(), tri2->m_centroid);
-    //               });
+//     m_triangles.clear();
+//     for (auto &shape : m_shapes) {
+//         for (auto &tri : shape->triangles()) {
+//             m_triangles.push_back(*tri);
+//         }
+//     }
+//     // Sort by distance to camera
+//     // This is obviously broken but it works well enough for now
+//         std::sort(m_triangles.begin(), m_triangles.end(),
+//                   [&camera](const auto &tri1, const auto &tri2) {
+//                       return glm::distance(camera.pos(), tri1.m_centroid) <
+//                              glm::distance(camera.pos(), tri2.m_centroid);
+//                   });
 }
 }
+
