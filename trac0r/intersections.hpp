@@ -2,11 +2,12 @@
 #define INTERSECTIONS_HPP
 
 #include "aabb.hpp"
+#include "ray.hpp"
+#include "triangle.hpp"
 
 #include <glm/glm.hpp>
 
-#include <cppformat/format.h>
-#include <glm/gtx/string_cast.hpp>
+#include <memory>
 
 namespace trac0r {
 // From
@@ -67,24 +68,22 @@ namespace trac0r {
 // }
 
 // From http://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection
-inline bool intersect_ray_aabb(const glm::vec3 &origin, const glm::vec3 &dir, const AABB &aabb) {
+inline bool intersect_ray_aabb(const Ray &ray, const AABB &aabb) {
     float tmin, tmax, tymin, tymax, tzmin, tzmax;
 
     glm::vec3 bounds[2];
     bounds[0] = aabb.min();
     bounds[1] = aabb.max();
 
-    glm::vec3 invdir = 1.f / dir;
     glm::i8vec3 sign;
+    sign.x = (ray.m_invdir.x < 0);
+    sign.y = (ray.m_invdir.y < 0);
+    sign.z = (ray.m_invdir.z < 0);
 
-    sign.x = (invdir.x < 0);
-    sign.y = (invdir.y < 0);
-    sign.z = (invdir.z < 0);
-
-    tmin = (bounds[sign.x].x - origin.x) * invdir.x;
-    tmax = (bounds[1 - sign.x].x - origin.x) * invdir.x;
-    tymin = (bounds[sign.y].y - origin.y) * invdir.y;
-    tymax = (bounds[1 - sign.y].y - origin.y) * invdir.y;
+    tmin = (bounds[sign.x].x - ray.m_origin.x) * ray.m_invdir.x;
+    tmax = (bounds[1 - sign.x].x - ray.m_origin.x) * ray.m_invdir.x;
+    tymin = (bounds[sign.y].y - ray.m_origin.y) * ray.m_invdir.y;
+    tymax = (bounds[1 - sign.y].y - ray.m_origin.y) * ray.m_invdir.y;
 
     if ((tmin > tymax) || (tymin > tmax))
         return false;
@@ -93,8 +92,8 @@ inline bool intersect_ray_aabb(const glm::vec3 &origin, const glm::vec3 &dir, co
     if (tymax < tmax)
         tmax = tymax;
 
-    tzmin = (bounds[sign.z].z - origin.z) * invdir.z;
-    tzmax = (bounds[1 - sign.z].z - origin.z) * invdir.z;
+    tzmin = (bounds[sign.z].z - ray.m_origin.z) * ray.m_invdir.z;
+    tzmax = (bounds[1 - sign.z].z - ray.m_origin.z) * ray.m_invdir.z;
 
     if ((tmin > tzmax) || (tzmin > tmax))
         return false;
@@ -108,15 +107,14 @@ inline bool intersect_ray_aabb(const glm::vec3 &origin, const glm::vec3 &dir, co
 
 // Möller-Trumbore intersection algorithm
 // (see https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm)
-inline bool intersect_ray_triangle(const glm::vec3 &origin, const glm::vec3 &dir,
-                                   const glm::vec3 &v0, glm::vec3 &v1, glm::vec3 &v2, float &dist) {
+inline bool intersect_ray_triangle(const Ray &ray, const std::unique_ptr<Triangle> &triangle, float &dist) {
     // Calculate edges of triangle from v0.
-    auto e0 = v1 - v0;
-    auto e1 = v2 - v0;
+    auto e0 = triangle->m_v2 - triangle->m_v1;
+    auto e1 = triangle->m_v3 - triangle->m_v1;
 
     // Calculate determinant to check whether the ray is in the newly calculated plane made up from
     // e0 and e1.
-    auto pvec = glm::cross(dir, e1);
+    auto pvec = glm::cross(ray.m_dir, e1);
     auto det = glm::dot(e0, pvec);
 
     // Check whether determinant is close to 0. If that is the case, the ray is in the same plane as
@@ -128,8 +126,8 @@ inline bool intersect_ray_triangle(const glm::vec3 &origin, const glm::vec3 &dir
 
     auto inv_det = 1.f / det;
 
-    // Calculate distance from v0 to ray origin
-    auto tvec = origin - v0;
+    // Calculate distance from v1 to ray origin
+    auto tvec = ray.m_origin - triangle->m_v1;
 
     // Calculate u parameter and test bound
     auto u = glm::dot(tvec, pvec) * inv_det;
@@ -142,7 +140,7 @@ inline bool intersect_ray_triangle(const glm::vec3 &origin, const glm::vec3 &dir
     auto qvec = glm::cross(tvec, e0);
 
     // Calculate v parameter and test bound
-    auto v = glm::dot(dir, qvec) * inv_det;
+    auto v = glm::dot(ray.m_dir, qvec) * inv_det;
 
     // Check whether the intersection lies outside of the triangle
     if (v < 0.f || u + v > 1.f)

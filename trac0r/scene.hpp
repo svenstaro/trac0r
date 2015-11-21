@@ -1,6 +1,7 @@
 #ifndef SCENE_HPP
 #define SCENE_HPP
 
+#include "ray.hpp"
 #include "shape.hpp"
 #include "camera.hpp"
 #include "acceleration_structure.hpp"
@@ -16,7 +17,7 @@ class Scene {
   public:
     Scene();
     void add_shape(std::unique_ptr<Shape> &shape);
-    glm::vec3 intersect(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth, int max_depth) const;
+    glm::vec3 intersect(const Ray &ray, int depth, int max_depth) const;
     void rebuild(const Camera &camera);
 
   private:

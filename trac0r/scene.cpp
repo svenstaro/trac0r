@@ -19,8 +19,8 @@ void Scene::add_shape(std::unique_ptr<Shape> &shape) {
     m_accel->add_shape(std::move(shape));    
 }
 
-glm::vec3 Scene::intersect(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth, int max_depth) const {
-    return m_accel->intersect(ray_pos, ray_dir, depth, max_depth);
+glm::vec3 Scene::intersect(const Ray &ray, int depth, int max_depth) const {
+    return m_accel->intersect(ray, depth, max_depth);
 }
 
 void Scene::rebuild(const Camera &camera) {

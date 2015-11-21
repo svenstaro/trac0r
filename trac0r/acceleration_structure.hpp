@@ -3,6 +3,7 @@
 
 #include "shape.hpp"
 #include "camera.hpp"
+#include "ray.hpp"
 
 #include <glm/glm.hpp>
 
@@ -16,7 +17,7 @@ public:
     virtual ~AccelerationStructure() = 0;
     void add_shape(std::unique_ptr<Shape> &&shape);
     std::vector<std::unique_ptr<Shape>> &shapes();
-    virtual glm::vec3 intersect(glm::vec3 &ray_pos, glm::vec3 &ray_dir, int depth, int max_depth) const = 0;
+    virtual glm::vec3 intersect(const Ray &ray, int depth, int max_depth) const = 0;
     virtual void rebuild(const Camera &camera) = 0;
 
 protected:
