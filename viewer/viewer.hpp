@@ -44,8 +44,6 @@ class Viewer {
     int m_frame = 0;
 #ifdef BENCHMARK
     int m_max_frames = 10; // run indefinintely
-#else
-    int m_max_frames = -1; // run indefinintely
 #endif
 
     SDL_Renderer *m_render;
