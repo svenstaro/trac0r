@@ -1,6 +1,10 @@
 #include "camera.hpp"
 
 #include <glm/glm.hpp>
+#include <glm/gtx/vector_angle.hpp>
+
+#include <glm/gtx/string_cast.hpp>
+#include <cppformat/format.h>
 
 namespace trac0r {
 
@@ -111,8 +115,8 @@ glm::vec2 Camera::screenspace_to_camspace(int x, int y) const {
 }
 
 glm::i32vec2 Camera::camspace_to_screenspace(glm::vec2 coords) const {
-    int screen_x = 0.5f * (m_screen_width - 2.f * m_screen_width * coords.x);
-    int screen_y = 0.5f * (m_screen_height - 2.f * m_screen_height * coords.y);
+    int screen_x = glm::round(0.5f * (m_screen_width - 2.f * m_screen_width * coords.x));
+    int screen_y = glm::round(0.5f * (m_screen_height - 2.f * m_screen_height * coords.y));
     return {screen_x, screen_y};
 }
 
@@ -122,12 +126,14 @@ glm::vec3 Camera::camspace_to_worldspace(glm::vec2 rel_pos) const {
     return worldspace;
 }
 
-glm::vec3 Camera::worldspace_to_camspace(glm::vec3 world_pos_on_canvas) const {
-    auto canvas_center_to_point = glm::length(world_pos_on_canvas - canvas_center_pos());
-    // canvas_center_to_point.x = canvas_width() / canvas_center_to_point.x;
-    // canvas_center_to_point.y = canvas_height() / canvas_center_to_point.y;
-    // canvas_center_to_point.x = glm::length(canvas_center_to_point.x * canvas_dir_x());
-    // canvas_center_to_point.y = canvas_height() / canvas_center_to_point.y;
-    return canvas_center_to_point;
+glm::vec2 Camera::worldspace_to_camspace(glm::vec3 world_pos_on_canvas) const {
+    auto canvas_center_to_point = world_pos_on_canvas - canvas_center_pos();
+    auto angle1 = glm::orientedAngle(glm::normalize(canvas_center_to_point), right(), world_up());
+    auto angle2 = glm::pi<float>() - (glm::half_pi<float>() + angle1);
+    auto x = glm::sin(angle2) * glm::length(canvas_center_to_point);
+    auto y = glm::sin(angle1) * glm::length(canvas_center_to_point);
+    auto rel_x = -(2 * x) / canvas_width();
+    auto rel_y = -(2 * y) / canvas_height();
+    return {rel_x, -rel_y};
 }
 }

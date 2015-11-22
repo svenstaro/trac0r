@@ -79,7 +79,7 @@ class Camera {
      *
      * @return The relative position in camera space. Values are between -1.0 and 1.0.
      */
-    glm::vec3 worldspace_to_camspace(glm::vec3 world_pos) const;
+    glm::vec2 worldspace_to_camspace(glm::vec3 world_pos) const;
 
   private:
     glm::vec3 m_pos;
