@@ -19,6 +19,7 @@ class Scene {
     void add_shape(Shape &shape);
     glm::vec3 intersect(const Ray &ray, int depth, int max_depth) const;
     void rebuild(const Camera &camera);
+    std::unique_ptr<AccelerationStructure> &accel();
 
   private:
     std::unique_ptr<AccelerationStructure> m_accel;

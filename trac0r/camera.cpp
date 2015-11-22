@@ -41,7 +41,8 @@ void Camera::set_world_up(glm::vec3 world_up) {
 }
 
 glm::vec3 Camera::right() const {
-    return glm::normalize(glm::cross(m_world_up, m_dir));;
+    return glm::normalize(glm::cross(m_world_up, m_dir));
+    ;
 }
 
 glm::vec3 Camera::up() const {
@@ -109,8 +110,21 @@ glm::vec2 Camera::screenspace_to_camspace(int x, int y) const {
     return {rel_x, rel_y};
 }
 
-glm::vec3 Camera::camspace_to_worldspace(glm::vec2 rel_pos) const {
-    return canvas_center_pos() + (rel_pos.x * canvas_dir_x()) + (rel_pos.y * canvas_dir_y());
+glm::i32vec2 Camera::camspace_to_screenspace(glm::vec2 coords) const {
+    int screen_x = 0.5f * (m_screen_width - 2.f * m_screen_width * coords.x);
+    int screen_y = 0.5f * (m_screen_height - 2.f * m_screen_height * coords.y);
+    return {screen_x, screen_y};
 }
 
+glm::vec3 Camera::camspace_to_worldspace(glm::vec2 rel_pos) const {
+    auto worldspace =
+        canvas_center_pos() + (rel_pos.x * canvas_dir_x()) + (rel_pos.y * canvas_dir_y());
+    return worldspace;
+}
+
+glm::vec2 Camera::worldspace_to_camspace(glm::vec3 world_pos_on_canvas) const {
+    auto canvas_center_to_point = world_pos_on_canvas - canvas_center_pos();
+    glm::vec2 lol{canvas_center_to_point.x, canvas_center_to_point.y};
+    return lol;
+}
 }

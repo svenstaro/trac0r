@@ -7,12 +7,12 @@ add_definitions("-O2 -g -Wall -Wextra -pedantic -Werror -std=c++14 -Wno-unused-p
 
 set(cppformat external/cppformat/format.cc)
 file(GLOB trac0r_library_src trac0r/*.cpp ${cppformat})
-file(GLOB trac0r_tests_src tests/*.cpp)
 file(GLOB trac0r_viewer_src viewer/*.cpp)
 
 add_library(trac0r_library ${trac0r_library_src})
 add_executable(trac0r_viewer ${trac0r_viewer_src})
-add_executable(trac0r_tests ${trac0r_tests_src})
+add_executable(trac0r_test_camera tests/test_camera.cpp)
+add_executable(trac0r_test_packing tests/test_packing.cpp)
 
 if(${BENCHMARK})
     add_definitions("-DBENCHMARK")
@@ -39,7 +39,5 @@ target_link_libraries(trac0r_viewer
     ${SDL2_LIBRARIES}
 )
 
-target_link_libraries(trac0r_tests
-    trac0r_library
-    ${SDL2_LIBRARIES}
-)
+target_link_libraries(trac0r_test_camera trac0r_library)
+target_link_libraries(trac0r_test_packing trac0r_library)

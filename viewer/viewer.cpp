@@ -8,8 +8,6 @@
 #include <SDL_image.h>
 
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/intersect.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
@@ -257,7 +255,14 @@ void Viewer::mainloop() {
             new_color = (old_color * float(m_samples_accumulated - 1) + new_color) /
                         float(m_samples_accumulated);
 
-            // This is just for speeding up
+            // Let's draw some debug to the display (such as AABBs)
+            // if (m_debug) {
+            //     for (auto &shape : m_scene.accel()->shapes()) {
+            //
+            //     }
+            // }
+
+            // This striding is just for speeding up
             // We're basically drawing really big pixels here
             uint32_t packed_color = trac0r::pack_color_argb(new_color);
             for (auto u = 0; u < m_x_stride; u++) {

@@ -48,20 +48,38 @@ class Camera {
      * @param x Pixel coordinate. Can not be larger than m_screen_width.
      * @param y Pixel coordinate. Can not be larger than m_screen_height.
      *
-     * @return Relative camera space positions. Values will be between -1 and 1.
+     * @return Relative camera space positions. Values will be between -1.0 and 1.0.
      */
     glm::vec2 screenspace_to_camspace(int x, int y) const;
+
+    /**
+     * @brief Converts relative camera space positions to absolute screen space coordinates.
+     *
+     * @param coords Camera space coordinates between -1.0 and 1.0.
+     *
+     * @return Absolute screen space coordinates.
+     */
+    glm::i32vec2 camspace_to_screenspace(glm::vec2 coords) const;
 
     /**
      * @brief Converts camera space relative positions to world space positions on the camera's
      * canvas.
      *
      * @param rel_pos The relative position as screenspace_to_camspace(int x, int y) would return
-     * it. Values need to be between -1 and 1.
+     * it. Values need to be between -1.0 and 1.0.
      *
      * @return World space coordinates on the camera's canvas.
      */
     glm::vec3 camspace_to_worldspace(glm::vec2 rel_pos) const;
+
+    /**
+     * @brief Converts a position on the camera's canvas to a camera space relative position.
+     *
+     * @param world_pos The world space position.
+     *
+     * @return The relative position in camera space. Values are between -1.0 and 1.0.
+     */
+    glm::vec2 worldspace_to_camspace(glm::vec3 world_pos) const;
 
   private:
     glm::vec3 m_pos;

@@ -27,4 +27,8 @@ void Scene::rebuild(const Camera &camera) {
     m_accel->rebuild(camera);
 }
 
+std::unique_ptr<AccelerationStructure> &Scene::accel() {
+    return m_accel;
+}
+
 }
