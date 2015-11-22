@@ -122,9 +122,12 @@ glm::vec3 Camera::camspace_to_worldspace(glm::vec2 rel_pos) const {
     return worldspace;
 }
 
-glm::vec2 Camera::worldspace_to_camspace(glm::vec3 world_pos_on_canvas) const {
-    auto canvas_center_to_point = world_pos_on_canvas - canvas_center_pos();
-    glm::vec2 lol{canvas_center_to_point.x, canvas_center_to_point.y};
-    return lol;
+glm::vec3 Camera::worldspace_to_camspace(glm::vec3 world_pos_on_canvas) const {
+    auto canvas_center_to_point = glm::length(world_pos_on_canvas - canvas_center_pos());
+    // canvas_center_to_point.x = canvas_width() / canvas_center_to_point.x;
+    // canvas_center_to_point.y = canvas_height() / canvas_center_to_point.y;
+    // canvas_center_to_point.x = glm::length(canvas_center_to_point.x * canvas_dir_x());
+    // canvas_center_to_point.y = canvas_height() / canvas_center_to_point.y;
+    return canvas_center_to_point;
 }
 }
