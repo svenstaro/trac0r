@@ -346,6 +346,7 @@ void Viewer::mainloop() {
                         auto cs = m_camera.worldspace_to_camspace(ws);
                         auto ss = m_camera.camspace_to_screenspace(cs);
                         filledCircleRGBA(m_render, ss.x, ss.y, 5, 0, 0, 255, 255);
+                        // TODO Draw actual lines here
                     }
                 }
             }
