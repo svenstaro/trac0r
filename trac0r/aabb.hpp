@@ -3,6 +3,8 @@
 
 #include <glm/glm.hpp>
 
+#include <array>
+
 namespace trac0r {
 
 class AABB {
@@ -12,6 +14,7 @@ class AABB {
     glm::vec3 max() const;
     glm::vec3 diagonal() const;
     glm::vec3 center() const;
+    std::array<glm::vec3, 8> vertices() const;
     void extend(glm::vec3 &point);
     bool overlaps(const AABB &other) const;
     void reset();

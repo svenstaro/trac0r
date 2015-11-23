@@ -6,10 +6,12 @@
 
 #include <SDL_ttf.h>
 #include <SDL_image.h>
+#include <SDL2_gfxPrimitives.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/vector_query.hpp>
 
 #include <cppformat/format.h>
 
@@ -255,13 +257,6 @@ void Viewer::mainloop() {
             new_color = (old_color * float(m_samples_accumulated - 1) + new_color) /
                         float(m_samples_accumulated);
 
-            // Let's draw some debug to the display (such as AABBs)
-            // if (m_debug) {
-            //     for (auto &shape : m_scene.accel()->shapes()) {
-            //
-            //     }
-            // }
-
             // This striding is just for speeding up
             // We're basically drawing really big pixels here
             uint32_t packed_color = trac0r::pack_color_argb(new_color);
@@ -336,6 +331,27 @@ void Viewer::mainloop() {
         trac0r::render_text(m_render, mouse_pos_screen_tex, 10, 130);
         trac0r::render_text(m_render, mouse_pos_relative_tex, 10, 145);
         trac0r::render_text(m_render, mouse_pos_canvas_tex, 10, 160);
+
+        // boxColor(m_render, 0, 0, 300, 200, 0xFFFFFFFF);
+        // filledCircleRGBA(m_render, 150, 100, 10, 255, 255, 0, 255);
+        // circleColor(m_render, 200, 200, 100, 0x0000FF00);
+        // aalineColor(m_render, 0, 0, 300, 200, 0xFFFF00FF);
+
+        // Let's draw some debug to the display (such as AABBs)
+        if (m_debug) {
+            for (auto &shape : m_scene.accel()->shapes()) {
+                for (auto &vertex : shape.aabb().vertices()) {
+                    auto ws = m_camera.worldpoint_to_worldspace(vertex);
+                    if (ws != glm::vec3(0)) {
+                        auto cs = m_camera.worldspace_to_camspace(ws);
+                        auto ss = m_camera.camspace_to_screenspace(cs);
+                        filledCircleRGBA(m_render, ss.x, ss.y, 5, 0, 0, 255, 255);
+                    }
+                    break;
+                }
+                break;
+            }
+        }
 
         SDL_DestroyTexture(fps_debug_tex);
         SDL_DestroyTexture(scene_changing_tex);

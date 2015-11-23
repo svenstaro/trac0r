@@ -24,7 +24,7 @@ if(${EMSCRIPTEN})
     set(CMAKE_CXX_LINK_FLAGS "-O3 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_SDL_TTF=2 -s TOTAL_MEMORY=32000000 --emrun --preload-file ../res -o index.html")
 else()
     include(FindPkgConfig)
-    pkg_check_modules(SDL2 REQUIRED sdl2 SDL2_image SDL2_ttf)
+    pkg_check_modules(SDL2 REQUIRED sdl2 SDL2_image SDL2_ttf SDL2_gfx)
 endif()
 
 include_directories(SYSTEM

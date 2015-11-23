@@ -36,6 +36,19 @@ glm::vec3 AABB::center() const {
         return glm::vec3(0);
 }
 
+std::array<glm::vec3, 8> AABB::vertices() const {
+    std::array<glm::vec3, 8> result;
+    result[0] = {m_min.x, m_min.y, m_min.z};
+    result[1] = {m_max.x, m_min.y, m_min.z};
+    result[2] = {m_min.x, m_max.y, m_min.z};
+    result[3] = {m_max.x, m_max.y, m_min.z};
+    result[4] = {m_min.x, m_min.y, m_max.z};
+    result[5] = {m_max.x, m_min.y, m_max.z};
+    result[6] = {m_min.x, m_max.y, m_max.z};
+    result[7] = {m_max.x, m_max.y, m_max.z};
+    return result;
+}
+
 void AABB::extend(glm::vec3 &point) {
     if (!is_null()) {
         m_min = glm::min(point, m_min);

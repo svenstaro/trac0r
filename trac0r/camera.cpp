@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtx/vector_angle.hpp>
+#include <glm/gtx/intersect.hpp>
+#include <glm/gtx/fast_square_root.hpp>
 
 #include <glm/gtx/string_cast.hpp>
 #include <cppformat/format.h>
@@ -128,12 +130,36 @@ glm::vec3 Camera::camspace_to_worldspace(glm::vec2 rel_pos) const {
 
 glm::vec2 Camera::worldspace_to_camspace(glm::vec3 world_pos_on_canvas) const {
     auto canvas_center_to_point = world_pos_on_canvas - canvas_center_pos();
-    auto angle1 = glm::orientedAngle(glm::normalize(canvas_center_to_point), right(), world_up());
+    // auto angle1 = glm::abs(glm::orientedAngle(glm::normalize(canvas_center_to_point), right(), world_up()));
+    auto a = canvas_center_to_point;
+    auto b = right();
+    auto c = glm::cross(a, b);
+    auto angle1 = glm::atan(glm::length(c), glm::dot(a, b));
+    angle1 = glm::dot(c, world_up()) < 0.f ? -angle1 : angle1;
+    if (angle1 < 0)
+        angle1 += 2 * glm::pi<float>();
+    // fmt::print("{}\n", glm::to_string(glm::normalize(canvas_center_to_point)));
     auto angle2 = glm::pi<float>() - (glm::half_pi<float>() + angle1);
-    auto x = glm::sin(angle2) * glm::length(canvas_center_to_point);
-    auto y = glm::sin(angle1) * glm::length(canvas_center_to_point);
+    auto length = glm::length(canvas_center_to_point);
+    auto x = glm::sin(angle2) * length;
+    auto y = glm::sin(angle1) * length;
     auto rel_x = -(2 * x) / canvas_width();
     auto rel_y = -(2 * y) / canvas_height();
     return {rel_x, -rel_y};
+}
+
+glm::vec3 Camera::worldpoint_to_worldspace(glm::vec3 world_point) const {
+    // auto far_right_on_canvas = camspace_to_worldspace({1.f, 0.f});
+    // auto far_top_on_canvas = camspace_to_worldspace({0.f, 1.f});
+    // auto max_distance_x = glm::length(far_right_on_canvas - pos());
+    // auto max_distance_y = glm::length(far_top_on_canvas - pos());
+    auto ray_to_cam = pos() - world_point;
+    float dist = 0;
+    bool collided = glm::intersectRayPlane(world_point, glm::normalize(ray_to_cam), canvas_center_pos(), dir(), dist);
+    if (collided) {
+        return world_point + glm::normalize(ray_to_cam) * dist;
+    } else {
+        return glm::vec3(0);
+    }
 }
 }

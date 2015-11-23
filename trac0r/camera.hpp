@@ -81,6 +81,17 @@ class Camera {
      */
     glm::vec2 worldspace_to_camspace(glm::vec3 world_pos) const;
 
+    /**
+     * @brief Converts a position in the world to a position on the camera's canvas (but still in world space).
+     * You then have to use worldspace_to_camspace() and then camspace_to_screenspace() to find out which pixel
+     * a world point falls into.
+     *
+     * @param world_point The world point in world space.
+     *
+     * @return A world space coordinate on the camera's canvas.
+     */
+    glm::vec3 worldpoint_to_worldspace(glm::vec3 world_point) const;
+
   private:
     glm::vec3 m_pos;
     glm::vec3 m_dir;
