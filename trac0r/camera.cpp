@@ -131,22 +131,17 @@ glm::vec3 Camera::camspace_to_worldspace(glm::vec2 rel_pos) const {
 glm::vec2 Camera::worldspace_to_camspace(glm::vec3 world_pos_on_canvas) const {
     auto canvas_center_to_point = world_pos_on_canvas - canvas_center_pos();
 
+    // Manually calculate angle between the positive y-axis on the canvas and the world point
     auto ay = canvas_center_to_point;
     auto by = up();
     auto cy = glm::cross(ay, by);
     auto angle1y = glm::atan(glm::dot(ay, by), glm::length(cy));
-    // angle1y = glm::dot(cy, up()) < 0.f ? -angle1y : angle1y;
-    // if (angle1y < 0)
-    //     angle1y += 2 * glm::pi<float>();
-    fmt::print("{}\n", glm::to_string(glm::normalize(canvas_center_to_point)));
 
+    // Manually calculate angle between the positive x-axis on the canvas and the world point
     auto ax = canvas_center_to_point;
     auto bx = right();
     auto cx = glm::cross(ax, bx);
     auto angle1x = glm::atan(glm::length(cx), glm::dot(ax, bx));
-    angle1x = glm::dot(cx, world_up()) < 0.f ? -angle1x : angle1x;
-    if (angle1x < 0)
-        angle1x += 2 * glm::pi<float>();
 
     auto angle2x = glm::pi<float>() - (glm::half_pi<float>() + angle1x);
     auto length = glm::length(canvas_center_to_point);
