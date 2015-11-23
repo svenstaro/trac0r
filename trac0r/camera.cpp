@@ -130,19 +130,28 @@ glm::vec3 Camera::camspace_to_worldspace(glm::vec2 rel_pos) const {
 
 glm::vec2 Camera::worldspace_to_camspace(glm::vec3 world_pos_on_canvas) const {
     auto canvas_center_to_point = world_pos_on_canvas - canvas_center_pos();
-    // auto angle1 = glm::abs(glm::orientedAngle(glm::normalize(canvas_center_to_point), right(), world_up()));
-    auto a = canvas_center_to_point;
-    auto b = right();
-    auto c = glm::cross(a, b);
-    auto angle1 = glm::atan(glm::length(c), glm::dot(a, b));
-    angle1 = glm::dot(c, world_up()) < 0.f ? -angle1 : angle1;
-    if (angle1 < 0)
-        angle1 += 2 * glm::pi<float>();
-    // fmt::print("{}\n", glm::to_string(glm::normalize(canvas_center_to_point)));
-    auto angle2 = glm::pi<float>() - (glm::half_pi<float>() + angle1);
+
+    auto ay = canvas_center_to_point;
+    auto by = up();
+    auto cy = glm::cross(ay, by);
+    auto angle1y = glm::atan(glm::dot(ay, by), glm::length(cy));
+    // angle1y = glm::dot(cy, up()) < 0.f ? -angle1y : angle1y;
+    // if (angle1y < 0)
+    //     angle1y += 2 * glm::pi<float>();
+    fmt::print("{}\n", glm::to_string(glm::normalize(canvas_center_to_point)));
+
+    auto ax = canvas_center_to_point;
+    auto bx = right();
+    auto cx = glm::cross(ax, bx);
+    auto angle1x = glm::atan(glm::length(cx), glm::dot(ax, bx));
+    angle1x = glm::dot(cx, world_up()) < 0.f ? -angle1x : angle1x;
+    if (angle1x < 0)
+        angle1x += 2 * glm::pi<float>();
+
+    auto angle2x = glm::pi<float>() - (glm::half_pi<float>() + angle1x);
     auto length = glm::length(canvas_center_to_point);
-    auto x = glm::sin(angle2) * length;
-    auto y = glm::sin(angle1) * length;
+    auto x = glm::sin(angle2x) * length;
+    auto y = glm::sin(angle1y) * length;
     auto rel_x = -(2 * x) / canvas_width();
     auto rel_y = -(2 * y) / canvas_height();
     return {rel_x, -rel_y};
