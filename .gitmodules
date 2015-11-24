@@ -6,4 +6,4 @@
 	url = https://github.com/g-truc/glm.git
 [submodule "external/sdl2_gfx"]
 	path = external/sdl2_gfx
-	url = git@github.com:svn2github/sdl2_gfx.git
+	url = https://github.com/svn2github/sdl2_gfx.git
