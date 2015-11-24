@@ -5,7 +5,7 @@ include(ExternalProject)
 set(trac0r_flags -O2 -g -Wall -Wextra -pedantic -Werror -std=c++14 -Wno-unused-parameter)
 #set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -flto")
 
-set(cppformat_src external/cppformat/format.cc)
+file(GLOB cppformat_src external/cppformat/*.cc)
 add_library(cppformat ${cppformat_src})
 
 file(GLOB sdl2_gfx_src external/sdl2_gfx/*.c)
@@ -29,7 +29,6 @@ if(${BENCHMARK})
 endif()
 
 if(${EMSCRIPTEN})
-    # TODO CMake modernize to newer commands (cmake 3.0)
     set(CROSS_COMPILING ON)
     add_definitions("-O3 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_SDL_TTF=2")
     set(CMAKE_CXX_LINK_FLAGS "-O3 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_SDL_TTF=2 -s TOTAL_MEMORY=32000000 --emrun --preload-file ../res -o index.html")
@@ -46,9 +45,7 @@ include_directories(SYSTEM
     ${CMAKE_SOURCE_DIR}
 )
 
-target_link_libraries(trac0r_library
-    cppformat
-)
+target_link_libraries(trac0r_library cppformat)
 
 target_link_libraries(trac0r_viewer
     trac0r_library
