@@ -332,21 +332,38 @@ void Viewer::mainloop() {
         trac0r::render_text(m_render, mouse_pos_relative_tex, 10, 145);
         trac0r::render_text(m_render, mouse_pos_canvas_tex, 10, 160);
 
-        // boxColor(m_render, 0, 0, 300, 200, 0xFFFFFFFF);
-        // filledCircleRGBA(m_render, 150, 100, 10, 255, 255, 0, 255);
-        // circleColor(m_render, 200, 200, 100, 0x0000FF00);
-        // aalineColor(m_render, 0, 0, 300, 200, 0xFFFF00FF);
-
         // Let's draw some debug to the display (such as AABBs)
         if (m_debug) {
             for (auto &shape : m_scene.accel()->shapes()) {
-                for (auto &vertex : shape.aabb().vertices()) {
-                    auto ws = m_camera.worldpoint_to_worldspace(vertex);
-                    if (ws != glm::vec3(0)) {
-                        auto cs = m_camera.worldspace_to_camspace(ws);
-                        auto ss = m_camera.camspace_to_screenspace(cs);
-                        filledCircleRGBA(m_render, ss.x, ss.y, 5, 0, 0, 255, 255);
-                        // TODO Draw actual lines here
+                auto verts = shape.aabb().vertices();
+                std::array<glm::i8vec2, 12> pairs;
+                pairs[0] = {0, 1};
+                pairs[1] = {1, 3};
+                pairs[2] = {2, 3};
+                pairs[3] = {0, 2};
+                pairs[4] = {4, 5};
+                pairs[5] = {5, 7};
+                pairs[6] = {6, 7};
+                pairs[7] = {4, 6};
+                pairs[8] = {0, 4};
+                pairs[9] = {1, 5};
+                pairs[10] = {2, 6};
+                pairs[11] = {3, 7};
+                for (auto pair : pairs) {
+                    auto ws1 = m_camera.worldpoint_to_worldspace(verts[pair[0]]);
+                    auto ss1 = glm::i32vec2(0);
+                    if (ws1 != glm::vec3(0)) {
+                        auto cs1 = m_camera.worldspace_to_camspace(ws1);
+                        ss1 = m_camera.camspace_to_screenspace(cs1);
+                    }
+                    auto ws2 = m_camera.worldpoint_to_worldspace(verts[pair[1]]);
+                    auto ss2 = glm::i32vec2(0);
+                    if (ws2 != glm::vec3(0)) {
+                        auto cs2 = m_camera.worldspace_to_camspace(ws2);
+                        ss2 = m_camera.camspace_to_screenspace(cs2);
+                    }
+                    if (ss1 != glm::i32vec2(0) && ss2 != glm::i32vec2(0)) {
+                        aalineRGBA(m_render, ss1.x, ss1.y, ss2.x, ss2.y, 255, 255, 0, 200);
                     }
                 }
             }
