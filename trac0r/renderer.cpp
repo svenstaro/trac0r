@@ -20,7 +20,7 @@ glm::vec4 Renderer::trace_pixel_color(unsigned x, unsigned y) const {
 
     glm::vec3 ret_color{0};
     Ray next_ray{world_pos, ray_dir};
-    glm::vec3 factor{1};
+    glm::vec3 brdf{1};
     for (auto depth = 0; depth < m_max_depth; depth++) {
         auto intersect_info = m_scene.intersect(next_ray);
         if (intersect_info.m_has_intersected) {
@@ -54,12 +54,10 @@ glm::vec4 Renderer::trace_pixel_color(unsigned x, unsigned y) const {
             new_ray_dir = glm::rotate(normal, glm::linearRand(-half_pi, half_pi),
                                       glm::cross(normal, intersect_info.m_incoming_ray.m_dir));
             new_ray_dir = glm::rotate(new_ray_dir, glm::linearRand(-pi, pi), normal);
-            // float cos_theta = glm::dot(new_ray_dir, normal);
-            // glm::vec3 brdf = 2.f * intersect_info.m_material.m_reflectance * cos_theta;
+            float cos_theta = glm::dot(new_ray_dir, normal);
 
-            ret_color += factor * local_radiance;
-            // factor *= 2.f * intersect_info.m_material.m_reflectance * cos_theta;
-            factor *= intersect_info.m_material.m_reflectance;
+            ret_color += brdf * local_radiance;
+            brdf *= 2.f * intersect_info.m_material.m_reflectance * cos_theta;
 
             // Make a new ray
             next_ray = Ray{intersect_info.m_pos, new_ray_dir};

@@ -83,17 +83,18 @@ int Viewer::init() {
 }
 
 void Viewer::setup_scene(int screen_width, int screen_height) {
+    Material default_material{{0.2f, 0.2f, 0.2f}, {0, 0, 0}};
     auto wall_left =
-        trac0r::Shape::make_plane({-0.5f, 0.4f, 0}, {1, 0, 0}, {1, 1}, {{0, 0, 0}, {1, 0, 0}});
+        trac0r::Shape::make_plane({-0.5f, 0.4f, 0}, {1, 0, 0}, {1, 1}, {{1, 0, 0}, {0, 0, 0}});
     auto wall_right =
-        trac0r::Shape::make_plane({0.5f, 0.4f, 0}, {-1, 0, 0}, {1, 1}, {{0, 0, 0}, {0, 1, 0}});
-    auto wall_back = trac0r::Shape::make_plane({0, 0.4f, 0.5}, {0, 0, 1}, {1, 1}, {{0, 0, 0}, {0.2f, 0.2f, 0.2f}});
-    auto wall_top = trac0r::Shape::make_plane({0, 0.9f, 0}, {0, 1, 0}, {1, 1}, {{0, 0, 0}, {0.2f, 0.2f, 0.2f}});
-    auto wall_bottom = trac0r::Shape::make_plane({0, -0.1f, 0}, {0, 1, 0}, {1, 1}, {{0, 0, 0}, {0.2f, 0.2f, 0.2f}});
+        trac0r::Shape::make_plane({0.5f, 0.4f, 0}, {-1, 0, 0}, {1, 1}, {{0, 1, 0}, {0, 0, 0}});
+    auto wall_back = trac0r::Shape::make_plane({0, 0.4f, 0.5}, {0, 0, 1}, {1, 1}, default_material);
+    auto wall_top = trac0r::Shape::make_plane({0, 0.9f, 0}, {0, 1, 0}, {1, 1}, default_material);
+    auto wall_bottom = trac0r::Shape::make_plane({0, -0.1f, 0}, {0, 1, 0}, {1, 1}, default_material);
     auto lamp =
         trac0r::Shape::make_plane({0, 0.85f, -0.1}, {0, 1, 0}, {0.8, 0.8}, {{3, 3, 3}, {1, 1, 1}});
-    auto box1 = trac0r::Shape::make_box({0.2f, 0.1f, 0}, {0.3, 0.1, 0.5}, {0.2f, 0.5f, 0.2f}, {{0, 0, 0}, {0.2f, 0.2f, 0.2f}});
-    auto box2 = trac0r::Shape::make_box({-0.2f, 0.05f, 0}, {0.3, -0.4, -0.9}, {0.3f, 0.4f, 0.3f}, {{0, 0, 0}, {0.2f, 0.2f, 0.2f}});
+    auto box1 = trac0r::Shape::make_box({0.2f, 0.1f, 0}, {0.3, 0.1, 0.5}, {0.2f, 0.5f, 0.2f}, default_material);
+    auto box2 = trac0r::Shape::make_box({-0.2f, 0.05f, 0}, {0.3, -0.4, -0.9}, {0.3f, 0.4f, 0.3f}, default_material);
 
     m_scene.add_shape(wall_left);
     m_scene.add_shape(wall_right);
