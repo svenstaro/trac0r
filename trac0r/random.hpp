@@ -26,9 +26,9 @@ inline int64_t xorshift1024star(uint64_t &p, std::array<uint64_t, 16> &s) {
     return (s[p] = s0 ^ s1) * 1181783497276652981LL;
 }
 
-class prng {
+class PRNG {
   public:
-    prng() {
+    PRNG() {
         // Generate an initial seed based on time
         auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
         auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
@@ -49,13 +49,13 @@ class prng {
 
 template <typename T>
 std::enable_if_t<std::is_integral<T>::value, T> inline rand_range(const T min, const T max) {
-    static thread_local prng generator;
+    static thread_local PRNG generator;
     return generator.next() % max + min;
 }
 
 template <typename T>
 std::enable_if_t<std::is_floating_point<T>::value, T> inline rand_range(const T min, const T max) {
-    static thread_local prng generator;
+    static thread_local PRNG generator;
     return min +
            static_cast<T>(generator.next()) /
                (static_cast<T>(std::numeric_limits<uint64_t>::max() / (max - min)));
