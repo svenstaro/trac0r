@@ -145,7 +145,7 @@ inline bool intersect_ray_triangle(const Ray &ray, const Triangle &triangle, flo
     auto t = glm::dot(e1, qvec) * inv_det;
 
     if (t > epsilon) {
-        dist = t;
+        dist = t - epsilon;
         return true;
     }
 
