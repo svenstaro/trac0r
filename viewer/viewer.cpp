@@ -250,6 +250,7 @@ void Viewer::mainloop() {
         fmt::print("    {:<15} {:=10.3f} ms\n", "Scene rebuild", timer.elapsed());
 
     m_samples_accumulated += 1;
+#pragma omp parallel for collapse(2) schedule(dynamic, 1024)
     for (auto x = 0; x < width; x += m_x_stride) {
         for (auto y = 0; y < height; y += m_y_stride) {
             glm::vec4 new_color = m_renderer->trace_pixel_color(x, y);
