@@ -7,6 +7,8 @@
 #include <glm/gtx/normal.hpp>
 
 struct Triangle {
+    Triangle() {}
+
     Triangle(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, Material material)
         : m_v1(v1), m_v2(v2), m_v3(v3), m_material(material) {
         rebuild();
