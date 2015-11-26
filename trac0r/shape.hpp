@@ -3,6 +3,7 @@
 
 #include "aabb.hpp"
 #include "triangle.hpp"
+#include "material.hpp"
 
 #include <memory>
 #include <vector>
@@ -27,13 +28,9 @@ class Shape {
 
     void add_triangle(const Triangle triangle);
 
-    static Shape make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size,
-                          glm::vec3 reflectance = {0, 0, 0},
-                          glm::vec3 emittance = {0.3f, 0.3f, 0.3f});
+    static Shape make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size, Material material);
 
-    static Shape make_plane(glm::vec3 pos, glm::vec3 orientation, glm::vec2 size,
-                            glm::vec3 reflectance = {0, 0, 0},
-                            glm::vec3 emittance = {0.2f, 0.2f, 0.2f});
+    static Shape make_plane(glm::vec3 pos, glm::vec3 orientation, glm::vec2 size, Material material);
 
   protected:
     glm::vec3 m_pos;

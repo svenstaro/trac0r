@@ -9,7 +9,7 @@ namespace trac0r {
 class Renderer {
   public:
     Renderer(const Camera &camera, const Scene &scene);
-    glm::vec4 get_color(unsigned x, unsigned y) const;
+    glm::vec4 trace_pixel_color(unsigned x, unsigned y) const;
 
   private:
     int m_max_depth = 5;

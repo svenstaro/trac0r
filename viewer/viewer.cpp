@@ -84,16 +84,16 @@ int Viewer::init() {
 
 void Viewer::setup_scene(int screen_width, int screen_height) {
     auto wall_left =
-        trac0r::Shape::make_plane({-0.5f, 0.4f, 0}, {1, 0, 0}, {1, 1}, {0, 0, 0}, {1, 0, 0});
+        trac0r::Shape::make_plane({-0.5f, 0.4f, 0}, {1, 0, 0}, {1, 1}, {{0, 0, 0}, {1, 0, 0}});
     auto wall_right =
-        trac0r::Shape::make_plane({0.5f, 0.4f, 0}, {-1, 0, 0}, {1, 1}, {0, 0, 0}, {0, 1, 0});
-    auto wall_back = trac0r::Shape::make_plane({0, 0.4f, 0.5}, {0, 0, 1}, {1, 1});
-    auto wall_top = trac0r::Shape::make_plane({0, 0.9f, 0}, {0, 1, 0}, {1, 1});
-    auto wall_bottom = trac0r::Shape::make_plane({0, -0.1f, 0}, {0, 1, 0}, {1, 1});
+        trac0r::Shape::make_plane({0.5f, 0.4f, 0}, {-1, 0, 0}, {1, 1}, {{0, 0, 0}, {0, 1, 0}});
+    auto wall_back = trac0r::Shape::make_plane({0, 0.4f, 0.5}, {0, 0, 1}, {1, 1}, {{0, 0, 0}, {0.2f, 0.2f, 0.2f}});
+    auto wall_top = trac0r::Shape::make_plane({0, 0.9f, 0}, {0, 1, 0}, {1, 1}, {{0, 0, 0}, {0.2f, 0.2f, 0.2f}});
+    auto wall_bottom = trac0r::Shape::make_plane({0, -0.1f, 0}, {0, 1, 0}, {1, 1}, {{0, 0, 0}, {0.2f, 0.2f, 0.2f}});
     auto lamp =
-        trac0r::Shape::make_plane({0, 0.85f, -0.1}, {0, 1, 0}, {0.8, 0.8}, {3, 3, 3}, {1, 1, 1});
-    auto box1 = trac0r::Shape::make_box({0.2f, 0.1f, 0}, {0.3, 0.1, 0.5}, {0.2f, 0.5f, 0.2f});
-    auto box2 = trac0r::Shape::make_box({-0.2f, 0.05f, 0}, {0.3, -0.4, -0.9}, {0.3f, 0.4f, 0.3f});
+        trac0r::Shape::make_plane({0, 0.85f, -0.1}, {0, 1, 0}, {0.8, 0.8}, {{3, 3, 3}, {1, 1, 1}});
+    auto box1 = trac0r::Shape::make_box({0.2f, 0.1f, 0}, {0.3, 0.1, 0.5}, {0.2f, 0.5f, 0.2f}, {{0, 0, 0}, {0.2f, 0.2f, 0.2f}});
+    auto box2 = trac0r::Shape::make_box({-0.2f, 0.05f, 0}, {0.3, -0.4, -0.9}, {0.3f, 0.4f, 0.3f}, {{0, 0, 0}, {0.2f, 0.2f, 0.2f}});
 
     m_scene.add_shape(wall_left);
     m_scene.add_shape(wall_right);
@@ -251,7 +251,7 @@ void Viewer::mainloop() {
     m_samples_accumulated += 1;
     for (auto x = 0; x < width; x += m_x_stride) {
         for (auto y = 0; y < height; y += m_y_stride) {
-            glm::vec4 new_color = m_renderer->get_color(x, y);
+            glm::vec4 new_color = m_renderer->trace_pixel_color(x, y);
 
             glm::vec4 old_color = trac0r::unpack_color_argb_to_vec4(m_pixels[y * width + x]);
             new_color = (old_color * float(m_samples_accumulated - 1) + new_color) /

@@ -1,12 +1,14 @@
 #ifndef TRIANGLE_HPP
 #define TRIANGLE_HPP
 
+#include "material.hpp"
+
 #include <glm/glm.hpp>
 #include <glm/gtx/normal.hpp>
 
 struct Triangle {
-    Triangle(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 emittance, glm::vec3 reflectance)
-        : m_v1(v1), m_v2(v2), m_v3(v3), m_emittance(emittance), m_reflectance(reflectance) {
+    Triangle(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, Material material)
+        : m_v1(v1), m_v2(v2), m_v3(v3), m_material(material) {
         rebuild();
     }
 
@@ -30,8 +32,7 @@ struct Triangle {
     glm::vec3 m_v1;
     glm::vec3 m_v2;
     glm::vec3 m_v3;
-    glm::vec3 m_emittance;
-    glm::vec3 m_reflectance;
+    Material m_material;
     glm::vec3 m_normal;
     glm::vec3 m_centroid;
     float m_area;

@@ -44,8 +44,7 @@ void Shape::add_triangle(const Triangle triangle) {
     m_triangles.push_back(triangle);
 }
 
-Shape Shape::make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size,
-                                       glm::vec3 reflectance, glm::vec3 emittance) {
+Shape Shape::make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size, Material material) {
     Shape new_shape;
     new_shape.set_pos(pos);
     new_shape.set_orientation(glm::normalize(orientation));
@@ -61,28 +60,28 @@ Shape Shape::make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size,
     auto p8 = glm::vec3{0.5f, 0.5f, 0.5f};
 
     // front face
-    auto t1 = Triangle(p1, p2, p3, reflectance, emittance);
-    auto t2 = Triangle(p1, p4, p3, reflectance, emittance);
+    auto t1 = Triangle(p1, p2, p3, material);
+    auto t2 = Triangle(p1, p4, p3, material);
 
     // right face
-    auto t3 = Triangle(p3, p4, p8, reflectance, emittance);
-    auto t4 = Triangle(p3, p7, p8, reflectance, emittance);
+    auto t3 = Triangle(p3, p4, p8, material);
+    auto t4 = Triangle(p3, p7, p8, material);
 
     // left face
-    auto t5 = Triangle(p1, p2, p6, reflectance, emittance);
-    auto t6 = Triangle(p1, p5, p6, reflectance, emittance);
+    auto t5 = Triangle(p1, p2, p6, material);
+    auto t6 = Triangle(p1, p5, p6, material);
 
     // back face
-    auto t7 = Triangle(p5, p6, p8, reflectance, emittance);
-    auto t8 = Triangle(p6, p7, p8, reflectance, emittance);
+    auto t7 = Triangle(p5, p6, p8, material);
+    auto t8 = Triangle(p6, p7, p8, material);
 
     // top face
-    auto t9 = Triangle(p5, p1, p4, reflectance, emittance);
-    auto t10 = Triangle(p5, p8, p4, reflectance, emittance);
+    auto t9 = Triangle(p5, p1, p4, material);
+    auto t10 = Triangle(p5, p8, p4, material);
 
     // bottom face
-    auto t11 = Triangle(p6, p3, p2, reflectance, emittance);
-    auto t12 = Triangle(p3, p7, p6, reflectance, emittance);
+    auto t11 = Triangle(p6, p3, p2, material);
+    auto t12 = Triangle(p3, p7, p6, material);
 
     new_shape.add_triangle(t1);
     new_shape.add_triangle(t2);
@@ -114,8 +113,7 @@ Shape Shape::make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size,
     return new_shape;
 }
 
-Shape Shape::make_plane(glm::vec3 pos, glm::vec3 orientation, glm::vec2 size,
-                                         glm::vec3 reflectance, glm::vec3 emittance) {
+Shape Shape::make_plane(glm::vec3 pos, glm::vec3 orientation, glm::vec2 size, Material material) {
     Shape new_shape;
     new_shape.set_pos(pos);
     new_shape.set_orientation(glm::normalize(orientation));
@@ -126,8 +124,8 @@ Shape Shape::make_plane(glm::vec3 pos, glm::vec3 orientation, glm::vec2 size,
     auto p3 = glm::vec3{0.5f, 0, -0.5f};
     auto p4 = glm::vec3{0.5f, 0, 0.5f};
 
-    auto triangle_left = Triangle(p1, p2, p3, reflectance, emittance);
-    auto triangle_right = Triangle(p1, p4, p3, reflectance, emittance);
+    auto triangle_left = Triangle(p1, p2, p3, material);
+    auto triangle_right = Triangle(p1, p4, p3, material);
 
     new_shape.add_triangle(triangle_left);
     new_shape.add_triangle(triangle_right);

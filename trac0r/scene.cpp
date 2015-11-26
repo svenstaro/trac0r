@@ -19,8 +19,8 @@ void Scene::add_shape(Shape &shape) {
     m_accel->add_shape(shape);    
 }
 
-glm::vec3 Scene::intersect(const Ray &ray, int depth, int max_depth) const {
-    return m_accel->intersect(ray, depth, max_depth);
+IntersectionInfo Scene::intersect(const Ray &ray) const {
+    return m_accel->intersect(ray);
 }
 
 void Scene::rebuild(const Camera &camera) {

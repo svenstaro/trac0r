@@ -4,6 +4,7 @@
 #include "acceleration_structure.hpp"
 #include "triangle.hpp"
 #include "ray.hpp"
+#include "intersection_info.hpp"
 
 #include <glm/glm.hpp>
 
@@ -12,7 +13,7 @@ namespace trac0r {
 class FlatStructure final : public AccelerationStructure {
   public:
     ~FlatStructure() override;
-    glm::vec3 intersect(const Ray &ray, int depth, int max_depth) const override;
+    IntersectionInfo intersect(const Ray &ray) const override;
     void rebuild(const Camera &camera) override;
 
   private:
