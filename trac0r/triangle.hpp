@@ -6,8 +6,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/normal.hpp>
 
+namespace trac0r {
+
 struct Triangle {
-    Triangle() {}
+    Triangle() {
+    }
 
     Triangle(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, Material material)
         : m_v1(v1), m_v2(v2), m_v3(v3), m_material(material) {
@@ -39,5 +42,6 @@ struct Triangle {
     glm::vec3 m_centroid;
     float m_area;
 };
+}
 
 #endif /* end of include guard: TRIANGLE_HPP */

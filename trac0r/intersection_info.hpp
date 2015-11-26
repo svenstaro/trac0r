@@ -6,6 +6,8 @@
 
 #include <glm/glm.hpp>
 
+namespace trac0r {
+
 struct IntersectionInfo {
     /**
      * @brief Indicates whether an intersection was found.
@@ -32,5 +34,6 @@ struct IntersectionInfo {
      */
     Material m_material;
 };
+}
 
 #endif /* end of include guard: INTERSECTION_INFO_HPP */

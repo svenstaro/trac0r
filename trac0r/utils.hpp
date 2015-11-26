@@ -6,6 +6,7 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 
+#include <chrono>
 #include <cmath>
 #include <string>
 

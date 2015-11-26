@@ -83,7 +83,7 @@ int Viewer::init() {
 }
 
 void Viewer::setup_scene(int screen_width, int screen_height) {
-    Material default_material{{0.4f, 0.4f, 0.4f}, {0, 0, 0}};
+    trac0r::Material default_material{{0.4f, 0.4f, 0.4f}, {0, 0, 0}};
     auto wall_left =
         trac0r::Shape::make_plane({-0.5f, 0.4f, 0}, {1, 0, 0}, {1, 1}, {{1, 0, 0}, {0, 0, 0}});
     auto wall_right =

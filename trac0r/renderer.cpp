@@ -1,9 +1,9 @@
 #include "renderer.hpp"
 #include "ray.hpp"
+#include "random.hpp"
 
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/rotate_vector.hpp>
-#include <glm/gtc/random.hpp>
 
 #include "cppformat/format.h"
 #include <glm/gtx/string_cast.hpp>
@@ -51,9 +51,9 @@ glm::vec4 Renderer::trace_pixel_color(unsigned x, unsigned y) const {
             auto new_ray_dir = normal;
             auto half_pi = glm::half_pi<float>();
             auto pi = glm::pi<float>();
-            new_ray_dir = glm::rotate(normal, glm::linearRand(-half_pi, half_pi),
+            new_ray_dir = glm::rotate(normal, rand_range(-half_pi, half_pi),
                                       glm::cross(normal, intersect_info.m_incoming_ray.m_dir));
-            new_ray_dir = glm::rotate(new_ray_dir, glm::linearRand(-pi, pi), normal);
+            new_ray_dir = glm::rotate(new_ray_dir, rand_range(-pi, pi), normal);
             float cos_theta = glm::dot(new_ray_dir, normal);
 
             ret_color += brdf * local_radiance;
