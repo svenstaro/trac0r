@@ -38,6 +38,7 @@ if(${BENCHMARK})
 endif()
 
 if(${OPENCL})
+    find_package(OpenCL)
     add_definitions("-DOPENCL")
 endif()
 
@@ -48,7 +49,6 @@ if(${EMSCRIPTEN})
 else()
     include(FindPkgConfig)
     pkg_check_modules(SDL2 REQUIRED sdl2 SDL2_image SDL2_ttf)
-    find_package(OpenCL)
 endif()
 
 include_directories(SYSTEM
