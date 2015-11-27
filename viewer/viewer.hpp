@@ -51,6 +51,14 @@ class Viewer {
     SDL_Texture *m_render_tex;
     TTF_Font *m_font;
 
+    /**
+     * @brief We accumulate our "photons" into here for each pixel
+     */
+    std::vector<glm::vec4> m_intensities;
+
+    /**
+     * @brief This is where we put our normalized intensities
+     */
     std::vector<uint32_t> m_pixels;
 
     trac0r::Camera m_camera;

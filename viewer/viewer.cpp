@@ -53,6 +53,7 @@ int Viewer::init() {
     m_render_tex = SDL_CreateTexture(m_render, SDL_PIXELFORMAT_ARGB8888,
                                      SDL_TEXTUREACCESS_STREAMING, screen_width, screen_height);
     m_pixels.resize(screen_width * screen_height, 0);
+    m_intensities.resize(screen_width * screen_height, glm::vec4{0});
 
     if (m_render == nullptr) {
         SDL_DestroyWindow(m_window);
@@ -90,11 +91,14 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
         trac0r::Shape::make_plane({0.5f, 0.4f, 0}, {-1, 0, 0}, {1, 1}, {{0, 1, 0}, {0, 0, 0}});
     auto wall_back = trac0r::Shape::make_plane({0, 0.4f, 0.5}, {0, 0, 1}, {1, 1}, default_material);
     auto wall_top = trac0r::Shape::make_plane({0, 0.9f, 0}, {0, 1, 0}, {1, 1}, default_material);
-    auto wall_bottom = trac0r::Shape::make_plane({0, -0.1f, 0}, {0, 1, 0}, {1, 1}, default_material);
+    auto wall_bottom =
+        trac0r::Shape::make_plane({0, -0.1f, 0}, {0, 1, 0}, {1, 1}, default_material);
     auto lamp =
         trac0r::Shape::make_plane({0, 0.85f, -0.1}, {0, 1, 0}, {0.8, 0.8}, {{3, 3, 3}, {1, 1, 1}});
-    auto box1 = trac0r::Shape::make_box({0.2f, 0.1f, 0}, {0.3, 0.1, 0.5}, {0.2f, 0.5f, 0.2f}, default_material);
-    auto box2 = trac0r::Shape::make_box({-0.2f, 0.05f, 0}, {0.3, -0.4, -0.9}, {0.3f, 0.4f, 0.3f}, default_material);
+    auto box1 = trac0r::Shape::make_box({0.2f, 0.1f, 0}, {0.3, 0.1, 0.5}, {0.2f, 0.5f, 0.2f},
+                                        default_material);
+    auto box2 = trac0r::Shape::make_box({-0.2f, 0.05f, 0}, {0.3, -0.4, -0.9}, {0.3f, 0.4f, 0.3f},
+                                        default_material);
 
     m_scene.add_shape(wall_left);
     m_scene.add_shape(wall_right);
@@ -254,24 +258,30 @@ void Viewer::mainloop() {
     for (auto x = 0; x < width; x += m_x_stride) {
         for (auto y = 0; y < height; y += m_y_stride) {
             glm::vec4 new_color = m_renderer->trace_pixel_color(x, y);
+            m_intensities[y * width + x] += new_color;
+        }
+    }
 
-            glm::vec4 old_color = trac0r::unpack_color_argb_to_vec4(m_pixels[y * width + x]);
-            new_color = (old_color * float(m_samples_accumulated - 1) + new_color) /
-                        float(m_samples_accumulated);
+    if (m_print_perf)
+        fmt::print("    {:<15} {:>10.3f} ms\n", "Path tracing", timer.elapsed());
 
-            // This striding is just for speeding up
-            // We're basically drawing really big pixels here
-            uint32_t packed_color = trac0r::pack_color_argb(new_color);
+    // This striding is just for speeding up
+    // We're basically drawing really big pixels here
+#pragma omp parallel for collapse(2) schedule(dynamic, 1024)
+    for (auto x = 0; x < width; x += m_x_stride) {
+        for (auto y = 0; y < height; y += m_y_stride) {
             for (auto u = 0; u < m_x_stride; u++) {
                 for (auto v = 0; v < m_y_stride; v++) {
-                    m_pixels[(y + v) * width + (x + u)] = packed_color;
+                    glm::vec4 color =
+                        m_intensities[(y * width + x)] / static_cast<float>(m_samples_accumulated);
+                    m_pixels[(y + v) * width + (x + u)] = trac0r::pack_color_argb(color);
                 }
             }
         }
     }
 
     if (m_print_perf)
-        fmt::print("    {:<15} {:>10.3f} ms\n", "Path tracing", timer.elapsed());
+        fmt::print("    {:<15} {:>10.3f} ms\n", "Pixel transfer", timer.elapsed());
 
     SDL_RenderClear(m_render);
     SDL_UpdateTexture(m_render_tex, 0, m_pixels.data(), width * sizeof(uint32_t));
