@@ -93,8 +93,8 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
     auto wall_top = trac0r::Shape::make_plane({0, 0.9f, 0}, {0, 1, 0}, {1, 1}, default_material);
     auto wall_bottom =
         trac0r::Shape::make_plane({0, -0.1f, 0}, {0, 1, 0}, {1, 1}, default_material);
-    auto lamp =
-        trac0r::Shape::make_plane({0, 0.85f, -0.1}, {0, 1, 0}, {0.2, 0.2}, {{0, 0, 0}, {20, 20, 20}});
+    auto lamp = trac0r::Shape::make_plane({0, 0.85f, -0.1}, {0, 1, 0}, {0.2, 0.2},
+                                          {{0, 0, 0}, {20, 20, 20}});
     auto box1 = trac0r::Shape::make_box({0.2f, 0.1f, 0}, {0.3, 0.1, 0.5}, {0.2f, 0.5f, 0.2f},
                                         default_material);
     auto box2 = trac0r::Shape::make_box({-0.2f, 0.05f, 0}, {0.3, -0.4, -0.9}, {0.3f, 0.4f, 0.3f},
@@ -272,12 +272,13 @@ void Viewer::mainloop() {
     if (m_print_perf)
         fmt::print("    {:<15} {:>10.3f} ms\n", "Path tracing", timer.elapsed());
 
-    // This striding is just for speeding up
-    // We're basically drawing really big pixels here
+// This striding is just for speeding up
+// We're basically drawing really big pixels here
 #pragma omp parallel for collapse(2) schedule(dynamic, 1024)
     for (auto x = 0; x < width; x += m_x_stride) {
         for (auto y = 0; y < height; y += m_y_stride) {
-            glm::vec4 color = m_intensities[y * width + x] / static_cast<float>(m_samples_accumulated);
+            glm::vec4 color =
+                m_intensities[y * width + x] / static_cast<float>(m_samples_accumulated);
             for (auto u = 0; u < m_x_stride; u++) {
                 for (auto v = 0; v < m_y_stride; v++) {
                     m_pixels[(y + v) * width + (x + u)] = trac0r::pack_color_argb(color);
