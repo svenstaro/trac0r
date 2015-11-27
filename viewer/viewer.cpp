@@ -84,7 +84,7 @@ int Viewer::init() {
 }
 
 void Viewer::setup_scene(int screen_width, int screen_height) {
-    trac0r::Material default_material{{0.4f, 0.4f, 0.4f}, {0, 0, 0}};
+    trac0r::Material default_material{{0.5f, 0.5f, 0.5f}, {0, 0, 0}};
     auto wall_left =
         trac0r::Shape::make_plane({-0.5f, 0.4f, 0}, {1, 0, 0}, {1, 1}, {{1, 0, 0}, {0, 0, 0}});
     auto wall_right =
@@ -153,14 +153,17 @@ void Viewer::mainloop() {
             if (e.key.keysym.sym == SDLK_1) {
                 m_x_stride = 1;
                 m_y_stride = 1;
+                m_scene_changed = true;
             }
             if (e.key.keysym.sym == SDLK_2) {
                 m_x_stride = 2;
                 m_y_stride = 2;
+                m_scene_changed = true;
             }
             if (e.key.keysym.sym == SDLK_3) {
                 m_x_stride = 4;
                 m_y_stride = 4;
+                m_scene_changed = true;
             }
         }
 
@@ -257,12 +260,13 @@ void Viewer::mainloop() {
     for (auto x = 0; x < width; x += m_x_stride) {
         for (auto y = 0; y < height; y += m_y_stride) {
             glm::vec4 new_color = m_renderer->trace_pixel_color(x, y);
-            if (m_samples_accumulated == 0)
+            if (m_scene_changed)
                 m_intensities[y * width + x] = new_color;
             else
                 m_intensities[y * width + x] += new_color;
         }
     }
+
     m_samples_accumulated += 1;
 
     if (m_print_perf)
@@ -273,10 +277,9 @@ void Viewer::mainloop() {
 #pragma omp parallel for collapse(2) schedule(dynamic, 1024)
     for (auto x = 0; x < width; x += m_x_stride) {
         for (auto y = 0; y < height; y += m_y_stride) {
+            glm::vec4 color = m_intensities[y * width + x] / static_cast<float>(m_samples_accumulated);
             for (auto u = 0; u < m_x_stride; u++) {
                 for (auto v = 0; v < m_y_stride; v++) {
-                    glm::vec4 color =
-                        m_intensities[(y * width + x)] / static_cast<float>(m_samples_accumulated);
                     m_pixels[(y + v) * width + (x + u)] = trac0r::pack_color_argb(color);
                 }
             }
