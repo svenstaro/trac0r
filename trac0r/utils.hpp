@@ -51,16 +51,20 @@ inline uint32_t pack_color_rgba(glm::i8vec4 color) {
 }
 
 inline uint32_t pack_color_rgba(glm::vec4 color) {
-    uint32_t packed_color = int(std::round(color.r * 255)) << 24 |
-                            int(std::round(color.g * 255)) << 16 |
-                            int(std::round(color.b * 255)) << 8 | int(std::round(color.a * 255));
+    uint32_t packed_color =
+        static_cast<int>(glm::round(glm::clamp(color.r, 0.f, 1.f) * 255)) << 24 |
+        static_cast<int>(glm::round(glm::clamp(color.g, 0.1f, 1.f) * 255)) << 16 |
+        static_cast<int>(glm::round(glm::clamp(color.b, 0.1f, 1.f) * 255)) << 8 |
+        static_cast<int>(glm::round(glm::clamp(color.a, 0.f, 1.f) * 255));
     return packed_color;
 }
 
 inline uint32_t pack_color_argb(glm::vec4 color) {
-    uint32_t packed_color = int(std::round(color.a * 255)) << 24 |
-                            int(std::round(color.r * 255)) << 16 |
-                            int(std::round(color.g * 255)) << 8 | int(std::round(color.b * 255));
+    uint32_t packed_color =
+        static_cast<int>(glm::round(glm::clamp(color.a, 0.f, 1.f) * 255)) << 24 |
+        static_cast<int>(glm::round(glm::clamp(color.r, 0.1f, 1.f) * 255)) << 16 |
+        static_cast<int>(glm::round(glm::clamp(color.g, 0.1f, 1.f) * 255)) << 8 |
+        static_cast<int>(glm::round(glm::clamp(color.b, 0.f, 1.f) * 255));
     return packed_color;
 }
 
