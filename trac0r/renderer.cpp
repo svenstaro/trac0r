@@ -10,7 +10,17 @@
 
 namespace trac0r {
 
-Renderer::Renderer(const Camera &camera, const Scene &scene) : m_camera(camera), m_scene(scene) {
+Renderer::Renderer(const int width, const int height, const Camera &camera, const Scene &scene)
+    : m_width(width), m_height(height), m_camera(camera), m_scene(scene) {
+    m_luminance.resize(width * height, glm::vec4{0});
+
+#ifdef OPENCL
+    auto devices = boost::compute::system::devices();
+    m_compute_context = boost::compute::context(devices);
+    for (auto &device : devices) {
+        m_compute_queues.emplace_back(boost::compute::command_queue(m_compute_context, device));
+    }
+#endif
 }
 
 glm::vec4 Renderer::trace_pixel_color(unsigned x, unsigned y) const {
@@ -61,12 +71,27 @@ glm::vec4 Renderer::trace_pixel_color(unsigned x, unsigned y) const {
 
             // Make a new ray
             next_ray = Ray{intersect_info.m_pos, new_ray_dir};
-            
+
         } else {
             break;
         }
     }
 
     return glm::vec4(ret_color, 1.f);
+}
+
+std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int stride_y) {
+#pragma omp parallel for collapse(2) schedule(dynamic, 1024)
+    for (auto x = 0; x < m_width; x += stride_x) {
+        for (auto y = 0; y < m_height; y += stride_y) {
+            glm::vec4 new_color = trace_pixel_color(x, y);
+            if (scene_changed)
+                m_luminance[y * m_width + x] = new_color;
+            else
+                m_luminance[y * m_width + x] += new_color;
+        }
+    }
+
+    return m_luminance;
 }
 }

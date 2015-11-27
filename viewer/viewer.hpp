@@ -28,7 +28,7 @@ class Viewer {
     SDL_Window *window();
 
     // Put this stuff somewhere else
-    void setup_scene(int width, int height);
+    void setup_scene();
 
   private:
     bool m_scene_changed = false;
@@ -39,22 +39,20 @@ class Viewer {
     int m_last_frame_time = 0;
     bool m_debug = false;
     bool m_print_perf = true;
-    int m_x_stride = 1;
-    int m_y_stride = 1;
+    int m_stride_x = 1;
+    int m_stride_y = 1;
     int m_frame = 0;
+    int m_screen_width = 600;
+    int m_screen_height = 400;
+
 #ifdef BENCHMARK
-    int m_max_frames = 10; // run indefinintely
+    int m_max_frames = 10;
 #endif
 
     SDL_Renderer *m_render;
     SDL_Window *m_window;
     SDL_Texture *m_render_tex;
     TTF_Font *m_font;
-
-    /**
-     * @brief We accumulate our "photons" into here for each pixel
-     */
-    std::vector<glm::vec4> m_intensities;
 
     /**
      * @brief This is where we put our normalized intensities

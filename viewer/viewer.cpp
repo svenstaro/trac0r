@@ -40,10 +40,7 @@ int Viewer::init() {
         return 1;
     }
 
-    int screen_width = 600;
-    int screen_height = 400;
-
-    m_window = SDL_CreateWindow("trac0r", 100, 100, screen_width, screen_height, SDL_WINDOW_SHOWN);
+    m_window = SDL_CreateWindow("trac0r", 100, 100, m_screen_width, m_screen_height, SDL_WINDOW_SHOWN);
     if (m_window == nullptr) {
         std::cerr << "SDL_CreateWindow error: " << SDL_GetError() << std::endl;
         SDL_Quit();
@@ -54,9 +51,8 @@ int Viewer::init() {
     // SDL_RENDERER_PRESENTVSYNC);
     m_render = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
     m_render_tex = SDL_CreateTexture(m_render, SDL_PIXELFORMAT_ARGB8888,
-                                     SDL_TEXTUREACCESS_STREAMING, screen_width, screen_height);
-    m_pixels.resize(screen_width * screen_height, 0);
-    m_intensities.resize(screen_width * screen_height, glm::vec4{0});
+                                     SDL_TEXTUREACCESS_STREAMING, m_screen_width, m_screen_height);
+    m_pixels.resize(m_screen_width * m_screen_height, 0);
 
     if (m_render == nullptr) {
         SDL_DestroyWindow(m_window);
@@ -78,8 +74,8 @@ int Viewer::init() {
     }
 
     // Setup scene
-    setup_scene(screen_width, screen_height);
-    m_renderer = std::make_unique<trac0r::Renderer>(m_camera, m_scene);
+    setup_scene();
+    m_renderer = std::make_unique<trac0r::Renderer>(m_screen_width, m_screen_height, m_camera, m_scene);
 
     trac0r::print_sysinfo();
 
@@ -88,7 +84,7 @@ int Viewer::init() {
     return 0;
 }
 
-void Viewer::setup_scene(int screen_width, int screen_height) {
+void Viewer::setup_scene() {
     trac0r::Material default_material{{0.5f, 0.5f, 0.5f}, {0, 0, 0}};
     auto wall_left =
         trac0r::Shape::make_plane({-0.5f, 0.4f, 0}, {1, 0, 0}, {1, 1}, {{1, 0, 0}, {0, 0, 0}});
@@ -119,7 +115,7 @@ void Viewer::setup_scene(int screen_width, int screen_height) {
     glm::vec3 world_up = {0, 1, 0};
 
     m_camera =
-        trac0r::Camera(cam_pos, cam_dir, world_up, 90.f, 0.001, 100.f, screen_width, screen_height);
+        trac0r::Camera(cam_pos, cam_dir, world_up, 90.f, 0.001, 100.f, m_screen_width, m_screen_height);
 }
 
 void Viewer::mainloop() {
@@ -156,18 +152,18 @@ void Viewer::mainloop() {
                 m_debug = !m_debug;
             }
             if (e.key.keysym.sym == SDLK_1) {
-                m_x_stride = 1;
-                m_y_stride = 1;
+                m_stride_x = 1;
+                m_stride_y = 1;
                 m_scene_changed = true;
             }
             if (e.key.keysym.sym == SDLK_2) {
-                m_x_stride = 2;
-                m_y_stride = 2;
+                m_stride_x = 2;
+                m_stride_y = 2;
                 m_scene_changed = true;
             }
             if (e.key.keysym.sym == SDLK_3) {
-                m_x_stride = 4;
-                m_y_stride = 4;
+                m_stride_x = 4;
+                m_stride_y = 4;
                 m_scene_changed = true;
             }
         }
@@ -261,31 +257,22 @@ void Viewer::mainloop() {
     if (m_print_perf)
         fmt::print("    {:<15} {:=10.3f} ms\n", "Scene rebuild", timer.elapsed());
 
-#pragma omp parallel for collapse(2) schedule(dynamic, 1024)
-    for (auto x = 0; x < width; x += m_x_stride) {
-        for (auto y = 0; y < height; y += m_y_stride) {
-            glm::vec4 new_color = m_renderer->trace_pixel_color(x, y);
-            if (m_scene_changed)
-                m_intensities[y * width + x] = new_color;
-            else
-                m_intensities[y * width + x] += new_color;
-        }
-    }
+    const auto luminance = m_renderer->render(m_scene_changed, m_stride_x, m_stride_y);
 
     m_samples_accumulated += 1;
 
     if (m_print_perf)
         fmt::print("    {:<15} {:>10.3f} ms\n", "Path tracing", timer.elapsed());
 
-// This striding is just for speeding up
-// We're basically drawing really big pixels here
+    // This striding is just for speeding up
+    // We're basically drawing really big pixels here
 #pragma omp parallel for collapse(2) schedule(dynamic, 1024)
-    for (auto x = 0; x < width; x += m_x_stride) {
-        for (auto y = 0; y < height; y += m_y_stride) {
+    for (auto x = 0; x < width; x += m_stride_x) {
+        for (auto y = 0; y < height; y += m_stride_y) {
             glm::vec4 color =
-                m_intensities[y * width + x] / static_cast<float>(m_samples_accumulated);
-            for (auto u = 0; u < m_x_stride; u++) {
-                for (auto v = 0; v < m_y_stride; v++) {
+                luminance[y * width + x] / static_cast<float>(m_samples_accumulated);
+            for (auto u = 0; u < m_stride_x; u++) {
+                for (auto v = 0; v < m_stride_y; v++) {
                     m_pixels[(y + v) * width + (x + u)] = trac0r::pack_color_argb(color);
                 }
             }
