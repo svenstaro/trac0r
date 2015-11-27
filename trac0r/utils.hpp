@@ -1,16 +1,38 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
+#include <cppformat/format.h>
+
 #include <glm/glm.hpp>
 
 #include <SDL.h>
 #include <SDL_ttf.h>
 
+#ifdef OPENCL
+#include <boost/compute/core.hpp>
+#endif
+
 #include <chrono>
 #include <cmath>
 #include <string>
+#include <thread>
 
 namespace trac0r {
+
+inline void print_sysinfo() {
+    fmt::print("Rendering on\n");
+#ifdef OPENCL
+    auto device = boost::compute::system::default_device();
+    const auto &devices = boost::compute::system::devices();
+    for (size_t i = 0; i < devices.size(); i++) {
+        fmt::print("    GPU (Device {}: {}, OpenCL version: {}, driver version: {})\n", i + 1,
+                   devices[i].name(), devices[i].version(), devices[i].driver_version());
+    }
+#else
+    auto threads = std::thread::hardware_concurrency();
+    fmt::print("    CPU ({} threads)\n", threads);
+#endif
+}
 
 inline SDL_Texture *make_text(SDL_Renderer *renderer, TTF_Font *font, std::string text,
                               const SDL_Color &color) {

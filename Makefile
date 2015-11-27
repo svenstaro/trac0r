@@ -6,9 +6,17 @@ gcc:
 	mkdir -p build
 	cd build; CXX=g++ cmake ..; make -j
 
+gcc-opencl:
+	mkdir -p build
+	cd build; CXX=g++ cmake -DOPENCL=1 ..; make -j
+
 clang:
 	mkdir -p build
 	cd build; CXX=clang++ cmake ..; make -j
+
+clang-opencl:
+	mkdir -p build
+	cd build; CXX=clang++ cmake -DOPENCL=1 ..; make -j
 
 benchmark:
 	mkdir -p build

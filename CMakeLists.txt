@@ -37,6 +37,10 @@ if(${BENCHMARK})
     add_definitions("-DBENCHMARK")
 endif()
 
+if(${OPENCL})
+    add_definitions("-DOPENCL")
+endif()
+
 if(${EMSCRIPTEN})
     set(CROSS_COMPILING ON)
     add_definitions("-O3 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_SDL_TTF=2")
@@ -44,6 +48,7 @@ if(${EMSCRIPTEN})
 else()
     include(FindPkgConfig)
     pkg_check_modules(SDL2 REQUIRED sdl2 SDL2_image SDL2_ttf)
+    find_package(OpenCL)
 endif()
 
 include_directories(SYSTEM
@@ -51,10 +56,15 @@ include_directories(SYSTEM
     external/
     external/glm
     external/sdl2_gfx
+    external/boost-compute/include
     ${CMAKE_SOURCE_DIR}
+    ${OpenCL_INCLUDE_DIRS}
 )
 
-target_link_libraries(trac0r_library cppformat)
+target_link_libraries(trac0r_library
+    cppformat
+    ${OpenCL_LIBRARIES}
+)
 
 target_link_libraries(trac0r_viewer
     trac0r_library

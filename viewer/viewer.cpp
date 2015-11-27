@@ -11,9 +11,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/rotate_vector.hpp>
-#include <glm/gtx/vector_query.hpp>
 
 #include <cppformat/format.h>
+
+#ifdef OPENCL
+#include <boost/compute/core.hpp>
+#endif
 
 #include <algorithm>
 #include <iostream>
@@ -77,6 +80,8 @@ int Viewer::init() {
     // Setup scene
     setup_scene(screen_width, screen_height);
     m_renderer = std::make_unique<trac0r::Renderer>(m_camera, m_scene);
+
+    trac0r::print_sysinfo();
 
     fmt::print("Finish init\n");
 
