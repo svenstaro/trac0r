@@ -21,6 +21,24 @@ Renderer::Renderer(const int width, const int height, const Camera &camera, cons
     for (auto &device : devices) {
         m_compute_queues.emplace_back(boost::compute::command_queue(m_compute_context, device));
     }
+
+    const char source2[] = BOOST_COMPUTE_STRINGIZE_SOURCE(
+        __kernel void lolol(__global float4 * input) {
+            const uint i = get_global_id(0);
+            input[i].x = 1.f;
+            input[i].y = .5f;
+            input[i].z = 0.f;
+            input[i].w = 1.f;
+        }
+    );
+
+        m_prog2 = boost::compute::program::create_with_source(source2, m_compute_context);
+    try {
+        m_prog2.build();
+        m_kernel2 = boost::compute::kernel(m_prog2, "lolol");
+    } catch (boost::compute::opencl_error &e) {
+        fmt::print("{}", m_prog2.build_log());
+    }
 #endif
 }
 
@@ -98,26 +116,8 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     //     return was;
     // });
 
-    const char source2[] = BOOST_COMPUTE_STRINGIZE_SOURCE(
-        __kernel void lolol(__global float4 * input) {
-            const uint i = get_global_id(0);
-            input[i].x = 1.f;
-            input[i].y = .5f;
-            input[i].z = 0.f;
-            input[i].w = 1.f;
-        }
-    );
-
-    boost::compute::program prog2 =
-        boost::compute::program::create_with_source(source2, m_compute_context);
-    try {
-        prog2.build();
-        boost::compute::kernel kernel2(prog2, "lolol");
-        kernel2.set_arg(0, dev_lum);
-        m_compute_queues[0].enqueue_1d_range_kernel(kernel2, 0, n, 0);
-    } catch (boost::compute::opencl_error &e) {
-        fmt::print("{}", prog2.build_log());
-    }
+    m_kernel2.set_arg(0, dev_lum);
+    m_compute_queues[0].enqueue_1d_range_kernel(m_kernel2, 0, n, 0);
 
     // boost::compute::transform(dev_lum.begin(), dev_lum.end(), dev_lum.begin(), lol,
     // m_compute_queues[0]);
