@@ -23,7 +23,7 @@ class Renderer {
   public:
     Renderer(const int width, const int height, const Camera &camera, const Scene &scene);
     static glm::vec4 trace_pixel_color(unsigned x, unsigned y, unsigned max_depth,
-                                                 const Camera &camera, const Scene &scene);
+                                       const Camera &camera, const Scene &scene);
     std::vector<glm::vec4> &render(bool screen_changed, int stride_x, int stride_y);
 
   private:

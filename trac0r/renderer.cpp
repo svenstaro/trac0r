@@ -19,17 +19,16 @@ Renderer::Renderer(const int width, const int height, const Camera &camera, cons
         m_compute_queues.emplace_back(boost::compute::command_queue(m_compute_context, device));
     }
 
-    const char source2[] = BOOST_COMPUTE_STRINGIZE_SOURCE(
-        __kernel void lolol(__global float4 * input) {
+    const char source2[] =
+        BOOST_COMPUTE_STRINGIZE_SOURCE(__kernel void lolol(__global float4 * input) {
             const uint i = get_global_id(0);
             input[i].x = 1.f;
             input[i].y = .5f;
             input[i].z = 0.f;
             input[i].w = 1.f;
-        }
-    );
+        });
 
-        m_prog2 = boost::compute::program::create_with_source(source2, m_compute_context);
+    m_prog2 = boost::compute::program::create_with_source(source2, m_compute_context);
     try {
         m_prog2.build();
         m_kernel2 = boost::compute::kernel(m_prog2, "lolol");
@@ -74,7 +73,8 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
 #pragma omp parallel for collapse(2) schedule(dynamic, 1024)
     for (auto x = 0; x < m_width; x += stride_x) {
         for (auto y = 0; y < m_height; y += stride_y) {
-            glm::vec4 new_color = trace_pixel_color(x, y, m_max_depth, m_camera, m_scene);
+            glm::vec4 new_color =
+                trace_pixel_color(x, y, m_max_depth, m_camera, m_scene);
             if (scene_changed)
                 m_luminance[y * m_width + x] = new_color;
             else

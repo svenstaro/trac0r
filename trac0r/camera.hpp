@@ -8,39 +8,42 @@ namespace trac0r {
 class Camera {
   public:
     Camera();
-    Camera(glm::vec3 pos, glm::vec3 dir, glm::vec3 world_up, float vertical_fov, float near_plane_dist,
-           float far_plane_dist, int screen_width, int screen_height);
+    Camera(glm::vec3 pos, glm::vec3 dir, glm::vec3 world_up, float vertical_fov,
+           float near_plane_dist, float far_plane_dist, int screen_width, int screen_height);
 
-    glm::vec3 pos() const;
-    void set_pos(glm::vec3 pos);
+    static glm::vec3 pos(const Camera &camera);
+    static void set_pos(Camera &camera, glm::vec3 pos);
 
-    glm::vec3 dir() const;
-    void set_dir(glm::vec3 dir);
+    static glm::vec3 dir(const Camera &camera);
+    static void set_dir(Camera &camera, glm::vec3 dir);
 
-    glm::vec3 world_up() const;
-    void set_world_up(glm::vec3 dir);
+    static glm::vec3 world_up(const Camera &camera);
+    static void set_world_up(Camera &camera, glm::vec3 dir);
 
-    glm::vec3 right() const;
-    glm::vec3 up() const;
+    static glm::vec3 right(const Camera &camera);
+    static glm::vec3 up(const Camera &camera);
 
-    float near_plane_dist() const;
-    void set_near_plane_dist(float dist);
+    static float near_plane_dist(const Camera &camera);
+    static void set_near_plane_dist(Camera &camera, float dist);
 
-    float far_plane_dist() const;
-    void set_far_plane_dist(float dist);
+    static float far_plane_dist(const Camera &camera);
+    static void set_far_plane_dist(Camera &camera, float dist);
 
-    float vertical_fov() const;
-    void set_vertical_fov(float degrees);
+    static int screen_width(const Camera &camera);
+    static int screen_height(const Camera &camera);
 
-    float horizontal_fov() const;
+    static float vertical_fov(const Camera &camera);
+    static void set_vertical_fov(Camera &camera, float degrees);
 
-    float aspect_ratio() const;
+    static float horizontal_fov(const Camera &camera);
 
-    float canvas_width() const;
-    float canvas_height() const;
-    glm::vec3 canvas_center_pos() const;
-    glm::vec3 canvas_dir_x() const;
-    glm::vec3 canvas_dir_y() const;
+    static float aspect_ratio(const Camera &camera);
+
+    static float canvas_width(const Camera &camera);
+    static float canvas_height(const Camera &camera);
+    static glm::vec3 canvas_center_pos(const Camera &camera);
+    static glm::vec3 canvas_dir_x(const Camera &camera);
+    static glm::vec3 canvas_dir_y(const Camera &camera);
 
     /**
      * @brief Converts absolute screen space coordinates to relative camera space positions.
@@ -50,7 +53,7 @@ class Camera {
      *
      * @return Relative camera space positions. Values will be between -1.0 and 1.0.
      */
-    glm::vec2 screenspace_to_camspace(int x, int y) const;
+    static glm::vec2 screenspace_to_camspace(const Camera &camera, unsigned x, unsigned y);
 
     /**
      * @brief Converts relative camera space positions to absolute screen space coordinates.
@@ -59,7 +62,7 @@ class Camera {
      *
      * @return Absolute screen space coordinates.
      */
-    glm::i32vec2 camspace_to_screenspace(glm::vec2 coords) const;
+    static glm::i32vec2 camspace_to_screenspace(const Camera &camera, glm::vec2 coords);
 
     /**
      * @brief Converts camera space relative positions to world space positions on the camera's
@@ -70,7 +73,7 @@ class Camera {
      *
      * @return World space coordinates on the camera's canvas.
      */
-    glm::vec3 camspace_to_worldspace(glm::vec2 rel_pos) const;
+    static glm::vec3 camspace_to_worldspace(const Camera &camera, glm::vec2 rel_pos);
 
     /**
      * @brief Converts a position on the camera's canvas to a camera space relative position.
@@ -79,18 +82,20 @@ class Camera {
      *
      * @return The relative position in camera space. Values are between -1.0 and 1.0.
      */
-    glm::vec2 worldspace_to_camspace(glm::vec3 world_pos) const;
+    static glm::vec2 worldspace_to_camspace(const Camera &camera, glm::vec3 world_pos);
 
     /**
-     * @brief Converts a position in the world to a position on the camera's canvas (but still in world space).
-     * You then have to use worldspace_to_camspace() and then camspace_to_screenspace() to find out which pixel
+     * @brief Converts a position in the world to a position on the camera's canvas (but still in
+     * world space).
+     * You then have to use worldspace_to_camspace() and then camspace_to_screenspace() to find out
+     * which pixel
      * a world point falls into.
      *
      * @param world_point The world point in world space.
      *
      * @return A world space coordinate on the camera's canvas.
      */
-    glm::vec3 worldpoint_to_worldspace(glm::vec3 world_point) const;
+    static glm::vec3 worldpoint_to_worldspace(const Camera &camera, glm::vec3 world_point);
 
   private:
     glm::vec3 m_pos;
@@ -100,11 +105,9 @@ class Camera {
     float m_far_plane_dist;
     int m_screen_width;
     int m_screen_height;
-
     float m_vertical_fov;
     float m_horizontal_fov;
 };
-
 }
 
 #endif /* end of include guard: CAMERA_HPP */

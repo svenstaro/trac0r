@@ -8,9 +8,9 @@
 namespace trac0r {
 glm::vec4 Renderer::trace_pixel_color(unsigned x, unsigned y, unsigned max_depth,
                                       const Camera &camera, const Scene &scene) {
-    glm::vec2 rel_pos = camera.screenspace_to_camspace(x, y);
-    glm::vec3 world_pos = camera.camspace_to_worldspace(rel_pos);
-    glm::vec3 ray_dir = glm::normalize(world_pos - camera.pos());
+    glm::vec2 rel_pos = Camera::screenspace_to_camspace(camera, x, y);
+    glm::vec3 world_pos = Camera::camspace_to_worldspace(camera, rel_pos);
+    glm::vec3 ray_dir = glm::normalize(world_pos - Camera::pos(camera));
 
     glm::vec3 ret_color{0};
     Ray next_ray{world_pos, ray_dir};

@@ -22,6 +22,8 @@
 #include <iostream>
 #include <memory>
 
+using Camera = trac0r::Camera;
+
 Viewer::~Viewer() {
     TTF_CloseFont(m_font);
     TTF_Quit();
@@ -40,7 +42,8 @@ int Viewer::init() {
         return 1;
     }
 
-    m_window = SDL_CreateWindow("trac0r", 100, 100, m_screen_width, m_screen_height, SDL_WINDOW_SHOWN);
+    m_window =
+        SDL_CreateWindow("trac0r", 100, 100, m_screen_width, m_screen_height, SDL_WINDOW_SHOWN);
     if (m_window == nullptr) {
         std::cerr << "SDL_CreateWindow error: " << SDL_GetError() << std::endl;
         SDL_Quit();
@@ -75,7 +78,8 @@ int Viewer::init() {
 
     // Setup scene
     setup_scene();
-    m_renderer = std::make_unique<trac0r::Renderer>(m_screen_width, m_screen_height, m_camera, m_scene);
+    m_renderer =
+        std::make_unique<trac0r::Renderer>(m_screen_width, m_screen_height, m_camera, m_scene);
 
     trac0r::print_sysinfo();
 
@@ -115,7 +119,7 @@ void Viewer::setup_scene() {
     glm::vec3 world_up = {0, 1, 0};
 
     m_camera =
-        trac0r::Camera(cam_pos, cam_dir, world_up, 90.f, 0.001, 100.f, m_screen_width, m_screen_height);
+        Camera(cam_pos, cam_dir, world_up, 90.f, 0.001, 100.f, m_screen_width, m_screen_height);
 }
 
 void Viewer::mainloop() {
@@ -187,37 +191,37 @@ void Viewer::mainloop() {
     const uint8_t *keystates = SDL_GetKeyboardState(0);
     if (keystates[SDL_SCANCODE_A]) {
         m_scene_changed = true;
-        m_camera.set_pos(m_camera.pos() - m_camera.right() * cam_speed);
+        Camera::set_pos(m_camera, Camera::pos(m_camera) - Camera::right(m_camera) * cam_speed);
     } else if (keystates[SDL_SCANCODE_D]) {
-        m_camera.set_pos(m_camera.pos() + m_camera.right() * cam_speed);
+        Camera::set_pos(m_camera, Camera::pos(m_camera) + Camera::right(m_camera) * cam_speed);
         m_scene_changed = true;
     }
 
     // Up/down
     if (keystates[SDL_SCANCODE_SPACE]) {
         m_scene_changed = true;
-        m_camera.set_pos(m_camera.pos() + glm::vec3{0, 1, 0} * cam_speed);
+        Camera::set_pos(m_camera, Camera::pos(m_camera) + glm::vec3{0, 1, 0} * cam_speed);
     } else if (keystates[SDL_SCANCODE_LCTRL]) {
         m_scene_changed = true;
-        m_camera.set_pos(m_camera.pos() - glm::vec3{0, 1, 0} * cam_speed);
+        Camera::set_pos(m_camera, Camera::pos(m_camera) - glm::vec3{0, 1, 0} * cam_speed);
     }
 
     // Roll
     if (keystates[SDL_SCANCODE_Q]) {
         m_scene_changed = true;
-        m_camera.set_world_up(glm::rotateZ(m_camera.up(), 0.1f));
+        Camera::set_world_up(m_camera, glm::rotateZ(Camera::up(m_camera), 0.1f));
     } else if (keystates[SDL_SCANCODE_E]) {
         m_scene_changed = true;
-        m_camera.set_world_up(glm::rotateZ(m_camera.up(), -0.1f));
+        Camera::set_world_up(m_camera, glm::rotateZ(Camera::up(m_camera), -0.1f));
     }
 
     // Front/back
     if (keystates[SDL_SCANCODE_W]) {
         m_scene_changed = true;
-        m_camera.set_pos(m_camera.pos() + m_camera.dir() * cam_speed);
+        Camera::set_pos(m_camera, Camera::pos(m_camera) + Camera::dir(m_camera) * cam_speed);
     } else if (keystates[SDL_SCANCODE_S]) {
         m_scene_changed = true;
-        m_camera.set_pos(m_camera.pos() - m_camera.dir() * cam_speed);
+        Camera::set_pos(m_camera, Camera::pos(m_camera) - Camera::dir(m_camera) * cam_speed);
     }
 
     // Rendering here
@@ -231,14 +235,15 @@ void Viewer::mainloop() {
         SDL_GetRelativeMouseState(&(mouse_pos.x), &(mouse_pos.y));
         if (mouse_pos.x != 0) {
             m_scene_changed = true;
-            m_camera.set_dir(glm::rotateY(m_camera.dir(), mouse_pos.x * 0.001f));
+            Camera::set_dir(m_camera, glm::rotateY(Camera::dir(m_camera), mouse_pos.x * 0.001f));
         }
 
         // Pitch
         if (mouse_pos.y != 0) {
             m_scene_changed = true;
-            m_camera.set_dir(glm::rotate(m_camera.dir(), mouse_pos.y * 0.001f,
-                                         glm::cross(m_camera.up(), m_camera.dir())));
+            Camera::set_dir(m_camera,
+                            glm::rotate(Camera::dir(m_camera), mouse_pos.y * 0.001f,
+                                        glm::cross(Camera::up(m_camera), Camera::dir(m_camera))));
         }
 
     } else if (!m_look_mode) {
@@ -264,13 +269,12 @@ void Viewer::mainloop() {
     if (m_print_perf)
         fmt::print("    {:<15} {:>10.3f} ms\n", "Path tracing", timer.elapsed());
 
-    // This striding is just for speeding up
-    // We're basically drawing really big pixels here
+// This striding is just for speeding up
+// We're basically drawing really big pixels here
 #pragma omp parallel for collapse(2) schedule(dynamic, 1024)
     for (auto x = 0; x < width; x += m_stride_x) {
         for (auto y = 0; y < height; y += m_stride_y) {
-            glm::vec4 color =
-                luminance[y * width + x] / static_cast<float>(m_samples_accumulated);
+            glm::vec4 color = luminance[y * width + x] / static_cast<float>(m_samples_accumulated);
             for (auto u = 0; u < m_stride_x; u++) {
                 for (auto v = 0; v < m_stride_y; v++) {
                     m_pixels[(y + v) * width + (x + u)] = trac0r::pack_color_argb(color);
@@ -288,21 +292,23 @@ void Viewer::mainloop() {
 
     if (m_debug) {
         // Lots of debug info
-        glm::vec2 mouse_rel_pos = m_camera.screenspace_to_camspace(mouse_pos.x, mouse_pos.y);
-        glm::vec3 mouse_canvas_pos = m_camera.camspace_to_worldspace(mouse_rel_pos);
+        glm::vec2 mouse_rel_pos =
+            Camera::screenspace_to_camspace(m_camera, mouse_pos.x, mouse_pos.y);
+        glm::vec3 mouse_canvas_pos = Camera::camspace_to_worldspace(m_camera, mouse_rel_pos);
 
         auto fps_debug_info = "FPS: " + std::to_string(int(fps));
         auto scene_changing_info = "Samples : " + std::to_string(m_samples_accumulated);
         scene_changing_info += " Scene Changing: " + std::to_string(m_scene_changed);
         auto cam_look_debug_info = "Cam Look Mode: " + std::to_string(m_look_mode);
-        auto cam_pos_debug_info = "Cam Pos: " + glm::to_string(m_camera.pos());
-        auto cam_dir_debug_info = "Cam Dir: " + glm::to_string(m_camera.dir());
-        auto cam_up_debug_info = "Cam Up: " + glm::to_string(m_camera.up());
+        auto cam_pos_debug_info = "Cam Pos: " + glm::to_string(Camera::pos(m_camera));
+        auto cam_dir_debug_info = "Cam Dir: " + glm::to_string(Camera::dir(m_camera));
+        auto cam_up_debug_info = "Cam Up: " + glm::to_string(Camera::up(m_camera));
         auto cam_fov_debug_info =
-            "Cam FOV (H/V): " + std::to_string(int(glm::degrees(m_camera.horizontal_fov()))) + "/";
-        cam_fov_debug_info += std::to_string(int(glm::degrees(m_camera.vertical_fov())));
+            "Cam FOV (H/V): " +
+            std::to_string(int(glm::degrees(Camera::horizontal_fov(m_camera)))) + "/";
+        cam_fov_debug_info += std::to_string(int(glm::degrees(Camera::vertical_fov(m_camera))));
         auto cam_canvas_center_pos_info =
-            "Cam Canvas Center: " + glm::to_string(m_camera.canvas_center_pos());
+            "Cam Canvas Center: " + glm::to_string(Camera::canvas_center_pos(m_camera));
         auto mouse_pos_screen_info = "Mouse Pos Screen Space: " + glm::to_string(mouse_pos);
         auto mouse_pos_relative_info = "Mouse Pos Cam Space: " + glm::to_string(mouse_rel_pos);
         auto mouse_pos_canvas_info =
@@ -361,17 +367,17 @@ void Viewer::mainloop() {
                 pairs[10] = {2, 6};
                 pairs[11] = {3, 7};
                 for (auto pair : pairs) {
-                    auto ws1 = m_camera.worldpoint_to_worldspace(verts[pair[0]]);
+                    auto ws1 = Camera::worldpoint_to_worldspace(m_camera, verts[pair[0]]);
                     auto ss1 = glm::i32vec2(0);
                     if (ws1 != glm::vec3(0)) {
-                        auto cs1 = m_camera.worldspace_to_camspace(ws1);
-                        ss1 = m_camera.camspace_to_screenspace(cs1);
+                        auto cs1 = Camera::worldspace_to_camspace(m_camera, ws1);
+                        ss1 = Camera::camspace_to_screenspace(m_camera, cs1);
                     }
-                    auto ws2 = m_camera.worldpoint_to_worldspace(verts[pair[1]]);
+                    auto ws2 = Camera::worldpoint_to_worldspace(m_camera, verts[pair[1]]);
                     auto ss2 = glm::i32vec2(0);
                     if (ws2 != glm::vec3(0)) {
-                        auto cs2 = m_camera.worldspace_to_camspace(ws2);
-                        ss2 = m_camera.camspace_to_screenspace(cs2);
+                        auto cs2 = Camera::worldspace_to_camspace(m_camera, ws2);
+                        ss2 = Camera::camspace_to_screenspace(m_camera, cs2);
                     }
                     if (ss1 != glm::i32vec2(0) && ss2 != glm::i32vec2(0)) {
                         aalineRGBA(m_render, ss1.x, ss1.y, ss2.x, ss2.y, 255, 255, 0, 200);
