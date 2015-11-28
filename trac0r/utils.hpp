@@ -25,12 +25,12 @@ inline void print_sysinfo() {
     auto device = boost::compute::system::default_device();
     const auto &devices = boost::compute::system::devices();
     for (size_t i = 0; i < devices.size(); i++) {
-        fmt::print("    GPU (Device {}: {}, OpenCL version: {}, driver version: {})\n", i + 1,
+        fmt::print("    OpenCL (Device {}: {}, OpenCL version: {}, driver version: {})\n", i + 1,
                    devices[i].name(), devices[i].version(), devices[i].driver_version());
     }
 #else
     auto threads = std::thread::hardware_concurrency();
-    fmt::print("    CPU ({} threads)\n", threads);
+    fmt::print("    OpenMP ({} threads)\n", threads);
 #endif
 }
 
