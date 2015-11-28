@@ -4,9 +4,10 @@
 
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "cppformat/format.h"
-#include <glm/gtx/string_cast.hpp>
 
 namespace trac0r {
 
@@ -81,6 +82,55 @@ glm::vec4 Renderer::trace_pixel_color(unsigned x, unsigned y) const {
 }
 
 std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int stride_y) {
+#ifdef OPENCL
+    auto n = m_width * m_height;
+    boost::compute::default_random_engine rng(m_compute_queues[0]);
+    std::vector<boost::compute::float4_> lum;
+    lum.resize(n);
+    boost::compute::vector<boost::compute::float4_> dev_lum(n, m_compute_context);
+    //
+    // BOOST_COMPUTE_FUNCTION(boost::compute::float4_, lol, (const boost::compute::float4_ omg), {
+    //     float4 was;
+    //     was.x = 1.f;
+    //     was.y = 1.f;
+    //     was.z = 1.f;
+    //     was.w = 1.f;
+    //     return was;
+    // });
+
+    const char source2[] = BOOST_COMPUTE_STRINGIZE_SOURCE(
+        __kernel void lolol(__global float4 * input) {
+            const uint i = get_global_id(0);
+            input[i].x = 1.f;
+            input[i].y = .5f;
+            input[i].z = 0.f;
+            input[i].w = 1.f;
+        }
+    );
+
+    boost::compute::program prog2 =
+        boost::compute::program::create_with_source(source2, m_compute_context);
+    try {
+        prog2.build();
+        boost::compute::kernel kernel2(prog2, "lolol");
+        kernel2.set_arg(0, dev_lum);
+        m_compute_queues[0].enqueue_1d_range_kernel(kernel2, 0, n, 0);
+    } catch (boost::compute::opencl_error &e) {
+        fmt::print("{}", prog2.build_log());
+    }
+
+    // boost::compute::transform(dev_lum.begin(), dev_lum.end(), dev_lum.begin(), lol,
+    // m_compute_queues[0]);
+
+    boost::compute::copy(dev_lum.begin(), dev_lum.end(), lum.begin(), m_compute_queues[0]);
+
+    for (auto x = 0; x < m_width; x += stride_x) {
+        for (auto y = 0; y < m_height; y += stride_y) {
+            auto lol = reinterpret_cast<glm::vec4 *>(&lum[y * m_width + x]);
+            m_luminance[y * m_width + x] += *lol;
+        }
+    }
+#else
 #pragma omp parallel for collapse(2) schedule(dynamic, 1024)
     for (auto x = 0; x < m_width; x += stride_x) {
         for (auto y = 0; y < m_height; y += stride_y) {
@@ -91,6 +141,7 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
                 m_luminance[y * m_width + x] += new_color;
         }
     }
+#endif
 
     return m_luminance;
 }

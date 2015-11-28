@@ -6,6 +6,15 @@
 
 #ifdef OPENCL
 #include <boost/compute/core.hpp>
+#include <boost/compute/function.hpp>
+#include <boost/compute/system.hpp>
+#include <boost/compute/algorithm/for_each.hpp>
+#include <boost/compute/container/vector.hpp>
+#include <boost/compute/iterator/buffer_iterator.hpp>
+#include <boost/compute/random/default_random_engine.hpp>
+#include <boost/compute/types/fundamental.hpp>
+#include <boost/compute/types/struct.hpp>
+#include <boost/compute/utility/source.hpp>
 #endif
 
 namespace trac0r {
