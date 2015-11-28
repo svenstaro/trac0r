@@ -6,10 +6,19 @@
 
 namespace trac0r {
 
-FlatStructure::~FlatStructure() {
+void FlatStructure::add_shape(FlatStructure &flatstruct, Shape &shape) {
+    flatstruct.m_shapes.push_back(shape);
 }
 
-IntersectionInfo FlatStructure::intersect(const Ray &ray) const {
+std::vector<Shape> &FlatStructure::shapes(FlatStructure &flatstruct) {
+    return flatstruct.m_shapes;
+}
+
+const std::vector<Shape> &FlatStructure::shapes(const FlatStructure &flatstruct) {
+    return flatstruct.m_shapes;
+}
+
+IntersectionInfo FlatStructure::intersect(const FlatStructure &flatstruct, const Ray &ray) {
     // TODO: We get like 2x better performance here if we loop over a flat structure of triangles
     // instead of looping over all shapes and for each shape over all triangles
     IntersectionInfo intersect_info;
@@ -17,9 +26,9 @@ IntersectionInfo FlatStructure::intersect(const Ray &ray) const {
     // Keep track of closest triangle
     float closest_dist = std::numeric_limits<float>::max();
     Triangle closest_triangle;
-    for (const auto &shape : m_shapes) {
-        if (intersect_ray_aabb(ray, shape.aabb())) {
-            for (auto &tri : shape.triangles()) {
+    for (const auto &shape : FlatStructure::shapes(flatstruct)) {
+        if (intersect_ray_aabb(ray, Shape::aabb(shape))) {
+            for (auto &tri : Shape::triangles(shape)) {
                 float dist_to_intersect;
                 bool intersected = intersect_ray_triangle(ray, tri, dist_to_intersect);
                 if (intersected) {
@@ -42,7 +51,7 @@ IntersectionInfo FlatStructure::intersect(const Ray &ray) const {
     return intersect_info;
 }
 
-void FlatStructure::rebuild(const Camera &camera) {
+void FlatStructure::rebuild(FlatStructure &flatstruct, const Camera &camera) {
     //     m_triangles.clear();
     //     for (auto &shape : m_shapes) {
     //         for (auto &tri : shape->triangles()) {

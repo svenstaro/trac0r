@@ -3,6 +3,7 @@
 #include "trac0r/shape.hpp"
 #include "trac0r/utils.hpp"
 #include "trac0r/timer.hpp"
+#include "trac0r/flat_structure.hpp"
 
 #include <SDL_ttf.h>
 #include <SDL_image.h>
@@ -23,6 +24,10 @@
 #include <memory>
 
 using Camera = trac0r::Camera;
+using Scene = trac0r::Scene;
+using FlatStructure = trac0r::FlatStructure;
+using AABB = trac0r::AABB;
+using Shape = trac0r::Shape;
 
 Viewer::~Viewer() {
     TTF_CloseFont(m_font);
@@ -105,14 +110,14 @@ void Viewer::setup_scene() {
     auto box2 = trac0r::Shape::make_box({-0.2f, 0.05f, 0}, {0.3, -0.4, -0.9}, {0.3f, 0.4f, 0.3f},
                                         default_material);
 
-    m_scene.add_shape(wall_left);
-    m_scene.add_shape(wall_right);
-    m_scene.add_shape(wall_back);
-    m_scene.add_shape(wall_top);
-    m_scene.add_shape(wall_bottom);
-    m_scene.add_shape(lamp);
-    m_scene.add_shape(box1);
-    m_scene.add_shape(box2);
+    Scene::add_shape(m_scene, wall_left);
+    Scene::add_shape(m_scene, wall_right);
+    Scene::add_shape(m_scene, wall_back);
+    Scene::add_shape(m_scene, wall_top);
+    Scene::add_shape(m_scene, wall_bottom);
+    Scene::add_shape(m_scene, lamp);
+    Scene::add_shape(m_scene, box1);
+    Scene::add_shape(m_scene, box2);
 
     glm::vec3 cam_pos = {0, 0.31, -1.2};
     glm::vec3 cam_dir = {0, 0, 1};
@@ -257,7 +262,7 @@ void Viewer::mainloop() {
     if (m_print_perf)
         fmt::print("    {:<15} {:>10.3f} ms\n", "Input handling", timer.elapsed());
 
-    m_scene.rebuild(m_camera);
+    Scene::rebuild(m_scene, m_camera);
 
     if (m_print_perf)
         fmt::print("    {:<15} {:=10.3f} ms\n", "Scene rebuild", timer.elapsed());
@@ -351,8 +356,10 @@ void Viewer::mainloop() {
 
         // Let's draw some debug to the display (such as AABBs)
         if (m_debug) {
-            for (auto &shape : m_scene.accel()->shapes()) {
-                auto verts = shape.aabb().vertices();
+            auto &accel_struct = Scene::accel_struct(m_scene);
+            for (auto &shape : FlatStructure::shapes(accel_struct)) {
+                auto &aabb = Shape::aabb(shape);
+                const auto &verts = AABB::vertices(aabb);
                 std::array<glm::i8vec2, 12> pairs;
                 pairs[0] = {0, 1};
                 pairs[1] = {1, 3};

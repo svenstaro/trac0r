@@ -16,7 +16,7 @@ glm::vec4 Renderer::trace_pixel_color(unsigned x, unsigned y, unsigned max_depth
     Ray next_ray{world_pos, ray_dir};
     glm::vec3 brdf{1};
     for (size_t depth = 0; depth < max_depth; depth++) {
-        auto intersect_info = scene.intersect(next_ray);
+        auto intersect_info = Scene::intersect(scene, next_ray);
         if (intersect_info.m_has_intersected) {
             // Get the local radiance only on first bounce
             glm::vec3 local_radiance(0);

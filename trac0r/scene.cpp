@@ -1,5 +1,4 @@
 #include "scene.hpp"
-#include "flat_structure.hpp"
 #include "utils.hpp"
 
 #include <glm/glm.hpp>
@@ -11,24 +10,23 @@
 
 namespace trac0r {
 
-Scene::Scene() {
-    m_accel = std::make_unique<FlatStructure>();
+void Scene::add_shape(Scene &scene, Shape &shape) {
+    FlatStructure::add_shape(Scene::accel_struct(scene), shape);
 }
 
-void Scene::add_shape(Shape &shape) {
-    m_accel->add_shape(shape);    
+IntersectionInfo Scene::intersect(const Scene &scene, const Ray &ray) {
+    return FlatStructure::intersect(accel_struct(scene), ray);
 }
 
-IntersectionInfo Scene::intersect(const Ray &ray) const {
-    return m_accel->intersect(ray);
+void Scene::rebuild(Scene &scene, const Camera &camera) {
+    FlatStructure::rebuild(Scene::accel_struct(scene), camera);
 }
 
-void Scene::rebuild(const Camera &camera) {
-    m_accel->rebuild(camera);
+FlatStructure &Scene::accel_struct(Scene &scene) {
+    return scene.m_accel_struct;
 }
 
-std::unique_ptr<AccelerationStructure> &Scene::accel() {
-    return m_accel;
+const FlatStructure &Scene::accel_struct(const Scene &scene) {
+    return scene.m_accel_struct;
 }
-
 }

@@ -14,7 +14,7 @@ namespace trac0r {
 // http://ftp.cg.cs.tu-bs.de/media/publications/fast-rayaxis-aligned-bounding-box-overlap-tests-using-ray-slopes.pdf
 // Fast Ray/Axis-Aligned Bounding Box Overlap Tests using Ray Slopes by Martin Eisemann et al.
 inline bool intersect_ray_aabb_broken2(const Ray &ray, const AABB &aabb) {
-    if (aabb.is_null())
+    if (AABB::is_null(aabb))
         return false;
 
     auto s_yx = ray.m_dir.x * ray.m_invdir.y;
@@ -31,13 +31,13 @@ inline bool intersect_ray_aabb_broken2(const Ray &ray, const AABB &aabb) {
     auto c_xz = ray.m_origin.z - s_xz * ray.m_origin.x;
     auto c_zx = ray.m_origin.x - s_zx * ray.m_origin.z;
 
-    if ((ray.m_origin.x > aabb.max().x) || (ray.m_origin.y > aabb.max().y) ||
-        (ray.m_origin.z > aabb.max().z) || (s_xy * aabb.max().x - aabb.min().y + c_xy < 0) ||
-        (s_yx * aabb.max().y - aabb.min().x + c_yx < 0) ||
-        (s_zy * aabb.max().z - aabb.min().y + c_zy < 0) ||
-        (s_yz * aabb.max().y - aabb.min().z + c_yz < 0) ||
-        (s_xz * aabb.max().x - aabb.min().z + c_xz < 0) ||
-        (s_zx * aabb.max().z - aabb.min().x + c_zx < 0))
+    if ((ray.m_origin.x > AABB::max(aabb).x) || (ray.m_origin.y > AABB::max(aabb).y) ||
+        (ray.m_origin.z > AABB::max(aabb).z) || (s_xy * AABB::max(aabb).x - AABB::min(aabb).y + c_xy < 0) ||
+        (s_yx * AABB::max(aabb).y - AABB::min(aabb).x + c_yx < 0) ||
+        (s_zy * AABB::max(aabb).z - AABB::min(aabb).y + c_zy < 0) ||
+        (s_yz * AABB::max(aabb).y - AABB::min(aabb).z + c_yz < 0) ||
+        (s_xz * AABB::max(aabb).x - AABB::min(aabb).z + c_xz < 0) ||
+        (s_zx * AABB::max(aabb).z - AABB::min(aabb).x + c_zx < 0))
         return false;
 
     return true;
@@ -45,15 +45,15 @@ inline bool intersect_ray_aabb_broken2(const Ray &ray, const AABB &aabb) {
 
 // From http://tavianator.com/fast-branchless-raybounding-box-intersections-part-2-nans/
 inline bool intersect_ray_aabb_broken1(const Ray &ray, const AABB &aabb) {
-    double t1 = (aabb.min().x - ray.m_origin.x) * ray.m_dir.x;
-    double t2 = (aabb.max().x - ray.m_origin.x) * ray.m_dir.x;
+    double t1 = (AABB::min(aabb).x - ray.m_origin.x) * ray.m_dir.x;
+    double t2 = (AABB::max(aabb).x - ray.m_origin.x) * ray.m_dir.x;
 
     double tmin = glm::min(t1, t2);
     double tmax = glm::max(t1, t2);
 
     for (int i = 1; i < 3; ++i) {
-        t1 = (aabb.min()[i] - ray.m_origin[i]) * ray.m_invdir[i];
-        t2 = (aabb.max()[i] - ray.m_origin[i]) * ray.m_invdir[i];
+        t1 = (AABB::min(aabb)[i] - ray.m_origin[i]) * ray.m_invdir[i];
+        t2 = (AABB::max(aabb)[i] - ray.m_origin[i]) * ray.m_invdir[i];
 
         tmin = glm::max(tmin, glm::min(t1, t2));
         tmax = glm::min(tmax, glm::max(t1, t2));
@@ -68,8 +68,8 @@ inline bool intersect_ray_aabb(const Ray &ray, const AABB &aabb) {
     float tmin, tmax, tymin, tymax, tzmin, tzmax;
 
     glm::vec3 bounds[2];
-    bounds[0] = aabb.min();
-    bounds[1] = aabb.max();
+    bounds[0] = AABB::min(aabb);
+    bounds[1] = AABB::max(aabb);
 
     glm::i8vec3 sign;
     sign.x = (ray.m_invdir.x < 0);

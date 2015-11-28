@@ -5,7 +5,7 @@
 #include "shape.hpp"
 #include "camera.hpp"
 #include "intersection_info.hpp"
-#include "acceleration_structure.hpp"
+#include "flat_structure.hpp"
 
 #include <glm/glm.hpp>
 
@@ -16,16 +16,15 @@ namespace trac0r {
 
 class Scene {
   public:
-    Scene();
-    void add_shape(Shape &shape);
-    IntersectionInfo intersect(const Ray &ray) const;
-    void rebuild(const Camera &camera);
-    std::unique_ptr<AccelerationStructure> &accel();
+    static void add_shape(Scene &scene, Shape &shape);
+    static IntersectionInfo intersect(const Scene &scene, const Ray &ray);
+    static void rebuild(Scene &scene, const Camera &camera);
+    static const FlatStructure &accel_struct(const Scene &scene);
+    static FlatStructure &accel_struct(Scene &scene);
 
   private:
-    std::unique_ptr<AccelerationStructure> m_accel;
+    FlatStructure m_accel_struct;
 };
-
 }
 
 #endif /* end of include guard: SCENE_HPP*/
