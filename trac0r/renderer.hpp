@@ -22,7 +22,8 @@ namespace trac0r {
 class Renderer {
   public:
     Renderer(const int width, const int height, const Camera &camera, const Scene &scene);
-    glm::vec4 trace_pixel_color(unsigned x, unsigned y) const;
+    static glm::vec4 trace_pixel_color(unsigned x, unsigned y, unsigned max_depth,
+                                                 const Camera &camera, const Scene &scene);
     std::vector<glm::vec4> &render(bool screen_changed, int stride_x, int stride_y);
 
   private:
@@ -45,7 +46,6 @@ class Renderer {
     boost::compute::kernel m_kernel2;
 #endif
 };
-
 }
 
 #endif /* end of include guard: RENDERER_HPP */
