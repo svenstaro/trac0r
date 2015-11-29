@@ -20,6 +20,7 @@ Camera::Camera(glm::vec3 pos, glm::vec3 dir, glm::vec3 world_up, float vertical_
       m_screen_height(screen_height) {
 
     set_vertical_fov(*this, vertical_fov_degrees);
+    rebuild(*this);
 }
 
 glm::vec3 Camera::pos(const Camera &camera) {
@@ -28,6 +29,7 @@ glm::vec3 Camera::pos(const Camera &camera) {
 
 void Camera::set_pos(Camera &camera, glm::vec3 pos) {
     camera.m_pos = pos;
+    rebuild(camera);
 }
 
 glm::vec3 Camera::dir(const Camera &camera) {
@@ -36,6 +38,7 @@ glm::vec3 Camera::dir(const Camera &camera) {
 
 void Camera::set_dir(Camera &camera, glm::vec3 dir) {
     camera.m_dir = dir;
+    rebuild(camera);
 }
 
 glm::vec3 Camera::world_up(const Camera &camera) {
@@ -44,15 +47,15 @@ glm::vec3 Camera::world_up(const Camera &camera) {
 
 void Camera::set_world_up(Camera &camera, glm::vec3 world_up) {
     camera.m_world_up = world_up;
+    rebuild(camera);
 }
 
 glm::vec3 Camera::right(const Camera &camera) {
-    return glm::normalize(glm::cross(camera.m_world_up, camera.m_dir));
-    ;
+    return camera.m_right;
 }
 
 glm::vec3 Camera::up(const Camera &camera) {
-    return glm::cross(camera.m_dir, right(camera));
+    return camera.m_up;
 }
 
 float Camera::near_plane_dist(const Camera &camera) {
@@ -61,6 +64,7 @@ float Camera::near_plane_dist(const Camera &camera) {
 
 void Camera::set_near_plane_dist(Camera &camera, float dist) {
     camera.m_near_plane_dist = dist;
+    rebuild(camera);
 }
 
 float Camera::far_plane_dist(const Camera &camera) {
@@ -69,6 +73,7 @@ float Camera::far_plane_dist(const Camera &camera) {
 
 void Camera::set_far_plane_dist(Camera &camera, float dist) {
     camera.m_far_plane_dist = dist;
+    rebuild(camera);
 }
 
 int Camera::screen_width(const Camera &camera) {
@@ -100,23 +105,23 @@ float Camera::aspect_ratio(const Camera &camera) {
 }
 
 float Camera::canvas_width(const Camera &camera) {
-    return 2 * glm::tan(horizontal_fov(camera) / 2) * near_plane_dist(camera);
+    return camera.m_canvas_width;
 }
 
 float Camera::canvas_height(const Camera &camera) {
-    return 2 * glm::tan(vertical_fov(camera) / 2) * near_plane_dist(camera);
+    return camera.m_canvas_height;
 }
 
 glm::vec3 Camera::canvas_center_pos(const Camera &camera) {
-    return pos(camera) + dir(camera) * near_plane_dist(camera);
+    return camera.m_canvas_center_pos;
 }
 
 glm::vec3 Camera::canvas_dir_x(const Camera &camera) {
-    return glm::normalize(glm::cross(dir(camera), up(camera))) * (canvas_width(camera) / 2);
+    return camera.m_canvas_dir_x;
 }
 
 glm::vec3 Camera::canvas_dir_y(const Camera &camera) {
-    return glm::normalize(up(camera)) * (canvas_height(camera) / 2);
+    return camera.m_canvas_dir_y;
 }
 
 glm::vec2 Camera::screenspace_to_camspace(const Camera &camera, unsigned x, unsigned y) {
@@ -173,5 +178,16 @@ glm::vec3 Camera::worldpoint_to_worldspace(const Camera &camera, glm::vec3 world
     } else {
         return glm::vec3(0);
     }
+
+}
+
+void Camera::rebuild(Camera &camera) {
+    camera.m_right = glm::normalize(glm::cross(camera.m_world_up, camera.m_dir));
+    camera.m_up = glm::cross(camera.m_dir, right(camera));
+    camera.m_canvas_width = 2 * glm::tan(horizontal_fov(camera) / 2) * near_plane_dist(camera);
+    camera.m_canvas_height = 2 * glm::tan(vertical_fov(camera) / 2) * near_plane_dist(camera);
+    camera.m_canvas_center_pos = pos(camera) + dir(camera) * near_plane_dist(camera);
+    camera.m_canvas_dir_x = glm::normalize(glm::cross(dir(camera), up(camera))) * (canvas_width(camera) / 2);
+    camera.m_canvas_dir_y = glm::normalize(up(camera)) * (canvas_height(camera) / 2);
 }
 }

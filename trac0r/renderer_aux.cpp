@@ -48,7 +48,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
             // new_ray_dir = glm::rotate(normal, rand_range(-half_pi, half_pi),
             //                           glm::cross(normal, intersect_info.m_incoming_ray.m_dir));
             // new_ray_dir = glm::rotate(new_ray_dir, rand_range(-pi, pi), normal);
-            float u = rand_range(0.f, 1.f) * 2.f;
+            float u = 2.f * rand_range(0.f, 1.f);
             float v = glm::two_pi<float>() * rand_range(0.f, 1.f);
             float xx = glm::sqrt(1 - u * u) * glm::cos(v);
             float yy = glm::sqrt(1 - u * u) * glm::sin(v);
@@ -56,7 +56,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
             glm::vec3 new_ray_dir = {xx, yy, zz};
             new_ray_dir = glm::normalize(new_ray_dir);
             if(glm::dot(new_ray_dir, normal) < 0) {
-                    new_ray_dir = -new_ray_dir;
+                new_ray_dir = -new_ray_dir;
             }
 
             float cos_theta = glm::dot(new_ray_dir, normal);

@@ -98,9 +98,18 @@ class Camera {
     static glm::vec3 worldpoint_to_worldspace(const Camera &camera, glm::vec3 world_point);
 
   private:
+    static void rebuild(Camera &camera);
+
     glm::vec3 m_pos;
     glm::vec3 m_dir;
     glm::vec3 m_world_up;
+    glm::vec3 m_right;
+    glm::vec3 m_up;
+    float m_canvas_width;
+    float m_canvas_height;
+    glm::vec3 m_canvas_center_pos;
+    glm::vec3 m_canvas_dir_x;
+    glm::vec3 m_canvas_dir_y;
     float m_near_plane_dist;
     float m_far_plane_dist;
     int m_screen_width;

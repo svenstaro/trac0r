@@ -42,8 +42,8 @@ class Renderer {
 #ifdef OPENCL
     boost::compute::context m_compute_context;
     std::vector<boost::compute::command_queue> m_compute_queues;
-    boost::compute::program m_prog2;
-    boost::compute::kernel m_kernel2;
+    boost::compute::program m_program;
+    boost::compute::kernel m_kernel;
 #endif
 };
 }
