@@ -50,12 +50,12 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
         DeviceMaterial m_material;
         cl_float3 m_normal;
         cl_float3 m_centroid;
-        float m_area;
+        cl_float m_area;
     };
 
     struct DeviceFlatStructure {
         DeviceTriangle m_triangles[100];
-        unsigned m_num_triangles;
+        cl_uint m_num_triangles;
     };
 
     struct DeviceCamera {
@@ -64,17 +64,17 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
         cl_float3 m_world_up;
         cl_float3 m_right;
         cl_float3 m_up;
-        float m_canvas_width;
-        float m_canvas_height;
+        cl_float m_canvas_width;
+        cl_float m_canvas_height;
         cl_float3 m_canvas_center_pos;
         cl_float3 m_canvas_dir_x;
         cl_float3 m_canvas_dir_y;
-        float m_near_plane_dist;
-        float m_far_plane_dist;
-        int m_screen_width;
-        int m_screen_height;
-        float m_vertical_fov;
-        float m_horizontal_fov;
+        cl_float m_near_plane_dist;
+        cl_float m_far_plane_dist;
+        cl_int m_screen_width;
+        cl_int m_screen_height;
+        cl_float m_vertical_fov;
+        cl_float m_horizontal_fov;
     };
 
     size_t image_size = m_width * m_height;
