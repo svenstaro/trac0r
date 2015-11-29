@@ -155,19 +155,15 @@ glm::vec2 Camera::worldspace_to_camspace(const Camera &camera, glm::vec3 world_p
     auto angle1x = glm::atan(glm::length(cx), glm::dot(ax, bx));
 
     auto angle2x = glm::pi<float>() - (glm::half_pi<float>() + angle1x);
-    auto length = glm::length(canvas_center_to_point);
-    auto x = glm::sin(angle2x) * length;
-    auto y = glm::sin(angle1y) * length;
+    auto len = glm::length(canvas_center_to_point);
+    auto x = glm::sin(angle2x) * len;
+    auto y = glm::sin(angle1y) * len;
     auto rel_x = -(2 * x) / canvas_width(camera);
     auto rel_y = -(2 * y) / canvas_height(camera);
     return {rel_x, -rel_y};
 }
 
 glm::vec3 Camera::worldpoint_to_worldspace(const Camera &camera, glm::vec3 world_point) {
-    // auto far_right_on_canvas = camspace_to_worldspace({1.f, 0.f});
-    // auto far_top_on_canvas = camspace_to_worldspace({0.f, 1.f});
-    // auto max_distance_x = glm::length(far_right_on_canvas - pos());
-    // auto max_distance_y = glm::length(far_top_on_canvas - pos());
     auto ray_to_cam = pos(camera) - world_point;
     float dist = 0;
     bool collided = glm::intersectRayPlane(world_point, glm::normalize(ray_to_cam),

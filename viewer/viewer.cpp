@@ -103,7 +103,7 @@ void Viewer::setup_scene() {
     auto wall_top = trac0r::Shape::make_plane({0, 0.9f, 0}, {0, 1, 0}, {1, 1}, default_material);
     auto wall_bottom =
         trac0r::Shape::make_plane({0, -0.1f, 0}, {0, 1, 0}, {1, 1}, default_material);
-    auto lamp = trac0r::Shape::make_plane({0, 0.85f, -0.1}, {0, 1, 0}, {0.2, 0.2},
+    auto lamp = trac0r::Shape::make_plane({0, 0.85f, -0.1}, {0, 1, 0}, {0.4, 0.4},
                                           {{0, 0, 0}, {20, 20, 20}});
     auto box1 = trac0r::Shape::make_box({0.2f, 0.1f, 0}, {0.3, 0.1, 0.5}, {0.2f, 0.5f, 0.2f},
                                         default_material);
