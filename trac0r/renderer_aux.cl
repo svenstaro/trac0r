@@ -306,12 +306,14 @@ IntersectionInfo Scene_intersect(__constant FlatStructure *accel_struct, Ray *ra
     return intersect_info;
 }
 
-__kernel void renderer_trace_pixel_color(__write_only __global float4 *output, const unsigned max_depth,
-                                         __local PRNG *prng, __constant Camera *camera,
-                                         __constant FlatStructure *flatstruct) {
+// __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, const unsigned max_depth,
+//                                          __local PRNG *prng, __constant Camera *camera,
+//                                          __constant FlatStructure *flatstruct) {
+__kernel void renderer_trace_pixel_color(__write_only __global float4 *output) {
     int x = get_global_id(0);
-    int y = get_global_id(1);
-    int index = y * get_global_size(x) + x;
+    // int y = get_global_id(1);
+    // int index = y * get_global_size(x) + x;
+    int index = x;
 
     // float2 rel_pos = Camera_screenspace_to_camspace(camera, x, y);
     // float3 world_pos = Camera_camspace_to_worldspace(camera, rel_pos);

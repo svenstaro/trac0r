@@ -15,6 +15,7 @@
 #include <boost/compute/types/fundamental.hpp>
 #include <boost/compute/types/struct.hpp>
 #include <boost/compute/utility/source.hpp>
+#include <boost/compute/utility/dim.hpp>
 #endif
 
 namespace trac0r {
