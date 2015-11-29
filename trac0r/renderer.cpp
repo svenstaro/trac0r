@@ -156,15 +156,18 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
                                              &dev_flatstruct);
 
     m_kernel.set_arg(0, dev_output);
+    m_kernel.set_arg(1, m_width);
     // m_kernel.set_arg(1, m_max_depth);
     // m_kernel.set_arg(2, sizeof(dev_prng), &dev_prng);
     // m_kernel.set_arg(3, sizeof(dev_camera), &dev_camera);
     // m_kernel.set_arg(4, sizeof(dev_flatstruct), &dev_flatstruct);
-    size_t work_dim[1] = {image_size};
+    // size_t work_dim[2] = {static_cast<size_t>(m_width), static_cast<size_t>(m_height)};
+    // size_t local_work[2] = {1, 1};
     // int [1] = image_size;
-    m_compute_queues[0].enqueue_nd_range_kernel(m_kernel, 1, NULL, work_dim, NULL);
-                                                // boost::compute::dim(m_width, m_height),
-                                                // boost::compute::dim(1));
+    // m_compute_queues[0].enqueue_nd_range_kernel(m_kernel, 2, NULL, work_dim, local_work);
+    m_compute_queues[0].enqueue_nd_range_kernel(m_kernel, boost::compute::dim(0, 0),
+                                                boost::compute::dim(m_width, m_height),
+                                                boost::compute::dim(1, 1));
     // m_compute_queues[0].enqueue_1d_range_kernel(m_kernel, 0, image_size, 1);
 
     boost::compute::copy(dev_output.begin(), dev_output.end(), host_output.begin(),

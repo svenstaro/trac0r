@@ -309,11 +309,10 @@ IntersectionInfo Scene_intersect(__constant FlatStructure *accel_struct, Ray *ra
 // __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, const unsigned max_depth,
 //                                          __local PRNG *prng, __constant Camera *camera,
 //                                          __constant FlatStructure *flatstruct) {
-__kernel void renderer_trace_pixel_color(__write_only __global float4 *output) {
+__kernel void renderer_trace_pixel_color(__write_only __global float4 *output, __read_only const int width) {
     int x = get_global_id(0);
-    // int y = get_global_id(1);
-    // int index = y * get_global_size(x) + x;
-    int index = x;
+    int y = get_global_id(1);
+    int index = y * width + x;
 
     // float2 rel_pos = Camera_screenspace_to_camspace(camera, x, y);
     // float3 world_pos = Camera_camspace_to_worldspace(camera, rel_pos);
@@ -375,5 +374,5 @@ __kernel void renderer_trace_pixel_color(__write_only __global float4 *output) {
     // }
     //
     // output[index] = (float4)(ret_color.x, ret_color.y, ret_color.z, 1.f);
-    output[index] = (float4)(.5f, .2f, .9f, 1.f);
+    output[index] = (float4)(.5f, .9f, .9f, 1.f);
 }
