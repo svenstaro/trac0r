@@ -45,8 +45,8 @@ inline bool intersect_ray_aabb_broken2(const Ray &ray, const AABB &aabb) {
 
 // From http://tavianator.com/fast-branchless-raybounding-box-intersections-part-2-nans/
 inline bool intersect_ray_aabb_broken1(const Ray &ray, const AABB &aabb) {
-    double t1 = (AABB::min(aabb).x - ray.m_origin.x) * ray.m_dir.x;
-    double t2 = (AABB::max(aabb).x - ray.m_origin.x) * ray.m_dir.x;
+    double t1 = (AABB::min(aabb).x - ray.m_origin.x) * ray.m_invdir.x;
+    double t2 = (AABB::max(aabb).x - ray.m_origin.x) * ray.m_invdir.x;
 
     double tmin = glm::min(t1, t2);
     double tmax = glm::max(t1, t2);
