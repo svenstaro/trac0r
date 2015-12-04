@@ -187,7 +187,7 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     for (auto x = 0; x < m_width; x += stride_x) {
         for (auto y = 0; y < m_height; y += stride_y) {
             auto lol = reinterpret_cast<glm::vec4 *>(&host_output[y * m_width + x]);
-            if (m_scene_changed)
+            if (scene_changed)
                 m_luminance[y * m_width + x] = *lol;
             else
                 m_luminance[y * m_width + x] += *lol;
