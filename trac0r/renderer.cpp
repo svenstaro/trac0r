@@ -96,7 +96,7 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     host_output.resize(image_size);
 
     // Init dev_output
-    cl::Buffer dev_output(m_compute_context, CL_MEM_WRITE_ONLY, image_size * sizeof(cl_float4));
+    cl::Buffer dev_output_buf(m_compute_context, CL_MEM_WRITE_ONLY, image_size * sizeof(cl_float4));
 
     // Init dev_prng
     DevicePRNG dev_prng;
@@ -136,8 +136,9 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     dev_camera.m_screen_height = Camera::screen_height(m_camera);
     dev_camera.m_vertical_fov = Camera::vertical_fov(m_camera);
     dev_camera.m_horizontal_fov = Camera::horizontal_fov(m_camera);
-    // boost::compute::buffer dev_camera_buf(m_compute_context, sizeof(dev_camera));
-    // m_compute_queues[0].enqueue_write_buffer(dev_camera_buf, 0, sizeof(dev_camera), &dev_camera);
+    cl::Buffer dev_camera_buf(m_compute_context, CL_MEM_READ_ONLY, sizeof(dev_camera));
+    m_compute_queues[0].enqueueWriteBuffer(dev_camera_buf, CL_TRUE, 0, sizeof(dev_camera),
+                                           &dev_camera);
 
     // Init dev_flatstruct
     DeviceFlatStructure dev_flatstruct;
@@ -164,29 +165,32 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
             tri_num++;
         }
     }
-    // boost::compute::buffer dev_flatstruct_buf(m_compute_context, sizeof(dev_flatstruct));
-    // m_compute_queues[0].enqueue_write_buffer(dev_flatstruct_buf, 0, sizeof(dev_flatstruct),
-    //                                          &dev_flatstruct);
+    cl::Buffer dev_flatstruct_buf(m_compute_context, CL_MEM_READ_ONLY, sizeof(dev_flatstruct));
+    m_compute_queues[0].enqueueWriteBuffer(dev_flatstruct_buf, CL_TRUE, 0, sizeof(dev_flatstruct),
+                                           &dev_flatstruct);
 
-    m_kernel.setArg(0, dev_output);
+    m_kernel.setArg(0, dev_output_buf);
     m_kernel.setArg(1, m_width);
     m_kernel.setArg(2, m_max_depth);
     m_kernel.setArg(3, dev_prng_buf);
-    // m_kernel.set_arg(4, sizeof(dev_camera), &dev_camera);
-    // m_kernel.set_arg(5, sizeof(dev_flatstruct), &dev_flatstruct);
+    m_kernel.setArg(4, dev_camera_buf);
+    m_kernel.setArg(5, dev_flatstruct_buf);
     cl::Event event;
 
     m_compute_queues[0].enqueueNDRangeKernel(m_kernel, cl::NDRange(0, 0),
                                              cl::NDRange(m_width, m_height), cl::NDRange(1, 1));
 
     event.wait();
-    m_compute_queues[0].enqueueReadBuffer(dev_output, CL_TRUE, 0, image_size * sizeof(cl_float4),
-                                          &host_output[0]);
+    m_compute_queues[0].enqueueReadBuffer(dev_output_buf, CL_TRUE, 0,
+                                          image_size * sizeof(cl_float4), &host_output[0]);
 
     for (auto x = 0; x < m_width; x += stride_x) {
         for (auto y = 0; y < m_height; y += stride_y) {
             auto lol = reinterpret_cast<glm::vec4 *>(&host_output[y * m_width + x]);
-            m_luminance[y * m_width + x] += *lol;
+            if (m_scene_changed)
+                m_luminance[y * m_width + x] = *lol;
+            else
+                m_luminance[y * m_width + x] += *lol;
         }
     }
 #else

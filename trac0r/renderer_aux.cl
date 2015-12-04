@@ -307,73 +307,73 @@ IntersectionInfo Scene_intersect(__constant FlatStructure *accel_struct, Ray *ra
 }
 
 __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, const int width,
-                                         const unsigned max_depth,
-                                         __global PRNG *prng) { //, __constant Camera *camera,
-    // __constant FlatStructure *flatstruct) {
+                                         const unsigned max_depth, __global PRNG *prng,
+                                         __constant Camera *camera,
+                                         __constant FlatStructure *flatstruct) {
     int x = get_global_id(0);
     int y = get_global_id(1);
     int index = y * width + x;
 
-    // float2 rel_pos = Camera_screenspace_to_camspace(camera, x, y);
-    // float3 world_pos = Camera_camspace_to_worldspace(camera, rel_pos);
-    // float3 ray_dir = normalize(world_pos - camera->m_pos);
-    //
-    // float3 ret_color = (float3)(0);
-    // Ray next_ray = {world_pos, ray_dir};
-    // float3 brdf = (float3)(1);
-    // for (unsigned depth = 0; depth < max_depth; depth++) {
-    //     IntersectionInfo intersect_info = Scene_intersect(flatstruct, &next_ray);
-    //     if (intersect_info.m_has_intersected) {
-    //         // Get the local radiance only on first bounce
-    //         float3 local_radiance;
-    //         // if (depth == 0) {
-    //         // auto ray = ray_pos - impact_pos;
-    //         // float dist2 = glm_dot(ray, ray);
-    //         // auto cos_area = glm_dot(-ray_dir, tri->m_normal) * tri->m_area;
-    //         // auto solid_angle = cos_area / glm_max(dist2, 1e-6f);
-    //         //
-    //         // if (cos_area > 0.0)
-    //         //     local_radiance = tri->m_emittance * solid_angle;
-    //         //     local_radiance = intersect_info.m_material.m_emittance;
-    //         // }
-    //
-    //         local_radiance = intersect_info.m_material.m_emittance;
-    //
-    //         // Emitter sample
-    //         // TODO
-    //         // glm_vec3 illumination;
-    //
-    //         float3 normal =
-    //             intersect_info.m_normal *
-    //             -sign(dot(intersect_info.m_normal, intersect_info.m_incoming_ray.m_dir));
-    //
-    //         // Find new random direction for diffuse reflection
-    //         float u = 2.f * rand_range(prng, 0.f, 1.f);
-    //         float v = 2.f * M_PI_F * rand_range(prng, 0.f, 1.f);
-    //         float xx = sqrt(1 - u * u) * cos(v);
-    //         float yy = sqrt(1 - u * u) * sin(v);
-    //         float zz = u;
-    //         float3 new_ray_dir = {xx, yy, zz};
-    //         new_ray_dir = normalize(new_ray_dir);
-    //         if (dot(new_ray_dir, normal) < 0) {
-    //             new_ray_dir = -new_ray_dir;
-    //         }
-    //
-    //         float cos_theta = dot(new_ray_dir, normal);
-    //
-    //         ret_color += brdf * local_radiance;
-    //         brdf *= 2.f * intersect_info.m_material.m_reflectance * cos_theta;
-    //
-    //         // Make a new ray
-    //         Ray new_ray = {intersect_info.m_pos, new_ray_dir};
-    //         next_ray = new_ray;
-    //
-    //     } else {
-    //         break;
-    //     }
-    // }
-    //
-    // output[index] = (float4)(ret_color.x, ret_color.y, ret_color.z, 1.f);
-    output[index] = (float4)(rand_range(prng, 0.f, 1.f), rand_range(prng, 0.f, 1.f),
-                             rand_range(prng, 0.f, 1.f), 1.f);
+    float2 rel_pos = Camera_screenspace_to_camspace(camera, x, y);
+    float3 world_pos = Camera_camspace_to_worldspace(camera, rel_pos);
+    float3 ray_dir = normalize(world_pos - camera->m_pos);
+
+    float3 ret_color = (float3)(0);
+    Ray next_ray = {world_pos, ray_dir};
+    float3 brdf = (float3)(1);
+    for (unsigned depth = 0; depth < max_depth; depth++) {
+        IntersectionInfo intersect_info = Scene_intersect(flatstruct, &next_ray);
+        if (intersect_info.m_has_intersected) {
+            // Get the local radiance only on first bounce
+            float3 local_radiance;
+            // if (depth == 0) {
+            // auto ray = ray_pos - impact_pos;
+            // float dist2 = glm_dot(ray, ray);
+            // auto cos_area = glm_dot(-ray_dir, tri->m_normal) * tri->m_area;
+            // auto solid_angle = cos_area / glm_max(dist2, 1e-6f);
+            //
+            // if (cos_area > 0.0)
+            //     local_radiance = tri->m_emittance * solid_angle;
+            //     local_radiance = intersect_info.m_material.m_emittance;
+            // }
+
+            local_radiance = intersect_info.m_material.m_emittance;
+
+            // Emitter sample
+            // TODO
+            // glm_vec3 illumination;
+
+            float3 normal =
+                intersect_info.m_normal *
+                -sign(dot(intersect_info.m_normal, intersect_info.m_incoming_ray.m_dir));
+
+            // Find new random direction for diffuse reflection
+            float u = 2.f * rand_range(prng, 0.f, 1.f);
+            float v = 2.f * M_PI_F * rand_range(prng, 0.f, 1.f);
+            float xx = sqrt(1 - u * u) * cos(v);
+            float yy = sqrt(1 - u * u) * sin(v);
+            float zz = u;
+            float3 new_ray_dir = {xx, yy, zz};
+            new_ray_dir = normalize(new_ray_dir);
+            if (dot(new_ray_dir, normal) < 0) {
+                new_ray_dir = -new_ray_dir;
+            }
+
+            float cos_theta = dot(new_ray_dir, normal);
+
+            ret_color += brdf * local_radiance;
+            brdf *= 2.f * intersect_info.m_material.m_reflectance * cos_theta;
+
+            // Make a new ray
+            Ray new_ray = {intersect_info.m_pos, new_ray_dir};
+            next_ray = new_ray;
+
+        } else {
+            break;
+        }
+    }
+
+    output[index] = (float4)(ret_color.x, ret_color.y, ret_color.z, 1.f);
+    // output[index] = (float4)(rand_range(prng, 0.f, 1.f), rand_range(prng, 0.f, 1.f),
+    //                          rand_range(prng, 0.f, 1.f), 1.f);
 }
