@@ -64,7 +64,7 @@ typedef struct AABB {
 } AABB;
 
 // From http://xorshift.di.unimi.it/xorshift1024star.c
-ulong xorshift1024star(__local PRNG *prng) {
+ulong xorshift1024star(__global PRNG *prng) {
     ulong s0 = prng->m_seed[prng->m_p];
     ulong s1 = prng->m_seed[prng->m_p = (prng->m_p + 1) & 15];
     s1 ^= s1 << 31; // a
@@ -73,7 +73,7 @@ ulong xorshift1024star(__local PRNG *prng) {
     return (prng->m_seed[prng->m_p] = s0 ^ s1) * 1181783497276652981L;
 }
 
-float rand_range(__local PRNG *prng, const float min, const float max) {
+float rand_range(__global PRNG *prng, const float min, const float max) {
     return min + ((float)xorshift1024star(prng)) / (float)(ULONG_MAX / (max - min));
 }
 
@@ -307,7 +307,8 @@ IntersectionInfo Scene_intersect(__constant FlatStructure *accel_struct, Ray *ra
 }
 
 __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, const int width,
-                                         const unsigned max_depth) { //, __local PRNG *prng) { //, __constant Camera *camera,
+                                         const unsigned max_depth,
+                                         __global PRNG *prng) { //, __constant Camera *camera,
     // __constant FlatStructure *flatstruct) {
     int x = get_global_id(0);
     int y = get_global_id(1);
@@ -373,5 +374,6 @@ __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, c
     // }
     //
     // output[index] = (float4)(ret_color.x, ret_color.y, ret_color.z, 1.f);
-    output[index] = (float4)(.5f, .9f, .9f, 1.f);
+    output[index] = (float4)(rand_range(prng, 0.f, 1.f), rand_range(prng, 0.f, 1.f),
+                             rand_range(prng, 0.f, 1.f), 1.f);
 }

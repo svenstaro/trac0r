@@ -37,7 +37,7 @@ Renderer::Renderer(const int width, const int height, const Camera &camera, cons
     cl_int result = m_program.build();
     if (result != CL_SUCCESS) {
         auto build_log = m_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_compute_devices[0]);
-        fmt::print(build_log);
+        fmt::print("{}", build_log);
         exit(1);
     }
     m_kernel = cl::Kernel(m_program, "renderer_trace_pixel_color");
@@ -171,10 +171,11 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     m_kernel.setArg(0, dev_output);
     m_kernel.setArg(1, m_width);
     m_kernel.setArg(2, m_max_depth);
-    // m_kernel.setArg(3, dev_prng_buf);
+    m_kernel.setArg(3, dev_prng_buf);
     // m_kernel.set_arg(4, sizeof(dev_camera), &dev_camera);
     // m_kernel.set_arg(5, sizeof(dev_flatstruct), &dev_flatstruct);
     cl::Event event;
+
     m_compute_queues[0].enqueueNDRangeKernel(m_kernel, cl::NDRange(0, 0),
                                              cl::NDRange(m_width, m_height), cl::NDRange(1, 1));
 
