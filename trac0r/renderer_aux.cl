@@ -64,7 +64,7 @@ typedef struct AABB {
 } AABB;
 
 // From http://xorshift.di.unimi.it/xorshift1024star.c
-ulong xorshift1024star(__global PRNG *prng) {
+inline ulong xorshift1024star(__global PRNG *prng) {
     ulong s0 = prng->m_seed[prng->m_p];
     ulong s1 = prng->m_seed[prng->m_p = (prng->m_p + 1) & 15];
     s1 ^= s1 << 31; // a
@@ -73,29 +73,29 @@ ulong xorshift1024star(__global PRNG *prng) {
     return (prng->m_seed[prng->m_p] = s0 ^ s1) * 1181783497276652981L;
 }
 
-float rand_range(__global PRNG *prng, const float min, const float max) {
+inline float rand_range(__global PRNG *prng, const float min, const float max) {
     return min + ((float)xorshift1024star(prng)) / (float)(ULONG_MAX / (max - min));
 }
 
-bool AABB_is_null(const AABB *aabb) {
+inline bool AABB_is_null(const AABB *aabb) {
     bool min_null = length(aabb->m_min) == 0;
     bool max_null = length(aabb->m_max) == 0;
     return min_null && max_null;
 }
 
-float3 AABB_min(const AABB *aabb) {
+inline float3 AABB_min(const AABB *aabb) {
     return aabb->m_min;
 }
 
-float3 AABB_max(const AABB *aabb) {
+inline float3 AABB_max(const AABB *aabb) {
     return aabb->m_max;
 }
 
-float3 AABB_diagonal(const AABB *aabb) {
+inline float3 AABB_diagonal(const AABB *aabb) {
     return aabb->m_max - aabb->m_min;
 }
 
-float3 AABB_center(const AABB *aabb) {
+inline float3 AABB_center(const AABB *aabb) {
     return aabb->m_min + (AABB_diagonal(aabb) * 0.5f);
 }
 
@@ -112,36 +112,36 @@ float3 AABB_center(const AABB *aabb) {
 //     return result;
 // }
 
-void AABB_extend(AABB *aabb, float3 point) {
+inline void AABB_extend(AABB *aabb, float3 point) {
     aabb->m_min = min(point, aabb->m_min);
     aabb->m_max = max(point, aabb->m_max);
 }
 
-bool AABB_overlaps(const AABB *first, const AABB *second) {
+inline bool AABB_overlaps(const AABB *first, const AABB *second) {
     return first->m_max.x > second->m_min.x && first->m_min.x < second->m_max.x &&
            first->m_max.y > second->m_min.y && first->m_min.y < second->m_max.y &&
            first->m_max.z > second->m_min.z && first->m_min.z < second->m_max.z;
 }
 
-void AABB_reset(AABB *aabb) {
+inline void AABB_reset(AABB *aabb) {
     aabb->m_min = 0;
     aabb->m_max = 0;
 }
 
-float2 Camera_screenspace_to_camspace(__constant const Camera *camera, unsigned x, unsigned y) {
+inline float2 Camera_screenspace_to_camspace(__constant const Camera *camera, unsigned x, unsigned y) {
     float rel_x = -(x - camera->m_screen_width / 2.f) / camera->m_screen_width;
     float rel_y = -(y - camera->m_screen_height / 2.f) / camera->m_screen_height;
     return (float2)(rel_x, rel_y);
 }
 
-int2 Camera_camspace_to_screenspace(__constant const Camera *camera, int2 coords) {
+inline int2 Camera_camspace_to_screenspace(__constant const Camera *camera, int2 coords) {
     int screen_x = round(0.5f * (camera->m_screen_width - 2.f * camera->m_screen_width * coords.x));
     int screen_y =
         round(0.5f * (camera->m_screen_height - 2.f * camera->m_screen_height * coords.y));
     return (int2)(screen_x, screen_y);
 }
 
-float3 Camera_camspace_to_worldspace(__constant const Camera *camera, float2 rel_pos) {
+inline float3 Camera_camspace_to_worldspace(__constant const Camera *camera, float2 rel_pos) {
     float3 worldspace = camera->m_canvas_center_pos + (rel_pos.x * camera->m_canvas_dir_x) +
                         (rel_pos.y * camera->m_canvas_dir_y);
     return worldspace;
@@ -185,7 +185,7 @@ float3 Camera_camspace_to_worldspace(__constant const Camera *camera, float2 rel
 
 // From
 // http://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection
-bool intersect_ray_aabb(const Ray *ray, const AABB *aabb) {
+inline bool intersect_ray_aabb(const Ray *ray, const AABB *aabb) {
     float tmin, tmax, tymin, tymax, tzmin, tzmax;
 
     float3 bounds[2];
@@ -224,7 +224,7 @@ bool intersect_ray_aabb(const Ray *ray, const AABB *aabb) {
 
 // Möller-Trumbore intersection algorithm
 // (see https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm)
-bool intersect_ray_triangle(const Ray *ray, __constant const Triangle *triangle, float *dist) {
+inline bool intersect_ray_triangle(const Ray *ray, __constant const Triangle *triangle, float *dist) {
     // Calculate edges of triangle from v0.
     float3 e0 = triangle->m_v2 - triangle->m_v1;
     float3 e1 = triangle->m_v3 - triangle->m_v1;
@@ -273,7 +273,7 @@ bool intersect_ray_triangle(const Ray *ray, __constant const Triangle *triangle,
     return false;
 }
 
-IntersectionInfo Scene_intersect(__constant FlatStructure *accel_struct, Ray *ray) {
+inline IntersectionInfo Scene_intersect(__constant FlatStructure *accel_struct, Ray *ray) {
     IntersectionInfo intersect_info;
 
     // Keep track of closest triangle
@@ -324,6 +324,9 @@ __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, c
     for (unsigned depth = 0; depth < max_depth; depth++) {
         IntersectionInfo intersect_info = Scene_intersect(flatstruct, &next_ray);
         if (intersect_info.m_has_intersected) {
+            // ret_color = intersect_info.m_material.m_reflectance;
+            // break;
+
             // Get the local radiance only on first bounce
             float3 local_radiance;
             // if (depth == 0) {
