@@ -307,8 +307,7 @@ IntersectionInfo Scene_intersect(__constant FlatStructure *accel_struct, Ray *ra
 }
 
 __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, const int width,
-                                         const unsigned max_depth,
-                                         __local PRNG *prng) { //, __constant Camera *camera,
+                                         const unsigned max_depth) { //, __local PRNG *prng) { //, __constant Camera *camera,
     // __constant FlatStructure *flatstruct) {
     int x = get_global_id(0);
     int y = get_global_id(1);

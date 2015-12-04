@@ -90,23 +90,23 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
         cl_float m_horizontal_fov;
     };
 
-    // size_t image_size = m_width * m_height;
+    size_t image_size = m_width * m_height;
 
-    // std::vector<boost::compute::float4_> host_output;
-    // host_output.resize(image_size);
+    std::vector<cl_float4> host_output;
+    host_output.resize(image_size);
 
     // Init dev_output
-    // boost::compute::vector<boost::compute::float4_> dev_output(image_size, m_compute_context);
+    cl::Buffer dev_output(m_compute_context, CL_MEM_WRITE_ONLY, image_size * sizeof(cl_float4));
 
     // Init dev_prng
-    // DevicePRNG dev_prng;
-    // auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
-    // auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
-    // for (auto i = 0; i < 16; i++)
-    //     dev_prng.m_seed[i] = xorshift64star(ns);
-    // dev_prng.m_p = 0;
-    // boost::compute::buffer dev_prng_buf(m_compute_context, sizeof(dev_prng));
-    // m_compute_queues[0].enqueue_write_buffer(dev_prng_buf, 0, sizeof(dev_prng), &dev_prng);
+    DevicePRNG dev_prng;
+    auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+    auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+    for (auto i = 0; i < 16; i++)
+        dev_prng.m_seed[i] = xorshift64star(ns);
+    dev_prng.m_p = 0;
+    cl::Buffer dev_prng_buf(m_compute_context, CL_MEM_READ_WRITE, sizeof(dev_prng));
+    m_compute_queues[0].enqueueWriteBuffer(dev_prng_buf, CL_TRUE, 0, sizeof(dev_prng), &dev_prng);
 
     // Init dev_camera
     DeviceCamera dev_camera;
@@ -164,29 +164,30 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
             tri_num++;
         }
     }
-// boost::compute::buffer dev_flatstruct_buf(m_compute_context, sizeof(dev_flatstruct));
-// m_compute_queues[0].enqueue_write_buffer(dev_flatstruct_buf, 0, sizeof(dev_flatstruct),
-//                                          &dev_flatstruct);
-//
-// m_kernel.set_arg(0, dev_output);
-// m_kernel.set_arg(1, m_width);
-// m_kernel.set_arg(2, m_max_depth);
-// m_kernel.set_arg(3, dev_prng_buf.size(), dev_prng_buf.get());
-// m_kernel.set_arg(4, sizeof(dev_camera), &dev_camera);
-// m_kernel.set_arg(5, sizeof(dev_flatstruct), &dev_flatstruct);
-// m_compute_queues[0].enqueue_nd_range_kernel(m_kernel, boost::compute::dim(0, 0),
-//                                             boost::compute::dim(m_width, m_height),
-//                                             boost::compute::dim(1, 1));
-//
-// boost::compute::copy(dev_output.begin(), dev_output.end(), host_output.begin(),
-//                      m_compute_queues[0]);
-//
-// for (auto x = 0; x < m_width; x += stride_x) {
-//     for (auto y = 0; y < m_height; y += stride_y) {
-//         auto lol = reinterpret_cast<glm::vec4 *>(&host_output[y * m_width + x]);
-//         m_luminance[y * m_width + x] += *lol;
-//     }
-// }
+    // boost::compute::buffer dev_flatstruct_buf(m_compute_context, sizeof(dev_flatstruct));
+    // m_compute_queues[0].enqueue_write_buffer(dev_flatstruct_buf, 0, sizeof(dev_flatstruct),
+    //                                          &dev_flatstruct);
+
+    m_kernel.setArg(0, dev_output);
+    m_kernel.setArg(1, m_width);
+    m_kernel.setArg(2, m_max_depth);
+    // m_kernel.setArg(3, dev_prng_buf);
+    // m_kernel.set_arg(4, sizeof(dev_camera), &dev_camera);
+    // m_kernel.set_arg(5, sizeof(dev_flatstruct), &dev_flatstruct);
+    cl::Event event;
+    m_compute_queues[0].enqueueNDRangeKernel(m_kernel, cl::NDRange(0, 0),
+                                             cl::NDRange(m_width, m_height), cl::NDRange(1, 1));
+
+    event.wait();
+    m_compute_queues[0].enqueueReadBuffer(dev_output, CL_TRUE, 0, image_size * sizeof(cl_float4),
+                                          &host_output[0]);
+
+    for (auto x = 0; x < m_width; x += stride_x) {
+        for (auto y = 0; y < m_height; y += stride_y) {
+            auto lol = reinterpret_cast<glm::vec4 *>(&host_output[y * m_width + x]);
+            m_luminance[y * m_width + x] += *lol;
+        }
+    }
 #else
 #pragma omp parallel for collapse(2) schedule(dynamic, 1024)
     for (auto x = 0; x < m_width; x += stride_x) {
