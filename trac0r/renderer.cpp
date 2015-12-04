@@ -14,20 +14,20 @@ Renderer::Renderer(const int width, const int height, const Camera &camera, cons
     m_luminance.resize(width * height, glm::vec4{0});
 
 #ifdef OPENCL
-    auto devices = boost::compute::system::devices();
-    m_compute_context = boost::compute::context(devices);
-    for (auto &device : devices) {
-        m_compute_queues.emplace_back(boost::compute::command_queue(m_compute_context, device));
-    }
-
-    m_program = boost::compute::program::create_with_source_file("trac0r/renderer_aux.cl",
-                                                                 m_compute_context);
-    try {
-        m_program.build();
-        m_kernel = boost::compute::kernel(m_program, "renderer_trace_pixel_color");
-    } catch (boost::compute::opencl_error &e) {
-        fmt::print("{}", m_program.build_log());
-    }
+    // auto devices = boost::compute::system::devices();
+    // m_compute_context = boost::compute::context(devices);
+    // for (auto &device : devices) {
+    //     m_compute_queues.emplace_back(boost::compute::command_queue(m_compute_context, device));
+    // }
+    //
+    // m_program = boost::compute::program::create_with_source_file("trac0r/renderer_aux.cl",
+    //                                                              m_compute_context);
+    // try {
+    //     m_program.build();
+    //     m_kernel = boost::compute::kernel(m_program, "renderer_trace_pixel_color");
+    // } catch (boost::compute::opencl_error &e) {
+    //     fmt::print("{}", m_program.build_log());
+    // }
 #endif
 }
 
@@ -77,23 +77,23 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
         float m_horizontal_fov;
     };
 
-    size_t image_size = m_width * m_height;
+    // size_t image_size = m_width * m_height;
 
-    std::vector<boost::compute::float4_> host_output;
-    host_output.resize(image_size);
+    // std::vector<boost::compute::float4_> host_output;
+    // host_output.resize(image_size);
 
     // Init dev_output
-    boost::compute::vector<boost::compute::float4_> dev_output(image_size, m_compute_context);
+    // boost::compute::vector<boost::compute::float4_> dev_output(image_size, m_compute_context);
 
     // Init dev_prng
-    DevicePRNG dev_prng;
-    auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
-    auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
-    for (auto i = 0; i < 16; i++)
-        dev_prng.m_seed[i] = xorshift64star(ns);
-    dev_prng.m_p = 0;
-    boost::compute::buffer dev_prng_buf(m_compute_context, sizeof(dev_prng));
-    m_compute_queues[0].enqueue_write_buffer(dev_prng_buf, 0, sizeof(dev_prng), &dev_prng);
+    // DevicePRNG dev_prng;
+    // auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+    // auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+    // for (auto i = 0; i < 16; i++)
+    //     dev_prng.m_seed[i] = xorshift64star(ns);
+    // dev_prng.m_p = 0;
+    // boost::compute::buffer dev_prng_buf(m_compute_context, sizeof(dev_prng));
+    // m_compute_queues[0].enqueue_write_buffer(dev_prng_buf, 0, sizeof(dev_prng), &dev_prng);
 
     // Init dev_camera
     DeviceCamera dev_camera;
@@ -123,8 +123,8 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     dev_camera.m_screen_height = Camera::screen_height(m_camera);
     dev_camera.m_vertical_fov = Camera::vertical_fov(m_camera);
     dev_camera.m_horizontal_fov = Camera::horizontal_fov(m_camera);
-    boost::compute::buffer dev_camera_buf(m_compute_context, sizeof(dev_camera));
-    m_compute_queues[0].enqueue_write_buffer(dev_camera_buf, 0, sizeof(dev_camera), &dev_camera);
+    // boost::compute::buffer dev_camera_buf(m_compute_context, sizeof(dev_camera));
+    // m_compute_queues[0].enqueue_write_buffer(dev_camera_buf, 0, sizeof(dev_camera), &dev_camera);
 
     // Init dev_flatstruct
     DeviceFlatStructure dev_flatstruct;
@@ -151,34 +151,29 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
             tri_num++;
         }
     }
-    boost::compute::buffer dev_flatstruct_buf(m_compute_context, sizeof(dev_flatstruct));
-    m_compute_queues[0].enqueue_write_buffer(dev_flatstruct_buf, 0, sizeof(dev_flatstruct),
-                                             &dev_flatstruct);
-
-    m_kernel.set_arg(0, dev_output);
-    m_kernel.set_arg(1, m_width);
-    // m_kernel.set_arg(1, m_max_depth);
-    // m_kernel.set_arg(2, sizeof(dev_prng), &dev_prng);
-    // m_kernel.set_arg(3, sizeof(dev_camera), &dev_camera);
-    // m_kernel.set_arg(4, sizeof(dev_flatstruct), &dev_flatstruct);
-    // size_t work_dim[2] = {static_cast<size_t>(m_width), static_cast<size_t>(m_height)};
-    // size_t local_work[2] = {1, 1};
-    // int [1] = image_size;
-    // m_compute_queues[0].enqueue_nd_range_kernel(m_kernel, 2, NULL, work_dim, local_work);
-    m_compute_queues[0].enqueue_nd_range_kernel(m_kernel, boost::compute::dim(0, 0),
-                                                boost::compute::dim(m_width, m_height),
-                                                boost::compute::dim(1, 1));
-    // m_compute_queues[0].enqueue_1d_range_kernel(m_kernel, 0, image_size, 1);
-
-    boost::compute::copy(dev_output.begin(), dev_output.end(), host_output.begin(),
-                         m_compute_queues[0]);
-
-    for (auto x = 0; x < m_width; x += stride_x) {
-        for (auto y = 0; y < m_height; y += stride_y) {
-            auto lol = reinterpret_cast<glm::vec4 *>(&host_output[y * m_width + x]);
-            m_luminance[y * m_width + x] += *lol;
-        }
-    }
+    // boost::compute::buffer dev_flatstruct_buf(m_compute_context, sizeof(dev_flatstruct));
+    // m_compute_queues[0].enqueue_write_buffer(dev_flatstruct_buf, 0, sizeof(dev_flatstruct),
+    //                                          &dev_flatstruct);
+    //
+    // m_kernel.set_arg(0, dev_output);
+    // m_kernel.set_arg(1, m_width);
+    // m_kernel.set_arg(2, m_max_depth);
+    // m_kernel.set_arg(3, dev_prng_buf.size(), dev_prng_buf.get());
+    // m_kernel.set_arg(4, sizeof(dev_camera), &dev_camera);
+    // m_kernel.set_arg(5, sizeof(dev_flatstruct), &dev_flatstruct);
+    // m_compute_queues[0].enqueue_nd_range_kernel(m_kernel, boost::compute::dim(0, 0),
+    //                                             boost::compute::dim(m_width, m_height),
+    //                                             boost::compute::dim(1, 1));
+    //
+    // boost::compute::copy(dev_output.begin(), dev_output.end(), host_output.begin(),
+    //                      m_compute_queues[0]);
+    //
+    // for (auto x = 0; x < m_width; x += stride_x) {
+    //     for (auto y = 0; y < m_height; y += stride_y) {
+    //         auto lol = reinterpret_cast<glm::vec4 *>(&host_output[y * m_width + x]);
+    //         m_luminance[y * m_width + x] += *lol;
+    //     }
+    // }
 #else
 #pragma omp parallel for collapse(2) schedule(dynamic, 1024)
     for (auto x = 0; x < m_width; x += stride_x) {

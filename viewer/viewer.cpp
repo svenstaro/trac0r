@@ -16,7 +16,7 @@
 #include <cppformat/format.h>
 
 #ifdef OPENCL
-#include <boost/compute/core.hpp>
+#include <CL/cl.hpp>
 #endif
 
 #include <algorithm>

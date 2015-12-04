@@ -7,6 +7,3 @@
 [submodule "external/sdl2_gfx"]
 	path = external/sdl2_gfx
 	url = https://github.com/svn2github/sdl2_gfx.git
-[submodule "external/boost-compute"]
-	path = external/boost-compute
-	url = https://github.com/boostorg/compute.git

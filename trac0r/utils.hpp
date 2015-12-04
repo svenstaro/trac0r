@@ -9,7 +9,7 @@
 #include <SDL_ttf.h>
 
 #ifdef OPENCL
-#include <boost/compute/core.hpp>
+#include <CL/cl.hpp>
 #endif
 
 #include <chrono>
@@ -20,15 +20,59 @@
 namespace trac0r {
 
 inline void print_sysinfo() {
-    fmt::print("Rendering on\n");
 #ifdef OPENCL
-    auto device = boost::compute::system::default_device();
-    const auto &devices = boost::compute::system::devices();
-    for (size_t i = 0; i < devices.size(); i++) {
-        fmt::print("    OpenCL (Device {}: {}, OpenCL version: {}, driver version: {})\n", i + 1,
-                   devices[i].name(), devices[i].version(), devices[i].driver_version());
+    fmt::print("Rendering on OpenCL\n");
+    std::vector<cl::Platform> platforms;
+    cl::Platform::get(&platforms);
+    for (const auto &platform : platforms) {
+        std::vector<cl::Device> devices;
+        platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+        for (size_t i = 0; i < devices.size(); i++) {
+            std::string name;
+            std::string version;
+            std::string driver_version;
+            cl_uint max_compute_units;
+            cl_uint max_work_item_dimensions;
+            cl_uint max_work_group_size;
+            cl_ulong max_mem_alloc_size;
+            size_t max_parameter_size;
+            cl_uint global_mem_cacheline_size;
+            cl_ulong global_mem_cache_size;
+            cl_ulong global_mem_size;
+            cl_ulong max_constant_buffer_size;
+            cl_uint max_constant_args;
+            cl_ulong local_mem_size;
+            devices[i].getInfo(CL_DEVICE_NAME, &name);
+            devices[i].getInfo(CL_DEVICE_VERSION, &version);
+            devices[i].getInfo(CL_DRIVER_VERSION, &driver_version);
+            devices[i].getInfo(CL_DEVICE_MAX_COMPUTE_UNITS, &max_compute_units);
+            devices[i].getInfo(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, &max_work_item_dimensions);
+            devices[i].getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &max_work_group_size);
+            devices[i].getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE, &max_mem_alloc_size);
+            devices[i].getInfo(CL_DEVICE_MAX_PARAMETER_SIZE, &max_parameter_size);
+            devices[i].getInfo(CL_DEVICE_GLOBAL_MEM_CACHELINE_SIZE, &global_mem_cacheline_size);
+            devices[i].getInfo(CL_DEVICE_GLOBAL_MEM_CACHE_SIZE, &global_mem_cache_size);
+            devices[i].getInfo(CL_DEVICE_GLOBAL_MEM_SIZE, &global_mem_size);
+            devices[i].getInfo(CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, &max_constant_buffer_size);
+            devices[i].getInfo(CL_DEVICE_MAX_CONSTANT_ARGS, &max_constant_args);
+            devices[i].getInfo(CL_DEVICE_LOCAL_MEM_SIZE, &local_mem_size);
+            fmt::print("    Device {}: {}, OpenCL version: {}, driver version: {}\n", i + 1, name,
+                       version, driver_version);
+            fmt::print("    Compute units: {}, Max work item dim: {}, Max work group size: {}\n",
+                       max_compute_units, max_work_item_dimensions, max_work_group_size);
+            fmt::print("    Max mem alloc size: {} MB, Max parameter size: {} B\n",
+                       max_mem_alloc_size / (1024 * 1024), max_parameter_size);
+            fmt::print("    Global mem cacheline size: {} B, Global mem cache size: {} KB, Global "
+                       "mem size: {} MB\n",
+                       global_mem_cacheline_size, global_mem_cache_size / 1024,
+                       global_mem_size / (1024 * 1024));
+            fmt::print("    Max constant buffer size: {} KB, Max constant args: {}, Local mem "
+                       "size: {} KB\n",
+                       max_constant_buffer_size / 1024, max_constant_args, local_mem_size / 1024);
+        }
     }
 #else
+    fmt::print("Rendering on OpenMP\n");
     auto threads = std::thread::hardware_concurrency();
     fmt::print("    OpenMP ({} threads)\n", threads);
 #endif

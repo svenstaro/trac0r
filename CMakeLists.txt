@@ -56,7 +56,6 @@ include_directories(SYSTEM
     external/
     external/glm
     external/sdl2_gfx
-    external/boost-compute/include
     ${CMAKE_SOURCE_DIR}
     ${OpenCL_INCLUDE_DIRS}
 )
