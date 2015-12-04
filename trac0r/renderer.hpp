@@ -31,11 +31,12 @@ class Renderer {
     const Scene &m_scene;
 
 #ifdef OPENCL
-    // cl::Context
-    // boost::compute::context m_compute_context;
-    // std::vector<boost::compute::command_queue> m_compute_queues;
-    // boost::compute::program m_program;
-    // boost::compute::kernel m_kernel;
+    std::vector<cl::Platform> m_compute_platforms;
+    std::vector<cl::Device> m_compute_devices;
+    cl::Context m_compute_context;
+    std::vector<cl::CommandQueue> m_compute_queues;
+    cl::Program m_program;
+    cl::Kernel m_kernel;
 #endif
 };
 }
