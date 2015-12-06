@@ -34,14 +34,11 @@ Renderer::Renderer(const int width, const int height, const Camera &camera, cons
     std::string source_content((std::istreambuf_iterator<char>(source_file)),
                                (std::istreambuf_iterator<char>()));
     m_program = cl::Program(m_compute_context, source_content);
-    cl_int result = m_program.build();
+    m_program.build();
     // cl_int result = m_program.build("-cl-fast-relaxed-math");
     // cl_int result = m_program.build("-cl-nv-verbose");
-    if (result != CL_SUCCESS) {
-        auto build_log = m_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_compute_devices[0]);
-        fmt::print("{}", build_log);
-        exit(1);
-    }
+    auto build_log = m_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_compute_devices[0]);
+    fmt::print("{}", build_log);
     m_kernel = cl::Kernel(m_program, "renderer_trace_pixel_color");
 #endif
 }

@@ -320,15 +320,14 @@ __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, c
     float3 world_pos = Camera_camspace_to_worldspace(camera, rel_pos);
     float3 ray_dir = normalize(world_pos - camera->m_pos);
 
-    float3 ret_color = (float3)(0);
-    Ray next_ray = {world_pos, ray_dir};
-    float3 brdf = (float3)(1);
+    float3 ret_color = (float3)(0.f);
+    Ray next_ray = {world_pos, ray_dir}; // TODO Call constructor
+    float3 brdf = (float3)(1.f);
     for (unsigned depth = 0; depth < max_depth; depth++) {
         IntersectionInfo intersect_info = Scene_intersect(accel_struct, num_triangles, &next_ray);
         if (intersect_info.m_has_intersected) {
-            // TODO Temporary for testing
-            ret_color = intersect_info.m_material.m_reflectance;
-            break;
+            // ret_color = intersect_info.m_material.m_reflectance;
+            // break;
 
             // Get the local radiance only on first bounce
             float3 local_radiance;
@@ -356,12 +355,12 @@ __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, c
             // Find new random direction for diffuse reflection
             float u = 2.f * rand_range(prng, 0.f, 1.f);
             float v = 2.f * M_PI_F * rand_range(prng, 0.f, 1.f);
-            float xx = sqrt(1 - u * u) * cos(v);
-            float yy = sqrt(1 - u * u) * sin(v);
+            float xx = sqrt(1.f - u * u) * cos(v);
+            float yy = sqrt(1.f - u * u) * sin(v);
             float zz = u;
             float3 new_ray_dir = {xx, yy, zz};
             new_ray_dir = normalize(new_ray_dir);
-            if (dot(new_ray_dir, normal) < 0) {
+            if (dot(new_ray_dir, normal) < 0.f) {
                 new_ray_dir = -new_ray_dir;
             }
 
@@ -373,7 +372,6 @@ __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, c
             // Make a new ray
             Ray new_ray = {intersect_info.m_pos, new_ray_dir};
             next_ray = new_ray;
-
         } else {
             break;
         }
