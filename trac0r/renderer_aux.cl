@@ -39,10 +39,10 @@ typedef struct Triangle {
     float m_area;
 } Triangle;
 
-typedef struct FlatStructure {
-    Triangle m_triangles[100];
-    unsigned m_num_triangles;
-} FlatStructure;
+// typedef struct FlatStructure {
+//     Triangle *m_triangles;
+//     unsigned m_num_triangles;
+// } FlatStructure;
 
 typedef struct Ray {
     float3 m_origin;
@@ -128,7 +128,8 @@ inline void AABB_reset(AABB *aabb) {
     aabb->m_max = 0;
 }
 
-inline float2 Camera_screenspace_to_camspace(__constant const Camera *camera, unsigned x, unsigned y) {
+inline float2 Camera_screenspace_to_camspace(__constant const Camera *camera, unsigned x,
+                                             unsigned y) {
     float rel_x = -(x - camera->m_screen_width / 2.f) / camera->m_screen_width;
     float rel_y = -(y - camera->m_screen_height / 2.f) / camera->m_screen_height;
     return (float2)(rel_x, rel_y);
@@ -224,7 +225,8 @@ inline bool intersect_ray_aabb(const Ray *ray, const AABB *aabb) {
 
 // Möller-Trumbore intersection algorithm
 // (see https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm)
-inline bool intersect_ray_triangle(const Ray *ray, __constant const Triangle *triangle, float *dist) {
+inline bool intersect_ray_triangle(const Ray *ray, __constant const Triangle *triangle,
+                                   float *dist) {
     // Calculate edges of triangle from v0.
     float3 e0 = triangle->m_v2 - triangle->m_v1;
     float3 e1 = triangle->m_v3 - triangle->m_v1;
@@ -273,7 +275,7 @@ inline bool intersect_ray_triangle(const Ray *ray, __constant const Triangle *tr
     return false;
 }
 
-inline IntersectionInfo Scene_intersect(__constant FlatStructure *accel_struct, Ray *ray) {
+inline IntersectionInfo Scene_intersect(__constant Triangle *accel_struct, const uint num_triangles, Ray *ray) {
     IntersectionInfo intersect_info;
 
     // Keep track of closest triangle
@@ -282,9 +284,9 @@ inline IntersectionInfo Scene_intersect(__constant FlatStructure *accel_struct, 
     // for (const auto &shape : FlatStructure::shapes(flatstruct)) {
     //     if (intersect_ray_aabb(ray, Shape::aabb(shape))) {
     //         for (auto &tri : Shape::triangles(shape)) {
-    for (unsigned i = 0; i < accel_struct->m_num_triangles; i++) {
+    for (unsigned i = 0; i < num_triangles; i++) {
         float dist_to_intersect;
-        __constant Triangle *tri = &(accel_struct->m_triangles[i]);
+        __constant Triangle *tri = &(accel_struct[i]);
         bool intersected = intersect_ray_triangle(ray, tri, &dist_to_intersect);
         if (intersected) {
             // Find closest triangle
@@ -309,7 +311,7 @@ inline IntersectionInfo Scene_intersect(__constant FlatStructure *accel_struct, 
 __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, const int width,
                                          const unsigned max_depth, __global PRNG *prng,
                                          __constant Camera *camera,
-                                         __constant FlatStructure *flatstruct) {
+                                         __constant Triangle *accel_struct, const uint num_triangles) {
     int x = get_global_id(0);
     int y = get_global_id(1);
     int index = y * width + x;
@@ -322,10 +324,11 @@ __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, c
     Ray next_ray = {world_pos, ray_dir};
     float3 brdf = (float3)(1);
     for (unsigned depth = 0; depth < max_depth; depth++) {
-        IntersectionInfo intersect_info = Scene_intersect(flatstruct, &next_ray);
+        IntersectionInfo intersect_info = Scene_intersect(accel_struct, num_triangles, &next_ray);
         if (intersect_info.m_has_intersected) {
-            // ret_color = intersect_info.m_material.m_reflectance;
-            // break;
+            // TODO Temporary for testing
+            ret_color = intersect_info.m_material.m_reflectance;
+            break;
 
             // Get the local radiance only on first bounce
             float3 local_radiance;

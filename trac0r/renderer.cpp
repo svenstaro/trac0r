@@ -35,6 +35,8 @@ Renderer::Renderer(const int width, const int height, const Camera &camera, cons
                                (std::istreambuf_iterator<char>()));
     m_program = cl::Program(m_compute_context, source_content);
     cl_int result = m_program.build();
+    // cl_int result = m_program.build("-cl-fast-relaxed-math");
+    // cl_int result = m_program.build("-cl-nv-verbose");
     if (result != CL_SUCCESS) {
         auto build_log = m_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_compute_devices[0]);
         fmt::print("{}", build_log);
@@ -66,10 +68,10 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
         cl_float m_area;
     };
 
-    struct DeviceFlatStructure {
-        DeviceTriangle m_triangles[100];
-        cl_uint m_num_triangles;
-    };
+    // struct DeviceFlatStructure {
+    //     DeviceTriangle *m_triangles;
+    //     cl_uint m_num_triangles;
+    // };
 
     struct DeviceCamera {
         cl_float3 m_pos;
@@ -141,9 +143,8 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
                                            &dev_camera);
 
     // Init dev_flatstruct
-    DeviceFlatStructure dev_flatstruct;
-    dev_flatstruct.m_num_triangles = 100;
-    auto tri_num = 0;
+    // DeviceFlatStructure dev_flatstruct;
+    std::vector<DeviceTriangle> dev_triangles;
     auto &accel_struct = Scene::accel_struct(m_scene);
     for (auto &shape : FlatStructure::shapes(accel_struct)) {
         for (auto &tri : Shape::triangles(shape)) {
@@ -161,20 +162,23 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
             dev_tri.m_normal = {{tri.m_normal.x, tri.m_normal.y, tri.m_normal.z}};
             dev_tri.m_centroid = {{tri.m_centroid.x, tri.m_centroid.y, tri.m_centroid.z}};
             dev_tri.m_area = tri.m_area;
-            dev_flatstruct.m_triangles[tri_num] = dev_tri;
-            tri_num++;
+            dev_triangles.push_back(dev_tri);
         }
     }
-    cl::Buffer dev_flatstruct_buf(m_compute_context, CL_MEM_READ_ONLY, sizeof(dev_flatstruct));
-    m_compute_queues[0].enqueueWriteBuffer(dev_flatstruct_buf, CL_TRUE, 0, sizeof(dev_flatstruct),
-                                           &dev_flatstruct);
+
+    cl::Buffer dev_triangles_buf(m_compute_context, CL_MEM_READ_ONLY,
+                                 sizeof(DeviceTriangle) * dev_triangles.size());
+    m_compute_queues[0].enqueueWriteBuffer(dev_triangles_buf, CL_TRUE, 0,
+                                           sizeof(DeviceTriangle) * dev_triangles.size(),
+                                           &dev_triangles[0]);
 
     m_kernel.setArg(0, dev_output_buf);
     m_kernel.setArg(1, m_width);
     m_kernel.setArg(2, m_max_depth);
     m_kernel.setArg(3, dev_prng_buf);
     m_kernel.setArg(4, dev_camera_buf);
-    m_kernel.setArg(5, dev_flatstruct_buf);
+    m_kernel.setArg(5, dev_triangles_buf);
+    m_kernel.setArg(6, static_cast<unsigned>(dev_triangles.size()));
     cl::Event event;
 
     m_compute_queues[0].enqueueNDRangeKernel(m_kernel, cl::NDRange(0, 0),
@@ -194,7 +198,7 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
         }
     }
 #else
-#pragma omp parallel for collapse(2) schedule(dynamic, 1024)
+#pragma omp parallel for simd collapse(2) schedule(dynamic, 1024)
     for (auto x = 0; x < m_width; x += stride_x) {
         for (auto y = 0; y < m_height; y += stride_y) {
             glm::vec4 new_color = trace_pixel_color(x, y, m_max_depth, m_camera, m_scene);
