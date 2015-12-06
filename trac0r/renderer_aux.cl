@@ -77,6 +77,12 @@ inline float rand_range(__global PRNG *prng, const float min, const float max) {
     return min + ((float)xorshift1024star(prng)) / (float)(ULONG_MAX / (max - min));
 }
 
+inline float3 uniform_sample_sphere(__global PRNG *prng) {
+    float3 rand_vec = (float3)(rand_range(prng, -1.f, 1.f), rand_range(prng, -1.f, 1.f),
+                               rand_range(prng, -1.f, 1.f));
+    return normalize(rand_vec);
+}
+
 inline bool AABB_is_null(const AABB *aabb) {
     bool min_null = length(aabb->m_min) == 0;
     bool max_null = length(aabb->m_max) == 0;
@@ -277,7 +283,8 @@ inline bool intersect_ray_triangle(const Ray *ray, __constant const Triangle *tr
 
 inline IntersectionInfo Scene_intersect(__constant Triangle *accel_struct, const uint num_triangles,
                                         Ray *ray) {
-    IntersectionInfo intersect_info;
+    IntersectionInfo intersect_info; // TODO use proper constructor
+    intersect_info.m_has_intersected = false;
 
     // Keep track of closest triangle
     float closest_dist = FLT_MAX;
@@ -355,13 +362,9 @@ __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, c
                 -sign(dot(intersect_info.m_normal, intersect_info.m_incoming_ray.m_dir));
 
             // Find new random direction for diffuse reflection
-            float u = 2.f * rand_range(prng, 0.f, 1.f);
-            float v = 2.f * M_PI_F * rand_range(prng, 0.f, 1.f);
-            float xx = sqrt(1.f - u * u) * cos(v);
-            float yy = sqrt(1.f - u * u) * sin(v);
-            float zz = u;
-            float3 new_ray_dir = (float3)(xx, yy, zz);
-            new_ray_dir = normalize(new_ray_dir);
+            float3 new_ray_dir = uniform_sample_sphere(prng);
+
+            // Make sphere distribution into hemisphere distribution
             if (dot(new_ray_dir, normal) < 0.f) {
                 new_ray_dir = -new_ray_dir;
             }
