@@ -6,6 +6,7 @@
 #include <glm/gtx/rotate_vector.hpp>
 
 namespace trac0r {
+// #pragma omp declare simd // TODO make this work
 glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const unsigned max_depth,
                                       const Camera &camera, const Scene &scene) {
     glm::vec2 rel_pos = Camera::screenspace_to_camspace(camera, x, y);

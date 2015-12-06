@@ -11,6 +11,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     endif()
 endif()
 
+#set(trac0r_flags -O3 -g ${OpenMP_CXX_FLAGS} -march=native -mtune=native -Rpass-analysis=loop-vectorize -Wall -Wextra -pedantic -Werror -std=c++14 -Wno-unused-parameter)
 set(trac0r_flags -O3 -g ${OpenMP_CXX_FLAGS} -Wall -Wextra -pedantic -Werror -std=c++14 -Wno-unused-parameter)
 set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} ${OpenMP_CXX_FLAGS}")
 
