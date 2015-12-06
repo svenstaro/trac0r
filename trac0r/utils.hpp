@@ -27,6 +27,12 @@ inline void print_sysinfo() {
     for (const auto &platform : platforms) {
         std::vector<cl::Device> devices;
         platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+
+        std::string platform_name;
+        std::string platform_version;
+        platform.getInfo(CL_PLATFORM_NAME, &platform_name);
+        platform.getInfo(CL_PLATFORM_VERSION, &platform_version);
+        fmt::print("  {} ({})\n", platform_name, platform_version);
         for (size_t i = 0; i < devices.size(); i++) {
             std::string name;
             std::string version;
@@ -56,7 +62,7 @@ inline void print_sysinfo() {
             devices[i].getInfo(CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, &max_constant_buffer_size);
             devices[i].getInfo(CL_DEVICE_MAX_CONSTANT_ARGS, &max_constant_args);
             devices[i].getInfo(CL_DEVICE_LOCAL_MEM_SIZE, &local_mem_size);
-            fmt::print("    Device {}: {}, OpenCL version: {}, driver version: {}\n", i + 1, name,
+            fmt::print("    Device {}: {}, OpenCL version: {}, driver version: {}\n", i, name,
                        version, driver_version);
             fmt::print("    Compute units: {}, Max work item dim: {}, Max work group size: {}\n",
                        max_compute_units, max_work_item_dimensions, max_work_group_size);
@@ -69,6 +75,7 @@ inline void print_sysinfo() {
             fmt::print("    Max constant buffer size: {} KB, Max constant args: {}, Local mem "
                        "size: {} KB\n",
                        max_constant_buffer_size / 1024, max_constant_args, local_mem_size / 1024);
+            fmt::print("\n");
         }
     }
 #else

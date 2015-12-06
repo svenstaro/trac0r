@@ -275,7 +275,8 @@ inline bool intersect_ray_triangle(const Ray *ray, __constant const Triangle *tr
     return false;
 }
 
-inline IntersectionInfo Scene_intersect(__constant Triangle *accel_struct, const uint num_triangles, Ray *ray) {
+inline IntersectionInfo Scene_intersect(__constant Triangle *accel_struct, const uint num_triangles,
+                                        Ray *ray) {
     IntersectionInfo intersect_info;
 
     // Keep track of closest triangle
@@ -311,7 +312,8 @@ inline IntersectionInfo Scene_intersect(__constant Triangle *accel_struct, const
 __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, const int width,
                                          const unsigned max_depth, __global PRNG *prng,
                                          __constant Camera *camera,
-                                         __constant Triangle *accel_struct, const uint num_triangles) {
+                                         __constant Triangle *accel_struct,
+                                         const uint num_triangles) {
     int x = get_global_id(0);
     int y = get_global_id(1);
     int index = y * width + x;
@@ -358,7 +360,7 @@ __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, c
             float xx = sqrt(1.f - u * u) * cos(v);
             float yy = sqrt(1.f - u * u) * sin(v);
             float zz = u;
-            float3 new_ray_dir = {xx, yy, zz};
+            float3 new_ray_dir = (float3)(xx, yy, zz);
             new_ray_dir = normalize(new_ray_dir);
             if (dot(new_ray_dir, normal) < 0.f) {
                 new_ray_dir = -new_ray_dir;
@@ -370,8 +372,8 @@ __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, c
             brdf *= 2.f * intersect_info.m_material.m_reflectance * cos_theta;
 
             // Make a new ray
-            Ray new_ray = {intersect_info.m_pos, new_ray_dir};
-            next_ray = new_ray;
+            next_ray.m_origin = intersect_info.m_pos;
+            next_ray.m_dir = new_ray_dir;
         } else {
             break;
         }

@@ -39,7 +39,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
             // TODO
             // glm::vec3 illumination;
 
-            auto normal =
+            glm::vec3 normal =
                 intersect_info.m_normal *
                 -glm::sign(glm::dot(intersect_info.m_normal, intersect_info.m_incoming_ray.m_dir));
 
