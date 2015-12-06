@@ -44,13 +44,9 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
                 -glm::sign(glm::dot(intersect_info.m_normal, intersect_info.m_incoming_ray.m_dir));
 
             // Find new random direction for diffuse reflection
-            float u = 2.f * rand_range(0.f, 1.f);
-            float v = glm::two_pi<float>() * rand_range(0.f, 1.f);
-            float xx = glm::sqrt(1 - u * u) * glm::cos(v);
-            float yy = glm::sqrt(1 - u * u) * glm::sin(v);
-            float zz = u;
-            glm::vec3 new_ray_dir = {xx, yy, zz};
-            new_ray_dir = glm::normalize(new_ray_dir);
+            glm::vec3 new_ray_dir = uniform_sample_sphere();
+
+            // Make sphere distribution into hemisphere distribution
             if (glm::dot(new_ray_dir, normal) < 0) {
                 new_ray_dir = -new_ray_dir;
             }

@@ -6,6 +6,8 @@
 #include <array>
 #include <type_traits>
 
+#include <glm/glm.hpp>
+
 namespace trac0r {
 
 // From http://xorshift.di.unimi.it/xorshift64star.c
@@ -59,6 +61,13 @@ std::enable_if_t<std::is_floating_point<T>::value, T> inline rand_range(const T 
     return min +
            static_cast<T>(generator.next()) /
                (static_cast<T>(std::numeric_limits<uint64_t>::max() / (max - min)));
+}
+
+inline glm::vec3 uniform_sample_sphere() {
+    static thread_local PRNG generator;
+    glm::vec3 rand_vec =
+        glm::vec3(rand_range(-1.f, 1.f), rand_range(-1.f, 1.f), rand_range(-1.f, 1.f));
+    return normalize(rand_vec);
 }
 }
 
