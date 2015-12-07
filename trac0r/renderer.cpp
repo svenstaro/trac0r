@@ -195,21 +195,22 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     auto local_mem_size = m_kernel.getWorkGroupInfo<CL_KERNEL_LOCAL_MEM_SIZE>(device);
     auto private_mem_size = m_kernel.getWorkGroupInfo<CL_KERNEL_PRIVATE_MEM_SIZE>(device);
     auto device_name = device.getInfo<CL_DEVICE_NAME>();
-    auto local_work_size = preferred_work_size_multiple / 2;
+    auto local_work_size_x = preferred_work_size_multiple;
+    auto local_work_size_y = 2;
     auto global_work_size = m_width * m_height;
-    auto work_group_size = local_work_size * local_work_size;
+    auto work_group_size = local_work_size_x * local_work_size_y;
 
     fmt::print("    Executing kernel ({}x{}/{}x{}, global work items: {}, items per work group: "
                "{}, total work groups: {}) on device {}\n",
-               m_width, m_height, local_work_size, local_work_size, global_work_size,
-               local_work_size * local_work_size, work_group_size, device_name);
+               m_width, m_height, local_work_size_x, local_work_size_y, global_work_size,
+               local_work_size_x * local_work_size_y, global_work_size / work_group_size, device_name);
     fmt::print(
         "    Max work group size: {}, Local mem size used by kernel: {} KB, minimum private mem "
         "size per work item: {} KB\n",
         max_work_group_size, local_mem_size / 1024, private_mem_size / 1024);
     cl_int result = m_compute_queues[0].enqueueNDRangeKernel(
         m_kernel, cl::NDRange(0, 0), cl::NDRange(m_width, m_height),
-        cl::NDRange(local_work_size, local_work_size), nullptr, &event);
+        cl::NDRange(local_work_size_x, local_work_size_y), nullptr, &event);
 
     if (result != CL_SUCCESS) {
         fmt::print("{}\n", opencl_error_string(result));
