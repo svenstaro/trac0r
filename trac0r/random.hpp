@@ -7,6 +7,7 @@
 #include <type_traits>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 namespace trac0r {
 
@@ -63,11 +64,49 @@ std::enable_if_t<std::is_floating_point<T>::value, T> inline rand_range(const T 
                (static_cast<T>(std::numeric_limits<uint64_t>::max() / (max - min)));
 }
 
+/**
+ * @brief Selects a random point on a sphere with uniform distribution.
+ * point on a uniform.
+ *
+ * TODO Add this to bibtex
+ * Marsaglia, G. "Choosing a Point from the Surface of a Sphere." Ann. Math. Stat. 43, 645-646,
+ * 1972.
+ * Muller, M. E. "A Note on a Method for Generating Points Uniformly on N-Dimensional Spheres."
+ * Comm. Assoc. Comput. Mach. 2, 19-20, Apr. 1959.
+ *
+ * @return A random point on the surface of a sphere
+ */
 inline glm::vec3 uniform_sample_sphere() {
-    static thread_local PRNG generator;
     glm::vec3 rand_vec =
         glm::vec3(rand_range(-1.f, 1.f), rand_range(-1.f, 1.f), rand_range(-1.f, 1.f));
     return normalize(rand_vec);
+}
+
+/**
+ * @brief Selects a random point on a sphere with uniform distribution.
+ * point on a uniform.
+ *
+ * @return A random point on the surface of a sphere
+ */
+inline glm::vec3 uniform_sample_sphere2() {
+    float s = rand_range(0.f, 1.f) * glm::two_pi<float>();
+    float t = rand_range(-1.f, 1.f);
+    glm::vec2 v = {glm::sin(s), glm::cos(s)};
+    v *= glm::sqrt(1.f - t * t);
+    return glm::vec3(v.x, v.y, t);
+}
+
+/**
+ * @brief Given a direction vector, this will return a random point on a sphere
+ * on the hemisphere around dir.
+ *
+ * @param dir A vector that represents the hemisphere's center
+ *
+ * @return A random point the on the hemisphere
+ */
+inline glm::vec3 oriented_hemisphere_sample(glm::vec3 dir) {
+    glm::vec3 v = uniform_sample_sphere();
+    return v * glm::sign(glm::dot(v, dir));
 }
 }
 

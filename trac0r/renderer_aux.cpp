@@ -39,18 +39,16 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
             // TODO
             // glm::vec3 illumination;
 
+            // Find normal in correct direction
             glm::vec3 normal =
                 intersect_info.m_normal *
                 -glm::sign(glm::dot(intersect_info.m_normal, intersect_info.m_incoming_ray.m_dir));
 
             // Find new random direction for diffuse reflection
-            glm::vec3 new_ray_dir = uniform_sample_sphere();
+            //glm::vec3 new_ray_dir = uniform_sample_sphere();
+            glm::vec3 new_ray_dir = oriented_hemisphere_sample(normal);
 
             // Make sphere distribution into hemisphere distribution
-            if (glm::dot(new_ray_dir, normal) < 0) {
-                new_ray_dir = -new_ray_dir;
-            }
-
             float cos_theta = glm::dot(new_ray_dir, normal);
 
             ret_color += brdf * local_radiance;

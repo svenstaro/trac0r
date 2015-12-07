@@ -83,6 +83,31 @@ inline float3 uniform_sample_sphere(__global PRNG *prng) {
     return normalize(rand_vec);
 }
 
+inline float3 uniform_sample_sphere2(__global PRNG *prng) {
+    float s = rand_range(prng, 0.f, 1.f) * M_PI_F * 2.f;
+    float t = rand_range(prng, -1.f, 1.f);
+    float2 v = (float2)(sin(s), cos(s));
+    v *= sqrt(1.f - t * t);
+    return (float3)(v.x, v.y, t);
+}
+
+inline float3 oriented_hemisphere_sample(__global PRNG *prng, const float3 dir) {
+    float3 v = uniform_sample_sphere(prng);
+    return v * sign(dot(v, dir));
+}
+
+inline float3 cosine_weighted_hemisphere(__global PRNG *prng) {
+    float u1 = rand_range(prng, 0.f, 1.f);
+    float u2 = rand_range(prng, 0.f, 1.f);
+    const float r = sqrt(u1);
+    const float theta = 2.f * M_PI * u2;
+
+    const float x = r * cos(theta);
+    const float y = r * sin(theta);
+
+    return (float3)(x, y, sqrt(1.f - u1));
+}
+
 inline bool AABB_is_null(const AABB *aabb) {
     bool min_null = length(aabb->m_min) == 0;
     bool max_null = length(aabb->m_max) == 0;
@@ -362,13 +387,10 @@ __kernel void renderer_trace_pixel_color(__write_only __global float4 *output, c
                 -sign(dot(intersect_info.m_normal, intersect_info.m_incoming_ray.m_dir));
 
             // Find new random direction for diffuse reflection
-            float3 new_ray_dir = uniform_sample_sphere(prng);
+            float3 new_ray_dir = oriented_hemisphere_sample(prng, normal);
 
-            // Make sphere distribution into hemisphere distribution
-            if (dot(new_ray_dir, normal) < 0.f) {
-                new_ray_dir = -new_ray_dir;
-            }
-
+            // TODO: We already calculate this in `oriented_hemisphere_sample`, might be more
+            // efficient to use the same dotproduct. Run benchmarks on this.
             float cos_theta = dot(new_ray_dir, normal);
 
             ret_color += brdf * local_radiance;
