@@ -8,6 +8,7 @@
 #include "cppformat/format.h"
 
 #include <fstream>
+#include <thread>
 
 namespace trac0r {
 
@@ -39,7 +40,7 @@ Renderer::Renderer(const int width, const int height, const Camera &camera, cons
     // cl_int result = m_program.build("-cl-nv-verbose");
     auto build_log = m_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_compute_devices[0]);
     fmt::print("{}", build_log);
-    if(result != CL_SUCCESS)
+    if (result != CL_SUCCESS)
         exit(1);
     m_kernel = cl::Kernel(m_program, "renderer_trace_pixel_color");
 #endif
@@ -210,5 +211,62 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
 #endif
 
     return m_luminance;
+}
+
+void Renderer::print_sysinfo() const {
+#ifdef OPENCL
+    fmt::print("Rendering on OpenCL\n");
+    std::vector<cl::Platform> platforms;
+    cl::Platform::get(&platforms);
+    for (const auto &platform : platforms) {
+        std::vector<cl::Device> devices;
+        platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+
+        auto platform_name = platform.getInfo<CL_PLATFORM_NAME>();
+        auto platform_version = platform.getInfo<CL_PLATFORM_VERSION>();
+        fmt::print("  {} ({})\n", platform_name, platform_version);
+        for (size_t i = 0; i < devices.size(); i++) {
+            auto device_name = devices[i].getInfo<CL_DEVICE_NAME>();
+            auto device_version = devices[i].getInfo<CL_DEVICE_VERSION>();
+            auto driver_version = devices[i].getInfo<CL_DRIVER_VERSION>();
+            auto max_compute_units = devices[i].getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>();
+            auto max_work_item_dimensions =
+                devices[i].getInfo<CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS>();
+            auto max_work_group_size = devices[i].getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
+            auto max_mem_alloc_size = devices[i].getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>();
+            auto max_parameter_size = devices[i].getInfo<CL_DEVICE_MAX_PARAMETER_SIZE>();
+            auto global_mem_cacheline_size =
+                devices[i].getInfo<CL_DEVICE_GLOBAL_MEM_CACHELINE_SIZE>();
+            auto global_mem_cache_size = devices[i].getInfo<CL_DEVICE_GLOBAL_MEM_CACHE_SIZE>();
+            auto global_mem_size = devices[i].getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>();
+            auto max_constant_buffer_size =
+                devices[i].getInfo<CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE>();
+            auto max_constant_args = devices[i].getInfo<CL_DEVICE_MAX_CONSTANT_ARGS>();
+            auto local_mem_size = devices[i].getInfo<CL_DEVICE_LOCAL_MEM_SIZE>();
+            auto preferred_work_size_multiple =
+                m_kernel.getWorkGroupInfo<CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE>(devices[i]);
+            fmt::print("    Device {}: {}, OpenCL version: {}, driver version: {}\n", i,
+                       device_name, device_version, driver_version);
+            fmt::print("    Compute units: {}, Max work item dim: {}, Max work group size: {}\n",
+                       max_compute_units, max_work_item_dimensions, max_work_group_size);
+            fmt::print("    Max mem alloc size: {} MB, Max parameter size: {} B\n",
+                       max_mem_alloc_size / (1024 * 1024), max_parameter_size);
+            fmt::print("    Global mem cacheline size: {} B, Global mem cache size: {} KB, Global "
+                       "mem size: {} MB\n",
+                       global_mem_cacheline_size, global_mem_cache_size / 1024,
+                       global_mem_size / (1024 * 1024));
+            fmt::print("    Max constant buffer size: {} KB, Max constant args: {}, Local mem "
+                       "size: {} KB\n",
+                       max_constant_buffer_size / 1024, max_constant_args, local_mem_size / 1024);
+            fmt::print("    Preferred work group size multiple: {}\n",
+                       preferred_work_size_multiple);
+            fmt::print("\n");
+        }
+    }
+#else
+    fmt::print("Rendering on OpenMP\n");
+    auto threads = std::thread::hardware_concurrency();
+    fmt::print("    OpenMP ({} threads)\n", threads);
+#endif
 }
 }

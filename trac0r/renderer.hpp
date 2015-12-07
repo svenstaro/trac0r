@@ -16,6 +16,7 @@ class Renderer {
     static glm::vec4 trace_pixel_color(const unsigned x, const unsigned y, const unsigned max_depth,
                                        const Camera &camera, const Scene &scene);
     std::vector<glm::vec4> &render(bool screen_changed, int stride_x, int stride_y);
+    void print_sysinfo() const;
 
   private:
     int m_max_depth = 5;
@@ -23,8 +24,8 @@ class Renderer {
     /**
      * @brief We accumulate our "photons" into here for each pixel
      */
-
     std::vector<glm::vec4> m_luminance;
+
     const int m_width;
     const int m_height;
     const Camera &m_camera;

@@ -85,8 +85,7 @@ int Viewer::init() {
     setup_scene();
     m_renderer =
         std::make_unique<trac0r::Renderer>(m_screen_width, m_screen_height, m_camera, m_scene);
-
-    trac0r::print_sysinfo();
+    m_renderer->print_sysinfo();
 
     fmt::print("Finish init\n");
 
