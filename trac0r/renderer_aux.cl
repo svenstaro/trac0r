@@ -108,6 +108,18 @@ inline float3 cosine_weighted_hemisphere(__global PRNG *prng) {
     return (float3)(x, y, sqrt(1.f - u1));
 }
 
+inline float3 reflect(float3 incident, float3 normal) {
+    return incident - 2.f * normal * dot(normal, incident);
+}
+
+inline float3 refract(float3 incident, float3 normal, float eta) {
+    float k = 1.f - eta * eta * (1.f - dot(normal, incident) * dot(normal, incident));
+    if (k < 0.f)
+        return (float3)(0.f);
+    else
+        return eta * incident - (eta * dot(normal, incident) + sqrt(k)) * normal;
+}
+
 inline bool AABB_is_null(const AABB *aabb) {
     bool min_null = length(aabb->m_min) == 0;
     bool max_null = length(aabb->m_max) == 0;
