@@ -108,6 +108,8 @@ void Viewer::setup_scene() {
                                         default_material);
     auto box2 = trac0r::Shape::make_box({-0.2f, 0.05f, 0}, {0.3, -0.4, -0.9}, {0.3f, 0.4f, 0.3f},
                                         default_material);
+    auto box3 = trac0r::Shape::make_box({0.f, 0.f, -2}, {0.f, 0.f, 0.1f}, {1.f, 1.f, 1.f},
+                                        default_material);
 
     Scene::add_shape(m_scene, wall_left);
     Scene::add_shape(m_scene, wall_right);
@@ -117,6 +119,7 @@ void Viewer::setup_scene() {
     Scene::add_shape(m_scene, lamp);
     Scene::add_shape(m_scene, box1);
     Scene::add_shape(m_scene, box2);
+    Scene::add_shape(m_scene, box3);
 
     glm::vec3 cam_pos = {0, 0.31, -1.2};
     glm::vec3 cam_dir = {0, 0, 1};
