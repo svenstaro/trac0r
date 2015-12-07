@@ -37,11 +37,11 @@ Renderer::Renderer(const int width, const int height, const Camera &camera, cons
     std::string source_content((std::istreambuf_iterator<char>(source_file)),
                                (std::istreambuf_iterator<char>()));
     m_program = cl::Program(m_compute_context, source_content);
-    cl_int result = m_program.build();
+    // cl_int result = m_program.build();
     // cl_int result = m_program.build("-cl-fast-relaxed-math");
-    // cl_int result = m_program.build("-cl-nv-verbose");
+    cl_int result = m_program.build("-cl-nv-verbose");
     auto build_log = m_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_compute_devices[0]);
-    fmt::print("{}", build_log);
+    fmt::print("{}\n", build_log);
     if (result != CL_SUCCESS)
         exit(1);
     m_kernel = cl::Kernel(m_program, "renderer_trace_pixel_color");
@@ -184,15 +184,23 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     cl::Event event;
 
     cl::Device device = m_compute_queues[0].getInfo<CL_QUEUE_DEVICE>();
+    auto preferred_work_size_multiple =
+        m_kernel.getWorkGroupInfo<CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE>(device);
     auto work_group_size =
         m_kernel.getWorkGroupInfo<CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE>(device);
+    auto local_mem_size = m_kernel.getWorkGroupInfo<CL_KERNEL_LOCAL_MEM_SIZE>(device);
+    auto private_mem_size = m_kernel.getWorkGroupInfo<CL_KERNEL_PRIVATE_MEM_SIZE>(device);
 
     auto device_name = device.getInfo<CL_DEVICE_NAME>();
-    fmt::print("Executing kernel ({}x{}/{}x{}, flat global size {}) on device {}\n", m_width,
-               m_height, work_group_size, work_group_size, m_width * m_height, device_name);
-    cl_int result = m_compute_queues[0].enqueueNDRangeKernel(m_kernel, cl::NDRange(0, 0),
-                                             cl::NDRange(m_width, m_height),
-                                             cl::NDRange(work_group_size, work_group_size), nullptr, &event);
+    fmt::print("    Executing kernel ({}x{}/{}x{}, global work items: {}) on device {}\n", m_width,
+               m_height, preferred_work_size_multiple, preferred_work_size_multiple,
+               m_width * m_height, device_name);
+    fmt::print("    Work group size: {}, Local mem size used by kernel: {} KB, minimum private mem "
+               "size per work item: {} KB\n",
+               work_group_size, local_mem_size / 1024, private_mem_size / 1024);
+    cl_int result = m_compute_queues[0].enqueueNDRangeKernel(
+        m_kernel, cl::NDRange(0, 0), cl::NDRange(m_width, m_height),
+        cl::NDRange(preferred_work_size_multiple / 2, preferred_work_size_multiple / 2), nullptr, &event);
     opencl_error_string(-4);
     if (result != CL_SUCCESS) {
         fmt::print("{}\n", opencl_error_string(result));
