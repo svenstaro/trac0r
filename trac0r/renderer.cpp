@@ -2,6 +2,7 @@
 #include "ray.hpp"
 #include "random.hpp"
 #include "utils.hpp"
+#include "timer.hpp"
 
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -38,8 +39,8 @@ Renderer::Renderer(const int width, const int height, const Camera &camera, cons
                                (std::istreambuf_iterator<char>()));
     m_program = cl::Program(m_compute_context, source_content);
     // cl_int result = m_program.build();
-    // cl_int result = m_program.build("-cl-fast-relaxed-math");
-    cl_int result = m_program.build("-cl-nv-verbose");
+    cl_int result = m_program.build("-cl-nv-verbose -cl-fast-relaxed-math");
+    // cl_int result = m_program.build("-cl-nv-verbose");
     auto build_log = m_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_compute_devices[0]);
     fmt::print("{}\n", build_log);
     if (result != CL_SUCCESS)
@@ -94,7 +95,9 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
         cl_float m_horizontal_fov;
     };
 
-    size_t image_size = m_width * m_height;
+    const size_t image_size = m_width * m_height;
+
+    Timer timer;
 
     std::vector<cl_float4> host_output;
     host_output.resize(image_size);
@@ -174,6 +177,8 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
                                            sizeof(DeviceTriangle) * dev_triangles.size(),
                                            &dev_triangles[0]);
 
+    m_last_frame_buffer_write_time = timer.elapsed();
+
     m_kernel.setArg(0, dev_output_buf);
     m_kernel.setArg(1, m_width);
     m_kernel.setArg(2, m_max_depth);
@@ -186,28 +191,34 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     cl::Device device = m_compute_queues[0].getInfo<CL_QUEUE_DEVICE>();
     auto preferred_work_size_multiple =
         m_kernel.getWorkGroupInfo<CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE>(device);
-    auto work_group_size =
-        m_kernel.getWorkGroupInfo<CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE>(device);
+    auto max_work_group_size = m_kernel.getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(device);
     auto local_mem_size = m_kernel.getWorkGroupInfo<CL_KERNEL_LOCAL_MEM_SIZE>(device);
     auto private_mem_size = m_kernel.getWorkGroupInfo<CL_KERNEL_PRIVATE_MEM_SIZE>(device);
-
     auto device_name = device.getInfo<CL_DEVICE_NAME>();
-    fmt::print("    Executing kernel ({}x{}/{}x{}, global work items: {}) on device {}\n", m_width,
-               m_height, preferred_work_size_multiple, preferred_work_size_multiple,
-               m_width * m_height, device_name);
-    fmt::print("    Work group size: {}, Local mem size used by kernel: {} KB, minimum private mem "
-               "size per work item: {} KB\n",
-               work_group_size, local_mem_size / 1024, private_mem_size / 1024);
+    auto local_work_size = preferred_work_size_multiple / 2;
+    auto global_work_size = m_width * m_height;
+    auto work_group_size = local_work_size * local_work_size;
+
+    fmt::print("    Executing kernel ({}x{}/{}x{}, global work items: {}, items per work group: "
+               "{}, total work groups: {}) on device {}\n",
+               m_width, m_height, local_work_size, local_work_size, global_work_size,
+               local_work_size * local_work_size, work_group_size, device_name);
+    fmt::print(
+        "    Max work group size: {}, Local mem size used by kernel: {} KB, minimum private mem "
+        "size per work item: {} KB\n",
+        max_work_group_size, local_mem_size / 1024, private_mem_size / 1024);
     cl_int result = m_compute_queues[0].enqueueNDRangeKernel(
         m_kernel, cl::NDRange(0, 0), cl::NDRange(m_width, m_height),
-        cl::NDRange(preferred_work_size_multiple / 2, preferred_work_size_multiple / 2), nullptr, &event);
-    opencl_error_string(-4);
+        cl::NDRange(local_work_size, local_work_size), nullptr, &event);
+
     if (result != CL_SUCCESS) {
         fmt::print("{}\n", opencl_error_string(result));
         exit(1);
     }
 
     event.wait();
+    m_last_frame_kernel_run_time = timer.elapsed();
+
     m_compute_queues[0].enqueueReadBuffer(dev_output_buf, CL_TRUE, 0,
                                           image_size * sizeof(cl_float4), &host_output[0]);
 
@@ -220,6 +231,8 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
                 m_luminance[y * m_width + x] += *lol;
         }
     }
+
+    m_last_frame_buffer_read_time = timer.elapsed();
 #else
 #pragma omp parallel for simd collapse(2) schedule(dynamic, 1024)
     for (auto x = 0; x < m_width; x += stride_x) {
@@ -293,6 +306,14 @@ void Renderer::print_sysinfo() const {
     fmt::print("Rendering on OpenMP\n");
     auto threads = std::thread::hardware_concurrency();
     fmt::print("    OpenMP ({} threads)\n", threads);
+#endif
+}
+
+void Renderer::print_last_frame_timings() const {
+#ifdef OPENCL
+        fmt::print("      {:<15} {:>12.3f} ms\n", "Buffer write to device", m_last_frame_buffer_write_time);
+        fmt::print("      {:<15} {:>20.3f} ms\n", "Kernel run time", m_last_frame_kernel_run_time);
+        fmt::print("      {:<15} {:>15.3f} ms\n", "Buffer read to host", m_last_frame_buffer_read_time);
 #endif
 }
 }

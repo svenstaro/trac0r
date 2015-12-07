@@ -70,7 +70,7 @@ inline ulong xorshift1024star(__global PRNG *prng) {
     s1 ^= s1 << 31; // a
     s1 ^= s1 >> 11; // b
     s0 ^= s0 >> 30; // c
-    return (prng->m_seed[prng->m_p] = s0 ^ s1) * 1181783497276652981L;
+    return (prng->m_seed[prng->m_p] = s0 ^ s1) * 1181783497276652981L * get_global_id(0) * get_global_id(1);
 }
 
 inline float rand_range(__global PRNG *prng, const float min, const float max) {

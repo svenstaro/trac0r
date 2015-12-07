@@ -8,6 +8,8 @@
 #include <CL/cl.hpp>
 #endif
 
+#include <chrono>
+
 namespace trac0r {
 
 class Renderer {
@@ -17,6 +19,7 @@ class Renderer {
                                        const Camera &camera, const Scene &scene);
     std::vector<glm::vec4> &render(bool screen_changed, int stride_x, int stride_y);
     void print_sysinfo() const;
+    void print_last_frame_timings() const;
 
   private:
     int m_max_depth = 5;
@@ -32,6 +35,9 @@ class Renderer {
     const Scene &m_scene;
 
 #ifdef OPENCL
+    double m_last_frame_buffer_write_time;
+    double m_last_frame_kernel_run_time;
+    double m_last_frame_buffer_read_time;
     std::vector<cl::Platform> m_compute_platforms;
     std::vector<cl::Device> m_compute_devices;
     cl::Context m_compute_context;

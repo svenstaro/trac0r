@@ -267,6 +267,7 @@ void Viewer::mainloop() {
         fmt::print("    {:<15} {:=10.3f} ms\n", "Scene rebuild", timer.elapsed());
 
     const auto luminance = m_renderer->render(m_scene_changed, m_stride_x, m_stride_y);
+    m_renderer->print_last_frame_timings();
 
     m_samples_accumulated += 1;
 
