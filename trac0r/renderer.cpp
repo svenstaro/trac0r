@@ -1,6 +1,7 @@
 #include "renderer.hpp"
 #include "ray.hpp"
 #include "random.hpp"
+#include "utils.hpp"
 
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -20,7 +21,8 @@ Renderer::Renderer(const int width, const int height, const Camera &camera, cons
     cl::Platform::get(&m_compute_platforms);
     for (const auto &platform : m_compute_platforms) {
         std::vector<cl::Device> devices;
-        platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+        // platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+        platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
         for (auto &device : devices) {
             m_compute_devices.push_back(device);
         }
@@ -181,8 +183,21 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     m_kernel.setArg(6, static_cast<unsigned>(dev_triangles.size()));
     cl::Event event;
 
-    m_compute_queues[0].enqueueNDRangeKernel(m_kernel, cl::NDRange(0, 0),
-                                             cl::NDRange(m_width, m_height), cl::NDRange(1, 1));
+    cl::Device device = m_compute_queues[0].getInfo<CL_QUEUE_DEVICE>();
+    auto work_group_size =
+        m_kernel.getWorkGroupInfo<CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE>(device);
+
+    auto device_name = device.getInfo<CL_DEVICE_NAME>();
+    fmt::print("Executing kernel ({}x{}/{}x{}, flat global size {}) on device {}\n", m_width,
+               m_height, work_group_size, work_group_size, m_width * m_height, device_name);
+    cl_int result = m_compute_queues[0].enqueueNDRangeKernel(m_kernel, cl::NDRange(0, 0),
+                                             cl::NDRange(m_width, m_height),
+                                             cl::NDRange(work_group_size, work_group_size), nullptr, &event);
+    opencl_error_string(-4);
+    if (result != CL_SUCCESS) {
+        fmt::print("{}\n", opencl_error_string(result));
+        exit(1);
+    }
 
     event.wait();
     m_compute_queues[0].enqueueReadBuffer(dev_output_buf, CL_TRUE, 0,
@@ -232,6 +247,7 @@ void Renderer::print_sysinfo() const {
             auto max_compute_units = devices[i].getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>();
             auto max_work_item_dimensions =
                 devices[i].getInfo<CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS>();
+            auto max_work_item_sizes = devices[i].getInfo<CL_DEVICE_MAX_WORK_ITEM_SIZES>();
             auto max_work_group_size = devices[i].getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
             auto max_mem_alloc_size = devices[i].getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>();
             auto max_parameter_size = devices[i].getInfo<CL_DEVICE_MAX_PARAMETER_SIZE>();
@@ -247,8 +263,10 @@ void Renderer::print_sysinfo() const {
                 m_kernel.getWorkGroupInfo<CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE>(devices[i]);
             fmt::print("    Device {}: {}, OpenCL version: {}, driver version: {}\n", i,
                        device_name, device_version, driver_version);
-            fmt::print("    Compute units: {}, Max work item dim: {}, Max work group size: {}\n",
-                       max_compute_units, max_work_item_dimensions, max_work_group_size);
+            fmt::print("    Compute units: {}, Max work item dim: {}, Max work item sizes: "
+                       "{}/{}/{}, Max work group size: {}\n",
+                       max_compute_units, max_work_item_dimensions, max_work_item_sizes[0],
+                       max_work_item_sizes[1], max_work_item_sizes[2], max_work_group_size);
             fmt::print("    Max mem alloc size: {} MB, Max parameter size: {} B\n",
                        max_mem_alloc_size / (1024 * 1024), max_parameter_size);
             fmt::print("    Global mem cacheline size: {} B, Global mem cache size: {} KB, Global "

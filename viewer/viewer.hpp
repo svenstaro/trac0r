@@ -42,8 +42,8 @@ class Viewer {
     int m_stride_x = 1;
     int m_stride_y = 1;
     int m_frame = 0;
-    int m_screen_width = 600;
-    int m_screen_height = 400;
+    int m_screen_width = 800;
+    int m_screen_height = 640;
 
 #ifdef BENCHMARK
     int m_max_frames = 10;
