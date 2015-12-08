@@ -96,18 +96,6 @@ inline float3 oriented_hemisphere_sample(__global PRNG *prng, const float3 dir) 
     return v * sign(dot(v, dir));
 }
 
-inline float3 cosine_weighted_hemisphere(__global PRNG *prng) {
-    float u1 = rand_range(prng, 0.f, 1.f);
-    float u2 = rand_range(prng, 0.f, 1.f);
-    const float r = sqrt(u1);
-    const float theta = 2.f * M_PI * u2;
-
-    const float x = r * cos(theta);
-    const float y = r * sin(theta);
-
-    return (float3)(x, y, sqrt(1.f - u1));
-}
-
 inline float3 reflect(float3 incident, float3 normal) {
     return incident - 2.f * normal * dot(normal, incident);
 }
