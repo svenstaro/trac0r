@@ -217,12 +217,16 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
         exit(1);
     }
 
+    // Wait for kernel to finish computing
     event.wait();
     m_last_frame_kernel_run_time = timer.elapsed();
 
+    // Transfer data from GPU back to CPU (TODO In later versions, just expose it to the OpenGL buffer
+    // and render it directly in order to get rid of this transfer)
     m_compute_queues[0].enqueueReadBuffer(dev_output_buf, CL_TRUE, 0,
                                           image_size * sizeof(cl_float4), &host_output[0]);
 
+    // Accumulate energy
     for (auto x = 0; x < m_width; x += stride_x) {
         for (auto y = 0; y < m_height; y += stride_y) {
             auto lol = reinterpret_cast<glm::vec4 *>(&host_output[y * m_width + x]);
