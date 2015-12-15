@@ -6,7 +6,9 @@
 namespace trac0r {
 
 struct Material {
+    glm::vec3 m_diffuse;
     glm::vec3 m_reflectance;
+    glm::vec3 m_refractance;
     glm::vec3 m_emittance;
 };
 }

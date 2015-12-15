@@ -15,47 +15,49 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
 
     glm::vec3 ret_color{0};
     Ray next_ray{world_pos, ray_dir};
-    glm::vec3 brdf{1};
+    glm::vec3 coeff{1};
     for (size_t depth = 0; depth < max_depth; depth++) {
         auto intersect_info = Scene::intersect(scene, next_ray);
         if (intersect_info.m_has_intersected) {
-            // Get the local radiance only on first bounce
-            glm::vec3 local_radiance;
-            // if (depth == 0) {
-            //     // auto ray = next_ray.m_origin - intersect_info.m_pos;
-            //     // float dist2 = glm::dot(ray, ray);
-            //     // // auto cos_area = glm::dot(-ray_dir, intersect_info.m_normal) *
-            //     intersect_info->m_area;
-            //     // // auto solid_angle = cos_area / glm::max(dist2, 1e-6f);
-            //     //
-            //     // if (cos_area > 0.0)
-            //     //     local_radiance = tri->m_emittance * solid_angle;
-            //     local_radiance = intersect_info.m_material.m_emittance;
-            // }
+            // Emitter Material
+            if (glm::length(intersect_info.m_material.m_emittance) > 0.f) {
+                ret_color += coeff * intersect_info.m_material.m_emittance;
+                break;
+            }
 
-            local_radiance = intersect_info.m_material.m_emittance;
+            // Diffuse Material
+            if (glm::length(intersect_info.m_material.m_diffuse) > 0.f) {
+                // Find new random direction for diffuse reflection
+                // glm::vec3 new_ray_dir = uniform_sample_sphere();
+                glm::vec3 new_ray_dir = oriented_hemisphere_sample(intersect_info.m_normal);
 
-            // Emitter sample
-            // TODO
-            // glm::vec3 illumination;
+                // Make sphere distribution into hemisphere distribution
+                float cos_theta = glm::dot(new_ray_dir, intersect_info.m_normal);
 
-            // Find normal in correct direction
-            glm::vec3 normal =
-                intersect_info.m_normal *
-                -glm::sign(glm::dot(intersect_info.m_normal, intersect_info.m_incoming_ray.m_dir));
+                // ret_color += coeff;
+                coeff *= 2.f * intersect_info.m_material.m_diffuse * cos_theta;
 
-            // Find new random direction for diffuse reflection
-            //glm::vec3 new_ray_dir = uniform_sample_sphere();
-            glm::vec3 new_ray_dir = oriented_hemisphere_sample(normal);
+                // Make a new ray
+                next_ray = Ray{intersect_info.m_pos, new_ray_dir};
+            }
 
-            // Make sphere distribution into hemisphere distribution
-            float cos_theta = glm::dot(new_ray_dir, normal);
+            // Reflective Material
+            if (glm::length(intersect_info.m_material.m_reflectance) > 0.f) {
+                // Find new direction for reflection
+                glm::vec3 new_ray_dir =
+                    intersect_info.m_incoming_ray.m_dir -
+                    (2.f * intersect_info.m_angle_between * intersect_info.m_normal);
 
-            ret_color += brdf * local_radiance;
-            brdf *= 2.f * intersect_info.m_material.m_reflectance * cos_theta;
+                // ret_color += coeff;
+                coeff *= 2.f * intersect_info.m_material.m_reflectance;
 
-            // Make a new ray
-            next_ray = Ray{intersect_info.m_pos, new_ray_dir};
+                // Make a new ray
+                next_ray = Ray{intersect_info.m_pos, new_ray_dir};
+            }
+
+            // Refractive Material
+            if (glm::length(intersect_info.m_material.m_refractance) > 0.f) {
+            }
 
         } else {
             break;

@@ -40,7 +40,15 @@ IntersectionInfo FlatStructure::intersect(const FlatStructure &flatstruct, const
                         intersect_info.m_has_intersected = true;
                         intersect_info.m_pos = ray.m_origin + ray.m_dir * closest_dist;
                         intersect_info.m_incoming_ray = ray;
-                        intersect_info.m_normal = closest_triangle.m_normal;
+
+                        intersect_info.m_angle_between = glm::dot(
+                            closest_triangle.m_normal, intersect_info.m_incoming_ray.m_dir);
+
+                        // Find normal in correct direction
+                        intersect_info.m_normal =
+                            closest_triangle.m_normal * -glm::sign(intersect_info.m_angle_between);
+                        intersect_info.m_angle_between = intersect_info.m_angle_between *
+                                                         -glm::sign(intersect_info.m_angle_between);
                         intersect_info.m_material = closest_triangle.m_material;
                     }
                 }
@@ -52,6 +60,8 @@ IntersectionInfo FlatStructure::intersect(const FlatStructure &flatstruct, const
 }
 
 void FlatStructure::rebuild(FlatStructure &flatstruct, const Camera &camera) {
+    (void)flatstruct;
+    (void)camera;
     //     m_triangles.clear();
     //     for (auto &shape : m_shapes) {
     //         for (auto &tri : shape->triangles()) {

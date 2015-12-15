@@ -239,7 +239,13 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
 
     m_last_frame_buffer_read_time = timer.elapsed();
 #else
+    // Forward path tracing part: Trace a bunch of rays through every light
+// #pragma omp parallel for simd collapse(2) schedule(dynamic, 1024)
+//     for () {
+//     }
+
 #pragma omp parallel for simd collapse(2) schedule(dynamic, 1024)
+    // Reverse path tracing part: Trace a ray through every camera pixel 
     for (auto x = 0; x < m_width; x += stride_x) {
         for (auto y = 0; y < m_height; y += stride_y) {
             glm::vec4 new_color = trace_pixel_color(x, y, m_max_depth, m_camera, m_scene);

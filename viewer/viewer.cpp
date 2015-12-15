@@ -93,23 +93,27 @@ int Viewer::init() {
 }
 
 void Viewer::setup_scene() {
-    trac0r::Material default_material{{0.740063, 0.742313, 0.733934}, {0, 0, 0}};
-    auto wall_left = trac0r::Shape::make_plane({-0.5f, 0.4f, 0}, {1, 0, 0}, {1, 1},
-                                               {{0.366046, 0.0371827, 0.0416385}, {0, 0, 0}});
-    auto wall_right = trac0r::Shape::make_plane({0.5f, 0.4f, 0}, {-1, 0, 0}, {1, 1},
-                                                {{0.162928, 0.408903, 0.0833759}, {0, 0, 0}});
+    trac0r::Material default_material{
+        {0.740063, 0.742313, 0.733934}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+    trac0r::Material diffuse_green{
+        {0.366046, 0.0371827, 0.0416385}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+    trac0r::Material diffuse_red{{0.162928, 0.408903, 0.0833759}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+    trac0r::Material reflective{{0, 0, 0}, {1, 1, 1}, {0, 0, 0}, {0, 0, 0}};
+    trac0r::Material refractive{{0, 0, 0}, {0, 0, 0}, {1, 1, 1}, {0, 0, 0}};
+    trac0r::Material emissive{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {10, 10, 9}};
+    auto wall_left = trac0r::Shape::make_plane({-0.5f, 0.4f, 0}, {1, 0, 0}, {1, 1}, diffuse_green);
+    auto wall_right = trac0r::Shape::make_plane({0.5f, 0.4f, 0}, {-1, 0, 0}, {1, 1}, diffuse_red);
     auto wall_back = trac0r::Shape::make_plane({0, 0.4f, 0.5}, {0, 0, 1}, {1, 1}, default_material);
     auto wall_top = trac0r::Shape::make_plane({0, 0.9f, 0}, {0, 1, 0}, {1, 1}, default_material);
     auto wall_bottom =
         trac0r::Shape::make_plane({0, -0.1f, 0}, {0, 1, 0}, {1, 1}, default_material);
-    auto lamp = trac0r::Shape::make_plane({0, 0.85f, -0.1}, {0, 1, 0}, {0.4, 0.4},
-                                          {{0, 0, 0}, {10, 10, 9}});
-    auto box1 = trac0r::Shape::make_box({0.2f, 0.1f, 0}, {0.3, 0.1, 0.5}, {0.2f, 0.5f, 0.2f},
+    auto lamp = trac0r::Shape::make_plane({0, 0.85f, -0.1}, {0, 1, 0}, {0.4, 0.4}, emissive);
+    auto box1 = trac0r::Shape::make_box({0.2f, 0.1f, 0.1f}, {0.3, 0.1, 0.5}, {0.2f, 0.5f, 0.2f},
                                         default_material);
-    auto box2 = trac0r::Shape::make_box({-0.2f, 0.05f, 0}, {0.3, -0.4, -0.9}, {0.3f, 0.4f, 0.3f},
-                                        default_material);
-    auto box3 = trac0r::Shape::make_box({0.f, 0.f, -2}, {0.f, 0.f, 0.1f}, {1.f, 1.f, 1.f},
-                                        default_material);
+    auto box2 = trac0r::Shape::make_box({-0.2f, 0.05f, 0.1f}, {0.3, -0.4, -0.9}, {0.3f, 0.4f, 0.3f},
+                                        reflective);
+    auto box3 = trac0r::Shape::make_box({0.f, 0.1f, -0.3f}, {0.1f, 0.5f, 1.f}, {0.2f, 0.2f, 0.2f},
+                                        refractive);
 
     Scene::add_shape(m_scene, wall_left);
     Scene::add_shape(m_scene, wall_right);

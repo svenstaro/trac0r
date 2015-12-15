@@ -25,6 +25,11 @@ struct IntersectionInfo {
     glm::vec3 m_normal;
 
     /**
+     * @brief The angle between the incoming ray and the normal.
+     */
+    float m_angle_between;
+
+    /**
      * @brief Direction vector of incomig ray towards point of intersection.
      */
     Ray m_incoming_ray = Ray(glm::vec3(0), glm::vec3(0));
@@ -33,6 +38,11 @@ struct IntersectionInfo {
      * @brief Material at the point of intersection.
      */
     Material m_material;
+
+    /**
+     * @brief TODO
+     */
+    glm::vec3 m_coeff{1};
 };
 }
 
