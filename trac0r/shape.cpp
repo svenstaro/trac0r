@@ -64,16 +64,16 @@ Shape Shape::make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size, Mate
     auto p8 = glm::vec3{0.5f, 0.5f, 0.5f};
 
     // front face
-    auto t1 = Triangle(p1, p2, p3, material);
+    auto t1 = Triangle(p2, p1, p3, material);
     auto t2 = Triangle(p1, p4, p3, material);
 
     // right face
-    auto t3 = Triangle(p3, p4, p8, material);
+    auto t3 = Triangle(p4, p3, p8, material);
     auto t4 = Triangle(p3, p7, p8, material);
 
     // left face
     auto t5 = Triangle(p1, p2, p6, material);
-    auto t6 = Triangle(p1, p5, p6, material);
+    auto t6 = Triangle(p5, p1, p6, material);
 
     // back face
     auto t7 = Triangle(p5, p6, p8, material);
@@ -81,10 +81,10 @@ Shape Shape::make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size, Mate
 
     // top face
     auto t9 = Triangle(p5, p1, p4, material);
-    auto t10 = Triangle(p5, p8, p4, material);
+    auto t10 = Triangle(p8, p4, p4, material);
 
     // bottom face
-    auto t11 = Triangle(p6, p3, p2, material);
+    auto t11 = Triangle(p2, p3, p6, material);
     auto t12 = Triangle(p3, p7, p6, material);
 
     Shape::add_triangle(new_shape, t1);
@@ -100,10 +100,10 @@ Shape Shape::make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size, Mate
     Shape::add_triangle(new_shape, t11);
     Shape::add_triangle(new_shape, t12);
 
-    glm::mat4 translate = glm::translate(pos);
+    glm::mat4 translation = glm::translate(pos);
     glm::mat4 rotation = glm::orientation(orientation, {0, 1, 0});
     glm::mat4 scale = glm::scale(size);
-    glm::mat4 model = translate * rotation * scale;
+    glm::mat4 model = translation * rotation * scale;
 
     for (auto &tri : triangles(new_shape)) {
         tri.m_v1 = glm::vec3(model * glm::vec4(tri.m_v1, 1));
@@ -128,16 +128,16 @@ Shape Shape::make_plane(glm::vec3 pos, glm::vec3 orientation, glm::vec2 size, Ma
     auto p3 = glm::vec3{0.5f, 0, -0.5f};
     auto p4 = glm::vec3{0.5f, 0, 0.5f};
 
-    auto triangle_left = Triangle(p1, p2, p3, material);
+    auto triangle_left = Triangle(p2, p1, p3, material);
     auto triangle_right = Triangle(p1, p4, p3, material);
 
     Shape::add_triangle(new_shape, triangle_left);
     Shape::add_triangle(new_shape, triangle_right);
 
-    glm::mat4 translate = glm::translate(pos);
+    glm::mat4 translation = glm::translate(pos);
     glm::mat4 rotation = glm::orientation(orientation, {0, 1, 0});
     glm::mat4 scale = glm::scale(Shape::scale(new_shape));
-    glm::mat4 model = translate * rotation * scale;
+    glm::mat4 model = translation * rotation * scale;
 
     for (auto &tri : triangles(new_shape)) {
         tri.m_v1 = glm::vec3(model * glm::vec4(tri.m_v1, 1));

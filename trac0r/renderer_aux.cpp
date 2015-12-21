@@ -27,6 +27,12 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
 
             // Diffuse Material
             if (glm::length(intersect_info.m_material.m_diffuse) > 0.f) {
+                // Find normal in correct direction
+                intersect_info.m_normal =
+                    intersect_info.m_normal * -glm::sign(intersect_info.m_angle_between);
+                intersect_info.m_angle_between =
+                    intersect_info.m_angle_between * -glm::sign(intersect_info.m_angle_between);
+
                 // Find new random direction for diffuse reflection
                 // glm::vec3 new_ray_dir = uniform_sample_sphere();
                 glm::vec3 new_ray_dir = oriented_hemisphere_sample(intersect_info.m_normal);
@@ -43,6 +49,12 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
 
             // Reflective Material
             if (glm::length(intersect_info.m_material.m_reflectance) > 0.f) {
+                // Find normal in correct direction
+                intersect_info.m_normal =
+                    intersect_info.m_normal * -glm::sign(intersect_info.m_angle_between);
+                intersect_info.m_angle_between =
+                    intersect_info.m_angle_between * -glm::sign(intersect_info.m_angle_between);
+
                 // Find new direction for reflection
                 glm::vec3 new_ray_dir =
                     intersect_info.m_incoming_ray.m_dir -
@@ -56,7 +68,61 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
             }
 
             // Refractive Material
-            if (glm::length(intersect_info.m_material.m_refractance) > 0.f) {
+            if (intersect_info.m_material.m_refractance != 0) {
+                float n1, n2;
+
+                if (intersect_info.m_angle_between > 0) {
+                    // Ray in inside the object
+                    n1 = intersect_info.m_material.m_refractance;
+                    n2 = 1.0003f;
+
+                    intersect_info.m_normal = -intersect_info.m_normal;
+                } else {
+                    // Ray is outside the object
+                    n1 = 1.0003f;
+                    n2 = intersect_info.m_material.m_refractance;
+
+                    intersect_info.m_angle_between = -intersect_info.m_angle_between;
+                }
+
+                float n = n1 / n2;
+
+                float cos_t =
+                    1.f - glm::pow(n, 2) * (1.f - glm::pow(intersect_info.m_angle_between, 2));
+
+                glm::vec3 new_ray_dir;
+                // Handle total internal reflection
+                if (cos_t < 0.f) {
+                    new_ray_dir = intersect_info.m_incoming_ray.m_dir -
+                                  (2.f * intersect_info.m_angle_between * intersect_info.m_normal);
+                    next_ray = Ray{intersect_info.m_pos, new_ray_dir};
+                    break;
+                }
+
+                cos_t = glm::sqrt(cos_t);
+
+                // Fresnel coefficients
+                // float r1 = n1 * intersect_info.m_angle_between - n2 * cos_t;
+                // float r2 = n1 * intersect_info.m_angle_between + n2 * cos_t;
+                // float r3 = n2 * intersect_info.m_angle_between - n1 * cos_t;
+                // float r4 = n2 * intersect_info.m_angle_between + n1 * cos_t;
+                // float r = glm::pow(r1 / r2, 2) + glm::pow(r3 / r4, 2) * 0.5f;
+
+                // TODO Make this into real glass and split between reflection/refraction here
+                // if (rand_range(0.f, 1.f) < r) {
+                //     // Reflection
+                //     new_ray_dir = intersect_info.m_incoming_ray.m_dir -
+                //                   (2.f * intersect_info.m_angle_between * intersect_info.m_normal);
+                //     break;
+                // } else {
+                    // Refraction
+                    new_ray_dir = intersect_info.m_incoming_ray.m_dir * (n1 / n2) +
+                                  intersect_info.m_normal *
+                                      ((n1 / n2) * intersect_info.m_angle_between - cos_t);
+                // }
+
+                // Make a new ray
+                next_ray = Ray{intersect_info.m_pos, new_ray_dir};
             }
 
         } else {

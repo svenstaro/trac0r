@@ -44,11 +44,7 @@ IntersectionInfo FlatStructure::intersect(const FlatStructure &flatstruct, const
                         intersect_info.m_angle_between = glm::dot(
                             closest_triangle.m_normal, intersect_info.m_incoming_ray.m_dir);
 
-                        // Find normal in correct direction
-                        intersect_info.m_normal =
-                            closest_triangle.m_normal * -glm::sign(intersect_info.m_angle_between);
-                        intersect_info.m_angle_between = intersect_info.m_angle_between *
-                                                         -glm::sign(intersect_info.m_angle_between);
+                        intersect_info.m_normal = closest_triangle.m_normal;
                         intersect_info.m_material = closest_triangle.m_material;
                     }
                 }
