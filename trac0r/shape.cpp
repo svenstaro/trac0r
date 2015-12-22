@@ -53,7 +53,7 @@ void Shape::add_triangle(Shape &shape, const Triangle triangle) {
 Shape Shape::make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size, Material material) {
     Shape new_shape;
     Shape::set_pos(new_shape, pos);
-    Shape::set_orientation(new_shape, glm::normalize(orientation));
+    Shape::set_orientation(new_shape, orientation);
     Shape::set_scale(new_shape, size);
 
     auto p1 = glm::vec3{-0.5f, 0.5f, -0.5f};
@@ -102,9 +102,9 @@ Shape Shape::make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size, Mate
     Shape::add_triangle(new_shape, t11);
     Shape::add_triangle(new_shape, t12);
 
-    glm::mat4 translation = glm::translate(pos);
+    glm::mat4 translation = glm::translate(glm::mat4(1.f), pos);
     glm::mat4 rotation = glm::orientation(orientation, {0, 1, 0});
-    glm::mat4 scale = glm::scale(size);
+    glm::mat4 scale = glm::scale(glm::mat4(1.f), size);
     glm::mat4 model = translation * rotation * scale;
 
     for (auto &tri : triangles(new_shape)) {
