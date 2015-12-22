@@ -2,6 +2,8 @@
 
 #include "glm/gtx/rotate_vector.hpp"
 
+#include "utils.hpp"
+
 namespace trac0r {
 
 const glm::vec3 Shape::pos(const Shape &shape) {
@@ -81,7 +83,7 @@ Shape Shape::make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size, Mate
 
     // top face
     auto t9 = Triangle(p5, p1, p4, material);
-    auto t10 = Triangle(p8, p4, p4, material);
+    auto t10 = Triangle(p8, p4, p5, material);
 
     // bottom face
     auto t11 = Triangle(p2, p3, p6, material);
@@ -103,6 +105,73 @@ Shape Shape::make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size, Mate
     glm::mat4 translation = glm::translate(pos);
     glm::mat4 rotation = glm::orientation(orientation, {0, 1, 0});
     glm::mat4 scale = glm::scale(size);
+    glm::mat4 model = translation * rotation * scale;
+
+    for (auto &tri : triangles(new_shape)) {
+        tri.m_v1 = glm::vec3(model * glm::vec4(tri.m_v1, 1));
+        tri.m_v2 = glm::vec3(model * glm::vec4(tri.m_v2, 1));
+        tri.m_v3 = glm::vec3(model * glm::vec4(tri.m_v3, 1));
+        tri.rebuild();
+    }
+
+    rebuild(new_shape);
+
+    return new_shape;
+}
+
+Shape Shape::make_icosphere(glm::vec3 pos, glm::vec3 orientation, float radius, size_t iterations,
+                            Material material) {
+    Shape new_shape;
+    Shape::set_pos(new_shape, pos);
+    Shape::set_orientation(new_shape, glm::normalize(orientation));
+    Shape::set_scale(new_shape, glm::vec3(radius, radius, radius));
+
+    float t = 0.5 + glm::sqrt(5) / 2.f;
+
+    triangles(new_shape).push_back(Triangle{{-1, t, 0}, {-t, 0, 1}, {0, 1, t}, material});
+    triangles(new_shape).push_back(Triangle{{-1, t, 0}, {0, 1, t}, {1, t, 0}, material});
+    triangles(new_shape).push_back(Triangle{{-1, t, 0}, {1, t, 0}, {0, 1, -t}, material});
+    triangles(new_shape).push_back(Triangle{{-1, t, 0}, {0, 1, -t}, {-t, 0, -1}, material});
+    triangles(new_shape).push_back(Triangle{{-1, t, 0}, {-t, 0, -1}, {-t, 0, 1}, material});
+
+    triangles(new_shape).push_back(Triangle{{1, t, 0}, {0, 1, t}, {t, 0, 1}, material});
+    triangles(new_shape).push_back(Triangle{{0, 1, t}, {-t, 0, 1}, {0, -1, t}, material});
+    triangles(new_shape).push_back(Triangle{{-t, 0, 1}, {-t, 0, -1}, {-1, -t, 0}, material});
+    triangles(new_shape).push_back(Triangle{{-t, 0, -1}, {0, 1, -t}, {0, -1, -t}, material});
+    triangles(new_shape).push_back(Triangle{{0, 1, -t}, {1, t, 0}, {t, 0, -1}, material});
+
+    triangles(new_shape).push_back(Triangle{{1, -t, 0}, {t, 0, 1}, {0, -1, t}, material});
+    triangles(new_shape).push_back(Triangle{{1, -t, 0}, {0, -1, t}, {-1, -t, 0}, material});
+    triangles(new_shape).push_back(Triangle{{1, -t, 0}, {-1, -t, 0}, {0, -1, -t}, material});
+    triangles(new_shape).push_back(Triangle{{1, -t, 0}, {0, -1, -t}, {t, 0, -1}, material});
+    triangles(new_shape).push_back(Triangle{{1, -t, 0}, {t, 0, -1}, {t, 0, 1}, material});
+
+    triangles(new_shape).push_back(Triangle{{0, -1, t}, {t, 0, 1}, {0, 1, t}, material});
+    triangles(new_shape).push_back(Triangle{{-1, -t, 0}, {0, -1, t}, {-t, 0, 1}, material});
+    triangles(new_shape).push_back(Triangle{{0, -1, -t}, {-1, -t, 0}, {-t, 0, -1}, material});
+    triangles(new_shape).push_back(Triangle{{t, 0, -1}, {0, -1, -t}, {0, 1, -t}, material});
+    triangles(new_shape).push_back(Triangle{{t, 0, 1}, {t, 0, -1}, {1, t, 0}, material});
+    rebuild(new_shape);
+
+    for (size_t i = 0; i < iterations; i++) {
+        std::vector<Triangle> new_triangles;
+        for (const auto &tri : triangles(new_shape)) {
+            glm::vec3 a = glm::normalize(get_middle_point(tri.m_v1, tri.m_v2));
+            glm::vec3 b = glm::normalize(get_middle_point(tri.m_v2, tri.m_v3));
+            glm::vec3 c = glm::normalize(get_middle_point(tri.m_v3, tri.m_v1));
+
+            new_triangles.push_back(Triangle{glm::normalize(tri.m_v1), a, c, material});
+            new_triangles.push_back(Triangle{glm::normalize(tri.m_v2), b, a, material});
+            new_triangles.push_back(Triangle{glm::normalize(tri.m_v3), c, b, material});
+            new_triangles.push_back(Triangle{a, b, c, material});
+        }
+
+        new_shape.m_triangles = new_triangles;
+    }
+
+    glm::mat4 translation = glm::translate(pos);
+    glm::mat4 rotation = glm::orientation(orientation, {0, 1, 0});
+    glm::mat4 scale = glm::scale(Shape::scale(new_shape));
     glm::mat4 model = translation * rotation * scale;
 
     for (auto &tri : triangles(new_shape)) {

@@ -18,6 +18,10 @@
 
 namespace trac0r {
 
+inline glm::vec3 get_middle_point(glm::vec3 v1, glm::vec3 v2) {
+    return (v1 - v2) / 2.f + v2;
+}
+
 #ifdef OPENCL
 inline std::string opencl_error_string(cl_int error) {
     switch (error) {

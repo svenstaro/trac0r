@@ -31,6 +31,9 @@ class Shape {
 
     static Shape make_box(glm::vec3 pos, glm::vec3 orientation, glm::vec3 size, Material material);
 
+    static Shape make_icosphere(glm::vec3 pos, glm::vec3 orientation, float radius,
+                                size_t iterations, Material material);
+
     static Shape make_plane(glm::vec3 pos, glm::vec3 orientation, glm::vec2 size,
                             Material material);
 
