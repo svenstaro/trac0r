@@ -98,7 +98,7 @@ void Viewer::setup_scene() {
     trac0r::Material diffuse_green{{0.162928, 0.408903, 0.0833759}, {0, 0, 0}, 0, {0, 0, 0}};
     trac0r::Material reflective{{0, 0, 0}, {1, 1, 1}, 0, {0, 0, 0}};
     trac0r::Material refractive{{0, 0, 0}, {0, 0, 0}, 1.51714f, {0, 0, 0}};
-    trac0r::Material emissive{{0, 0, 0}, {0, 0, 0}, 0, {10, 10, 9}};
+    trac0r::Material emissive{{0, 0, 0}, {0, 0, 0}, 0, {15, 14, 12}};
     auto wall_left = trac0r::Shape::make_plane({-0.5f, 0.4f, 0}, {0, 0, -glm::half_pi<float>()},
                                                {1, 1}, diffuse_red);
     auto wall_right = trac0r::Shape::make_plane({0.5f, 0.4f, 0}, {0, 0, glm::half_pi<float>()},
