@@ -5,6 +5,8 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
+#include <iostream>
+
 namespace trac0r {
 // #pragma omp declare simd // TODO make this work
 glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const unsigned max_depth,
@@ -22,7 +24,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
 
     Ray next_ray{world_pos, ray_dir};
     glm::vec3 return_color{0};
-    glm::vec3 weight{1};
+    glm::vec3 albedo{1};
 
     // Russian Roulette
     size_t depth = 0;
@@ -30,8 +32,9 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
     // We'll run until terminated by Russian Roulette
     while (true) {
         // Russian Roulette
-        float termination_probability = 1.f - (1.f / (max_depth - depth));
-        if (rand_range(0.f, 1.f) >= termination_probability) {
+        float continuation_probability = 1.f - (1.f / (max_depth - depth));
+        // float continuation_probability = (albedo.x + albedo.y + albedo.z) / 3.f;
+        if (rand_range(0.f, 1.0f) >= continuation_probability) {
             break;
         }
         depth++;
@@ -40,7 +43,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
         if (intersect_info.m_has_intersected) {
             // Emitter Material
             if (glm::length(intersect_info.m_material.m_emittance) > 0.f) {
-                return_color += weight * intersect_info.m_material.m_emittance;
+                return_color = albedo * intersect_info.m_material.m_emittance / continuation_probability;
                 break;
             }
 
@@ -59,7 +62,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
                 // Make sphere distribution into hemisphere distribution
                 float cos_theta = glm::dot(new_ray_dir, intersect_info.m_normal);
 
-                weight *= 2.f * intersect_info.m_material.m_diffuse * cos_theta;
+                albedo *= 2.f * intersect_info.m_material.m_diffuse * cos_theta;
 
                 // Make a new ray
                 next_ray = Ray{intersect_info.m_pos, new_ray_dir};
@@ -78,14 +81,15 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
                     intersect_info.m_incoming_ray.m_dir -
                     (2.f * intersect_info.m_angle_between * intersect_info.m_normal);
 
-                weight *= intersect_info.m_material.m_reflectance;
+                albedo *= intersect_info.m_material.m_reflectance;
 
                 // Make a new ray
                 next_ray = Ray{intersect_info.m_pos, new_ray_dir};
             }
 
-            // Refractive Material
-            if (intersect_info.m_material.m_refractance != 0) {
+            // Refractive Material TODO: Disabled for now, needs to be worked into a glass material that only
+            // sometimes refracts
+            if (false && intersect_info.m_material.m_refractance != 0) {
                 float n1, n2;
 
                 if (intersect_info.m_angle_between > 0) {
