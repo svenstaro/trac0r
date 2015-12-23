@@ -22,7 +22,7 @@ class Renderer {
     void print_last_frame_timings() const;
 
   private:
-    int m_max_depth = 5;
+    int m_max_depth = 6;
 
     /**
      * @brief We accumulate our "photons" into here for each pixel

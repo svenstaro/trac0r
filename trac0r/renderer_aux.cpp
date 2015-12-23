@@ -20,15 +20,26 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
     glm::vec3 world_pos = Camera::camspace_to_worldspace(camera, rel_pos);
     glm::vec3 ray_dir = glm::normalize(world_pos - Camera::pos(camera));
 
-    glm::vec3 ret_color{0};
     Ray next_ray{world_pos, ray_dir};
-    glm::vec3 coeff{1};
-    for (size_t depth = 0; depth < max_depth; depth++) {
+    glm::vec3 return_color{0};
+    glm::vec3 weight{1};
+
+    // Russian Roulette
+    size_t depth = 0;
+
+    while (true) {
+        // We'll run until terminated by Russian Roulette
+        float termination_probability = 1.f / (max_depth - depth);
+        if (rand_range(0.f, 1.f) <= termination_probability) {
+            break;
+        }
+        depth++;
+
         auto intersect_info = Scene::intersect(scene, next_ray);
         if (intersect_info.m_has_intersected) {
             // Emitter Material
             if (glm::length(intersect_info.m_material.m_emittance) > 0.f) {
-                ret_color += coeff * intersect_info.m_material.m_emittance;
+                return_color += weight * intersect_info.m_material.m_emittance;
                 break;
             }
 
@@ -47,8 +58,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
                 // Make sphere distribution into hemisphere distribution
                 float cos_theta = glm::dot(new_ray_dir, intersect_info.m_normal);
 
-                // ret_color += coeff;
-                coeff *= 2.f * intersect_info.m_material.m_diffuse * cos_theta;
+                weight *= 2.f * intersect_info.m_material.m_diffuse * cos_theta;
 
                 // Make a new ray
                 next_ray = Ray{intersect_info.m_pos, new_ray_dir};
@@ -67,8 +77,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
                     intersect_info.m_incoming_ray.m_dir -
                     (2.f * intersect_info.m_angle_between * intersect_info.m_normal);
 
-                // ret_color += coeff;
-                coeff *= 2.f * intersect_info.m_material.m_reflectance;
+                weight *= intersect_info.m_material.m_reflectance;
 
                 // Make a new ray
                 next_ray = Ray{intersect_info.m_pos, new_ray_dir};
@@ -138,6 +147,6 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
         }
     }
 
-    return glm::vec4(ret_color, 1.f);
+    return glm::vec4(return_color, 1.f);
 }
 }
