@@ -35,7 +35,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
 
                 // Find new random direction for diffuse reflection
                 // glm::vec3 new_ray_dir = uniform_sample_sphere();
-                glm::vec3 new_ray_dir = oriented_hemisphere_sample(intersect_info.m_normal);
+                glm::vec3 new_ray_dir = oriented_uniform_hemisphere_sample(intersect_info.m_normal);
 
                 // Make sphere distribution into hemisphere distribution
                 float cos_theta = glm::dot(new_ray_dir, intersect_info.m_normal);

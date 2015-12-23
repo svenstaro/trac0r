@@ -84,7 +84,6 @@ inline glm::vec3 uniform_sample_sphere() {
 
 /**
  * @brief Selects a random point on a sphere with uniform distribution.
- * point on a uniform.
  *
  * @return A random point on the surface of a sphere
  */
@@ -97,15 +96,48 @@ inline glm::vec3 uniform_sample_sphere2() {
 }
 
 /**
- * @brief Given a direction vector, this will return a random point on a sphere
+ * @brief Selects a random point on a sphere with cosine-weighted distribution.
+ *
+ * @return A random point on the surface of a sphere
+ */
+// TODO: https://pathtracing.wordpress.com/2011/03/03/cosine-weighted-hemisphere/
+inline glm::vec3 cosine_sample_sphere() {
+    float s = rand_range(0.f, 1.f);
+    float t = rand_range(0.f, 1.f);
+    
+    float r = glm::sqrt(s);
+    float theta = glm::two_pi<float>() * t;
+
+    float x = r * glm::cos(theta);
+    float y = r * glm::sin(theta);
+
+    return glm::vec3{x, y, glm::sqrt(glm::max(0.f, 1.f - s))};
+}
+
+/**
+ * @brief Given a direction vector, this will return a random uniform point on a sphere
  * on the hemisphere around dir.
  *
  * @param dir A vector that represents the hemisphere's center
  *
  * @return A random point the on the hemisphere
  */
-inline glm::vec3 oriented_hemisphere_sample(glm::vec3 dir) {
+inline glm::vec3 oriented_uniform_hemisphere_sample(glm::vec3 dir) {
     glm::vec3 v = uniform_sample_sphere();
+    return v * glm::sign(glm::dot(v, dir));
+}
+
+
+/**
+ * @brief Given a direction vector, this will return a random cosine-weighted point on a sphere
+ * on the hemisphere around dir.
+ *
+ * @param dir A vector that represents the hemisphere's center
+ *
+ * @return A random point the on the hemisphere
+ */
+inline glm::vec3 oriented_cosine_weighted_hemisphere_sample(glm::vec3 dir) {
+    glm::vec3 v = cosine_sample_sphere();
     return v * glm::sign(glm::dot(v, dir));
 }
 }
