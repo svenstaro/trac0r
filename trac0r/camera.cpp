@@ -124,9 +124,13 @@ glm::vec3 Camera::canvas_dir_y(const Camera &camera) {
     return camera.m_canvas_dir_y;
 }
 
+glm::vec2 Camera::pixel_size(const Camera &camera) {
+    return {1.f / screen_width(camera), 1.f / screen_height(camera)};
+}
+
 glm::vec2 Camera::screenspace_to_camspace(const Camera &camera, unsigned x, unsigned y) {
-    auto rel_x = -(x - screen_width(camera) / 2.f) / screen_width(camera);
-    auto rel_y = -(y - screen_height(camera) / 2.f) / screen_height(camera);
+    auto rel_x = (x - screen_width(camera) / 2.f) / screen_width(camera);
+    auto rel_y = (y - screen_height(camera) / 2.f) / screen_height(camera);
     return {rel_x, rel_y};
 }
 
@@ -139,8 +143,8 @@ glm::i32vec2 Camera::camspace_to_screenspace(const Camera &camera, glm::vec2 coo
 }
 
 glm::vec3 Camera::camspace_to_worldspace(const Camera &camera, glm::vec2 rel_pos) {
-    auto worldspace = canvas_center_pos(camera) + (rel_pos.x * canvas_dir_x(camera)) +
-                      (rel_pos.y * canvas_dir_y(camera));
+    auto worldspace = canvas_center_pos(camera) + (rel_pos.x * -canvas_dir_x(camera)) +
+                      (rel_pos.y * -canvas_dir_y(camera));
     return worldspace;
 }
 
@@ -178,7 +182,6 @@ glm::vec3 Camera::worldpoint_to_worldspace(const Camera &camera, glm::vec3 world
     } else {
         return glm::vec3(0);
     }
-
 }
 
 void Camera::rebuild(Camera &camera) {
@@ -187,7 +190,8 @@ void Camera::rebuild(Camera &camera) {
     camera.m_canvas_width = 2 * glm::tan(horizontal_fov(camera) / 2) * near_plane_dist(camera);
     camera.m_canvas_height = 2 * glm::tan(vertical_fov(camera) / 2) * near_plane_dist(camera);
     camera.m_canvas_center_pos = pos(camera) + dir(camera) * near_plane_dist(camera);
-    camera.m_canvas_dir_x = glm::normalize(glm::cross(dir(camera), up(camera))) * (canvas_width(camera) / 2);
+    camera.m_canvas_dir_x =
+        glm::normalize(glm::cross(dir(camera), up(camera))) * (canvas_width(camera) / 2);
     camera.m_canvas_dir_y = glm::normalize(up(camera)) * (canvas_height(camera) / 2);
 }
 }

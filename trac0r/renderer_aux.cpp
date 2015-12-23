@@ -10,6 +10,13 @@ namespace trac0r {
 glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const unsigned max_depth,
                                       const Camera &camera, const Scene &scene) {
     glm::vec2 rel_pos = Camera::screenspace_to_camspace(camera, x, y);
+
+    // Subpixel sampling / antialiasing
+    glm::vec2 pixel_size = Camera::pixel_size(camera);
+    glm::vec2 jitter = {rand_range(-pixel_size.x / 2.f, pixel_size.x / 2.f),
+                        rand_range(-pixel_size.y / 2.f, pixel_size.y / 2.f)};
+    rel_pos += jitter;
+
     glm::vec3 world_pos = Camera::camspace_to_worldspace(camera, rel_pos);
     glm::vec3 ray_dir = glm::normalize(world_pos - Camera::pos(camera));
 
@@ -112,13 +119,14 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
                 // if (rand_range(0.f, 1.f) < r) {
                 //     // Reflection
                 //     new_ray_dir = intersect_info.m_incoming_ray.m_dir -
-                //                   (2.f * intersect_info.m_angle_between * intersect_info.m_normal);
+                //                   (2.f * intersect_info.m_angle_between *
+                //                   intersect_info.m_normal);
                 //     break;
                 // } else {
-                    // Refraction
-                    new_ray_dir = intersect_info.m_incoming_ray.m_dir * (n1 / n2) +
-                                  intersect_info.m_normal *
-                                      ((n1 / n2) * intersect_info.m_angle_between - cos_t);
+                // Refraction
+                new_ray_dir =
+                    intersect_info.m_incoming_ray.m_dir * (n1 / n2) +
+                    intersect_info.m_normal * ((n1 / n2) * intersect_info.m_angle_between - cos_t);
                 // }
 
                 // Make a new ray

@@ -46,6 +46,13 @@ class Camera {
     static glm::vec3 canvas_dir_y(const Camera &camera);
 
     /**
+     * @brief Returns the size of one pixel in camera space.
+     *
+     * @return Vector of (x, y) pixel size in camera space.
+     */
+    static glm::vec2 pixel_size(const Camera &camera);
+
+    /**
      * @brief Converts absolute screen space coordinates to relative camera space positions.
      *
      * @param x Pixel coordinate. Can not be larger than m_screen_width.
