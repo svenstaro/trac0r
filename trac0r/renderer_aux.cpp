@@ -29,8 +29,8 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
 
     while (true) {
         // We'll run until terminated by Russian Roulette
-        float termination_probability = 1.f / (max_depth - depth);
-        if (rand_range(0.f, 1.f) <= termination_probability) {
+        float termination_probability = 1.f - (1.f / (max_depth - depth));
+        if (rand_range(0.f, 1.f) >= termination_probability) {
             break;
         }
         depth++;
