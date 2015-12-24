@@ -16,11 +16,13 @@ class FlatStructure {
     static void add_shape(FlatStructure &flatstruct, Shape &shape);
     static std::vector<Shape> &shapes(FlatStructure &flatstruct);
     static const std::vector<Shape> &shapes(const FlatStructure &flatstruct);
+    static std::vector<Triangle> &light_triangles(FlatStructure &flatstruct);
+    static const std::vector<Triangle> &light_triangles(const FlatStructure &flatstruct);
     static IntersectionInfo intersect(const FlatStructure &flatstruct, const Ray &ray);
-    static void rebuild(FlatStructure &flatstruct, const Camera &camera);
+    static void rebuild(FlatStructure &flatstruct);
 
   private:
-    std::vector<Triangle> m_triangles;
+    std::vector<Triangle> m_light_triangles;
     std::vector<Shape> m_shapes;
 };
 }

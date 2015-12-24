@@ -18,8 +18,8 @@ IntersectionInfo Scene::intersect(const Scene &scene, const Ray &ray) {
     return FlatStructure::intersect(accel_struct(scene), ray);
 }
 
-void Scene::rebuild(Scene &scene, const Camera &camera) {
-    FlatStructure::rebuild(Scene::accel_struct(scene), camera);
+void Scene::rebuild(Scene &scene) {
+    FlatStructure::rebuild(Scene::accel_struct(scene));
 }
 
 FlatStructure &Scene::accel_struct(Scene &scene) {

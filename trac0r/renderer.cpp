@@ -239,10 +239,21 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
 
     m_last_frame_buffer_read_time = timer.elapsed();
 #else
+    const auto &accel_struct = Scene::accel_struct(m_scene);
+    const auto &light_triangles = FlatStructure::light_triangles(accel_struct);
+
     // Forward path tracing part: Trace a bunch of rays through every light
-// #pragma omp parallel for simd collapse(2) schedule(dynamic, 1024)
-//     for () {
-//     }
+    const auto num_light_paths = 1'000'000;
+
+    // Assume worst case and just make it m_max_depth * N
+    m_lvc.resize(m_max_depth * num_light_paths); 
+#pragma omp parallel for simd schedule(dynamic, 1024)
+    for (auto i = 0; i < num_light_paths; i++) {
+        // Pick a random light triangle
+        auto rand_index = rand_range(0UL, light_triangles.size() - 1);
+        light_triangles[rand_index]; 
+        // TODO
+    }
 
 #pragma omp parallel for simd collapse(2) schedule(dynamic, 1024)
     // Reverse path tracing part: Trace a ray through every camera pixel 

@@ -18,7 +18,7 @@ class Scene {
   public:
     static void add_shape(Scene &scene, Shape &shape);
     static IntersectionInfo intersect(const Scene &scene, const Ray &ray);
-    static void rebuild(Scene &scene, const Camera &camera);
+    static void rebuild(Scene &scene);
     static const FlatStructure &accel_struct(const Scene &scene);
     static FlatStructure &accel_struct(Scene &scene);
 

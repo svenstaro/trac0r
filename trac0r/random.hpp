@@ -88,11 +88,25 @@ inline glm::vec3 uniform_sample_sphere() {
  * @return A random point on the surface of a sphere
  */
 inline glm::vec3 uniform_sample_sphere2() {
-    float s = rand_range(0.f, 1.f) * glm::two_pi<float>();
+    float s = rand_range(0.f, glm::two_pi<float>());
     float t = rand_range(-1.f, 1.f);
-    glm::vec2 v = {glm::sin(s), glm::cos(s)};
-    v *= glm::sqrt(1.f - t * t);
-    return glm::vec3(v.x, v.y, t);
+    return {glm::sin(s) * glm::sqrt(1.f - t * t), glm::cos(s) * glm::sqrt(1.f - t * t), t};
+}
+
+/**
+ * @brief Selects a random point on a cone with uniform distribution.
+ *
+ * @param dir Direction in which the cone is oriented
+ * @param angle Angle of the cone in radians
+ *
+ * @return A random point on the surface of a cone
+ */
+inline glm::vec3 oriented_uniform_cone_sample(glm::vec3 dir, float angle) {
+    float s = rand_range(0.f, glm::two_pi<float>());
+    float t = rand_range(glm::cos(angle), 1.f);
+    glm::vec3 random_vec_on_cone{glm::sin(s) * glm::sqrt(1.f - t * t), glm::cos(s) * glm::sqrt(1.f - t * t), t};
+    glm::vec3 projected_random = random_vec_on_cone - (dir * glm::dot(dir, random_vec_on_cone));
+    return projected_random;
 }
 
 /**
@@ -104,7 +118,7 @@ inline glm::vec3 uniform_sample_sphere2() {
 inline glm::vec3 cosine_sample_sphere() {
     float s = rand_range(0.f, 1.f);
     float t = rand_range(0.f, 1.f);
-    
+
     float r = glm::sqrt(s);
     float theta = glm::two_pi<float>() * t;
 
@@ -126,7 +140,6 @@ inline glm::vec3 oriented_uniform_hemisphere_sample(glm::vec3 dir) {
     glm::vec3 v = uniform_sample_sphere();
     return v * glm::sign(glm::dot(v, dir));
 }
-
 
 /**
  * @brief Given a direction vector, this will return a random cosine-weighted point on a sphere

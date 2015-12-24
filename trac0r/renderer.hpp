@@ -3,6 +3,7 @@
 
 #include "camera.hpp"
 #include "scene.hpp"
+#include "light_vertex.hpp"
 
 #ifdef OPENCL
 #include <CL/cl.hpp>
@@ -28,6 +29,11 @@ class Renderer {
      * @brief We accumulate our "photons" into here for each pixel
      */
     std::vector<glm::vec4> m_luminance;
+
+    /**
+     * @brief LVC for light traces
+     */
+    std::vector<LightVertex> m_lvc;
 
     const int m_width;
     const int m_height;

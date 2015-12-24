@@ -18,6 +18,14 @@ const std::vector<Shape> &FlatStructure::shapes(const FlatStructure &flatstruct)
     return flatstruct.m_shapes;
 }
 
+std::vector<Triangle> &FlatStructure::light_triangles(FlatStructure &flatstruct) {
+    return flatstruct.m_light_triangles;
+}
+
+const std::vector<Triangle> &FlatStructure::light_triangles(const FlatStructure &flatstruct) {
+    return flatstruct.m_light_triangles;
+}
+
 IntersectionInfo FlatStructure::intersect(const FlatStructure &flatstruct, const Ray &ray) {
     // TODO: We get like 2x better performance here if we loop over a flat structure of triangles
     // instead of looping over all shapes and for each shape over all triangles
@@ -55,21 +63,15 @@ IntersectionInfo FlatStructure::intersect(const FlatStructure &flatstruct, const
     return intersect_info;
 }
 
-void FlatStructure::rebuild(FlatStructure &flatstruct, const Camera &camera) {
-    (void)flatstruct;
-    (void)camera;
-    //     m_triangles.clear();
-    //     for (auto &shape : m_shapes) {
-    //         for (auto &tri : shape->triangles()) {
-    //             m_triangles.push_back(*tri);
-    //         }
-    //     }
-    //     // Sort by distance to camera
-    //     // This is obviously broken but it works well enough for now
-    //         std::sort(m_triangles.begin(), m_triangles.end(),
-    //                   [&camera](const auto &tri1, const auto &tri2) {
-    //                       return glm::distance(camera.pos(), tri1.m_centroid) <
-    //                              glm::distance(camera.pos(), tri2.m_centroid);
-    //                   });
+void FlatStructure::rebuild(FlatStructure &flatstruct) {
+    flatstruct.m_light_triangles.clear();
+    for (auto &shape : FlatStructure::shapes(flatstruct)) {
+        for (auto &tri : Shape::triangles(shape)) {
+            // Put lights into a list for easy access
+            if (tri.m_material.m_type == 4) {
+                flatstruct.m_light_triangles.push_back(tri);
+            }
+        }
+    }
 }
 }

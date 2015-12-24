@@ -93,12 +93,12 @@ int Viewer::init() {
 }
 
 void Viewer::setup_scene() {
-    trac0r::Material default_material{{0.740063, 0.742313, 0.733934}, {0, 0, 0}, 0, {0, 0, 0}};
-    trac0r::Material diffuse_red{{0.366046, 0.0371827, 0.0416385}, {0, 0, 0}, 0, {0, 0, 0}};
-    trac0r::Material diffuse_green{{0.162928, 0.408903, 0.0833759}, {0, 0, 0}, 0, {0, 0, 0}};
-    trac0r::Material reflective{{0, 0, 0}, {1, 1, 1}, 0, {0, 0, 0}};
-    trac0r::Material refractive{{0, 0, 0}, {0.5, 0.5, 0.5}, 1.51714f, {0, 0, 0}};
-    trac0r::Material emissive{{0, 0, 0}, {0, 0, 0}, 0, {15, 14, 12}};
+    trac0r::Material emissive{1, {1.f, 0.93f, 0.85f}, 0.f, 1.f, 15.f};
+    trac0r::Material default_material{2, {0.740063, 0.742313, 0.733934}};
+    trac0r::Material diffuse_red{2, {0.366046, 0.0371827, 0.0416385}};
+    trac0r::Material diffuse_green{2, {0.162928, 0.408903, 0.0833759}};
+    trac0r::Material glass{3, {0.1f, 0.6f, 0.2f}, 0.0f, 1.51714f};
+    trac0r::Material glossy{4, {1.f, 1.f, 1.f}, 1.f};
     auto wall_left = trac0r::Shape::make_plane({-0.5f, 0.4f, 0}, {0, 0, -glm::half_pi<float>()},
                                                {1, 1}, diffuse_red);
     auto wall_right = trac0r::Shape::make_plane({0.5f, 0.4f, 0}, {0, 0, glm::half_pi<float>()},
@@ -113,9 +113,9 @@ void Viewer::setup_scene() {
     auto box1 = trac0r::Shape::make_box({0.3f, 0.1f, 0.1f}, {0, 0.6f, 0}, {0.2f, 0.5f, 0.2f},
                                         default_material);
     auto box2 =
-        trac0r::Shape::make_box({-0.2f, 0.05f, 0.1f}, {0, -0.5f, 0}, {0.3f, 0.4f, 0.3f}, reflective);
+        trac0r::Shape::make_box({-0.2f, 0.05f, 0.1f}, {0, -0.5f, 0}, {0.3f, 0.4f, 0.3f}, glossy);
     auto sphere1 =
-        trac0r::Shape::make_icosphere({0.f, 0.1f, -0.3f}, {0, 0, 0}, 0.15f, 1, refractive);
+        trac0r::Shape::make_icosphere({0.f, 0.1f, -0.3f}, {0, 0, 0}, 0.15f, 1, glass);
 
     Scene::add_shape(m_scene, wall_left);
     Scene::add_shape(m_scene, wall_right);
@@ -270,7 +270,7 @@ void Viewer::mainloop() {
     if (m_print_perf)
         fmt::print("    {:<15} {:>10.3f} ms\n", "Input handling", timer.elapsed());
 
-    Scene::rebuild(m_scene, m_camera);
+    Scene::rebuild(m_scene);
 
     if (m_print_perf)
         fmt::print("    {:<15} {:=10.3f} ms\n", "Scene rebuild", timer.elapsed());
