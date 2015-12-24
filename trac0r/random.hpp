@@ -104,8 +104,15 @@ inline glm::vec3 uniform_sample_sphere2() {
 inline glm::vec3 oriented_uniform_cone_sample(glm::vec3 dir, float angle) {
     float s = rand_range(0.f, glm::two_pi<float>());
     float t = rand_range(glm::cos(angle), 1.f);
-    glm::vec3 random_vec_on_cone{glm::sin(s) * glm::sqrt(1.f - t * t), glm::cos(s) * glm::sqrt(1.f - t * t), t};
-    glm::vec3 projected_random = random_vec_on_cone - (dir * glm::dot(dir, random_vec_on_cone));
+    glm::vec3 random_vec_on_cone{glm::sin(s) * glm::sqrt(1.f - t * t),
+                                 glm::cos(s) * glm::sqrt(1.f - t * t), t};
+
+    glm::vec3 ortho_0{-dir.y, dir.x, dir.z + 1.f};
+    glm::vec3 ortho_1 = glm::normalize(glm::cross(ortho_0, dir));
+    glm::vec3 ortho_2 = glm::normalize(glm::cross(ortho_1, dir));
+
+    glm::vec3 projected_random = dir * random_vec_on_cone.z + ortho_1 * random_vec_on_cone.x +
+                                 ortho_2 * random_vec_on_cone.y;
     return projected_random;
 }
 

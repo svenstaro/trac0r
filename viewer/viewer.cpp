@@ -97,8 +97,8 @@ void Viewer::setup_scene() {
     trac0r::Material default_material{2, {0.740063, 0.742313, 0.733934}};
     trac0r::Material diffuse_red{2, {0.366046, 0.0371827, 0.0416385}};
     trac0r::Material diffuse_green{2, {0.162928, 0.408903, 0.0833759}};
-    trac0r::Material glass{3, {0.1f, 0.6f, 0.2f}, 0.0f, 1.51714f};
-    trac0r::Material glossy{4, {1.f, 1.f, 1.f}, 1.f};
+    trac0r::Material glass{3, {0.5f, 0.5f, 0.9f}, 0.0f, 1.51714f};
+    trac0r::Material glossy{4, {1.f, 1.f, 1.f}, 0.09f};
     auto wall_left = trac0r::Shape::make_plane({-0.5f, 0.4f, 0}, {0, 0, -glm::half_pi<float>()},
                                                {1, 1}, diffuse_red);
     auto wall_right = trac0r::Shape::make_plane({0.5f, 0.4f, 0}, {0, 0, glm::half_pi<float>()},

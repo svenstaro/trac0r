@@ -112,12 +112,13 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
                     // Reflection
                     new_ray_dir = intersect_info.m_incoming_ray.m_dir -
                                   (2.f * intersect_info.m_angle_between * intersect_info.m_normal);
-                    break;
+                    albedo *= intersect_info.m_material.m_color;
                 } else {
                     // Refraction
                     new_ray_dir = intersect_info.m_incoming_ray.m_dir * (n1 / n2) +
                                   intersect_info.m_normal *
                                       ((n1 / n2) * intersect_info.m_angle_between - cos_t);
+                    albedo *= 1.f;
                 }
 
                 // Make a new ray
@@ -132,8 +133,8 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
                 intersect_info.m_angle_between =
                     intersect_info.m_angle_between * -glm::sign(intersect_info.m_angle_between);
 
-                // float real_roughness =
-                //     intersect_info.m_material.m_roughness * glm::half_pi<float>();
+                float real_roughness =
+                    intersect_info.m_material.m_roughness * glm::half_pi<float>();
 
                 // Find new direction for reflection
                 glm::vec3 reflected_dir =
@@ -141,45 +142,13 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
                     (2.f * intersect_info.m_angle_between * intersect_info.m_normal);
 
                 // Find new random direction on cone for glossy reflection
-                glm::vec3 new_ray_dir = oriented_uniform_cone_sample(reflected_dir, 0.f);
-
-                // Get angle between new random ray direction and the surface's normal
-                // float cos_theta = glm::dot(new_ray_dir, reflected_dir);
-
-                // albedo *= 2.f * intersect_info.m_material.m_color * cos_theta;
+                glm::vec3 new_ray_dir = oriented_uniform_cone_sample(reflected_dir, real_roughness);
 
                 albedo *= intersect_info.m_material.m_color;
-                // albedo *= (1.f - intersect_info.m_material.m_roughness) *
-                //           intersect_info.m_material.m_color;
 
                 // Make a new ray
                 next_ray = Ray{intersect_info.m_pos, new_ray_dir};
             }
-
-            /*
-             *  Basic reflective material
-                                // Reflect
-
-                                // Find normal in correct direction
-                                intersect_info.m_normal =
-                                    intersect_info.m_normal *
-             -glm::sign(intersect_info.m_angle_between);
-                                intersect_info.m_angle_between =
-                                    intersect_info.m_angle_between *
-             -glm::sign(intersect_info.m_angle_between);
-
-                                // Find new direction for reflection
-                                glm::vec3 new_ray_dir =
-                                    intersect_info.m_incoming_ray.m_dir -
-                                    (2.f * intersect_info.m_angle_between *
-             intersect_info.m_normal);
-
-                                albedo *= (1.f - intersect_info.m_material.m_roughness) *
-                                          intersect_info.m_material.m_color;
-
-                                // Make a new ray
-                                next_ray = Ray{intersect_info.m_pos, new_ray_dir};
-                                */
         } else {
             break;
         }

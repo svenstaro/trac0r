@@ -250,7 +250,7 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
 #pragma omp parallel for simd schedule(dynamic, 1024)
     for (auto i = 0; i < num_light_paths; i++) {
         // Pick a random light triangle
-        auto rand_index = rand_range(0UL, light_triangles.size() - 1);
+        auto rand_index = rand_range(0UL, static_cast<unsigned long>(light_triangles.size() - 1));
         light_triangles[rand_index]; 
         // TODO
     }
