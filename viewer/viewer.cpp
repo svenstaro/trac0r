@@ -113,9 +113,9 @@ void Viewer::setup_scene() {
     auto box1 = trac0r::Shape::make_box({0.3f, 0.1f, 0.1f}, {0, 0.6f, 0}, {0.2f, 0.5f, 0.2f},
                                         default_material);
     auto box2 =
-        trac0r::Shape::make_box({-0.2f, 0.05f, 0.1f}, {0, -0.5f, 0}, {0.3f, 0.4f, 0.3f}, glossy);
+        trac0r::Shape::make_box({-0.2f, 0.15f, 0.1f}, {0, -0.5f, 0}, {0.3f, 0.6f, 0.3f}, glossy);
     auto sphere1 =
-        trac0r::Shape::make_icosphere({0.f, 0.1f, -0.3f}, {0, 0, 0}, 0.15f, 1, glass);
+        trac0r::Shape::make_icosphere({0.f, 0.1f, -0.3f}, {0, 0, 0}, 0.15f, 2, glass);
     auto sphere2 =
         trac0r::Shape::make_icosphere({0.3f, 0.45f, 0.1f}, {0, 0, 0}, 0.15f, 2, glossy);
 
