@@ -116,6 +116,8 @@ void Viewer::setup_scene() {
         trac0r::Shape::make_box({-0.2f, 0.05f, 0.1f}, {0, -0.5f, 0}, {0.3f, 0.4f, 0.3f}, glossy);
     auto sphere1 =
         trac0r::Shape::make_icosphere({0.f, 0.1f, -0.3f}, {0, 0, 0}, 0.15f, 1, glass);
+    auto sphere2 =
+        trac0r::Shape::make_icosphere({0.3f, 0.45f, 0.1f}, {0, 0, 0}, 0.15f, 2, glossy);
 
     Scene::add_shape(m_scene, wall_left);
     Scene::add_shape(m_scene, wall_right);
@@ -126,6 +128,7 @@ void Viewer::setup_scene() {
     Scene::add_shape(m_scene, box1);
     Scene::add_shape(m_scene, box2);
     Scene::add_shape(m_scene, sphere1);
+    Scene::add_shape(m_scene, sphere2);
 
     glm::vec3 cam_pos = {0, 0.31, -1.2};
     glm::vec3 cam_dir = {0, 0, 1};
