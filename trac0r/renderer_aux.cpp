@@ -75,6 +75,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
 
             // Glass Material
             if (intersect_info.m_material.m_type == 3) {
+                // This code is mostly taken from TomCrypto's Lambda
                 float n1, n2;
 
                 if (intersect_info.m_angle_between > 0) {
