@@ -24,7 +24,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
 
     Ray next_ray{world_pos, ray_dir};
     glm::vec3 return_color{0};
-    glm::vec3 albedo{1};
+    glm::vec3 luminance{1};
 
     // Russian Roulette
     size_t depth = 0;
@@ -33,7 +33,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
     while (true) {
         // Russian Roulette
         float continuation_probability = 1.f - (1.f / (max_depth - depth));
-        // float continuation_probability = (albedo.x + albedo.y + albedo.z) / 3.f;
+        // float continuation_probability = (luminance.x + luminance.y + luminance.z) / 3.f;
         if (rand_range(0.f, 1.0f) >= continuation_probability) {
             break;
         }
@@ -43,7 +43,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
         if (intersect_info.m_has_intersected) {
             // Emitter Material
             if (intersect_info.m_material.m_type == 1) {
-                return_color = albedo * intersect_info.m_material.m_color *
+                return_color = luminance * intersect_info.m_material.m_color *
                                intersect_info.m_material.m_emittance / continuation_probability;
             }
 
@@ -61,7 +61,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
                 // Get angle between new random ray direction and the surface's normal
                 float cos_theta = glm::dot(new_ray_dir, intersect_info.m_normal);
 
-                albedo *= 2.f * intersect_info.m_material.m_color * cos_theta;
+                luminance *= 2.f * intersect_info.m_material.m_color * cos_theta;
 
                 // Make a new ray
                 next_ray = Ray{intersect_info.m_pos, new_ray_dir};
@@ -112,13 +112,13 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
                     // Reflection
                     new_ray_dir = intersect_info.m_incoming_ray.m_dir -
                                   (2.f * intersect_info.m_angle_between * intersect_info.m_normal);
-                    albedo *= intersect_info.m_material.m_color;
+                    luminance *= intersect_info.m_material.m_color;
                 } else {
                     // Refraction
                     new_ray_dir = intersect_info.m_incoming_ray.m_dir * (n1 / n2) +
                                   intersect_info.m_normal *
                                       ((n1 / n2) * intersect_info.m_angle_between - cos_t);
-                    albedo *= 1.f;
+                    luminance *= 1.f;
                 }
 
                 // Make a new ray
@@ -144,7 +144,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
                 // Find new random direction on cone for glossy reflection
                 glm::vec3 new_ray_dir = oriented_uniform_cone_sample(reflected_dir, real_roughness);
 
-                albedo *= intersect_info.m_material.m_color;
+                luminance *= intersect_info.m_material.m_color;
 
                 // Make a new ray
                 next_ray = Ray{intersect_info.m_pos, new_ray_dir};
