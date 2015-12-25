@@ -2,6 +2,7 @@
 #define TRIANGLE_HPP
 
 #include "material.hpp"
+#include "random.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtx/normal.hpp>
@@ -32,6 +33,11 @@ struct Triangle {
         auto c = glm::length(m_v3 - m_v1);
         auto s = (a + b + c) / 2.f;
         m_area = glm::sqrt(s * (s - a) * (s - b) * (s - c));
+    }
+
+    static inline glm::vec3 random_point(const Triangle &triangle) {
+        return triangle.m_v1 + rand_range(0.f, 1.f) * (triangle.m_v2 - triangle.m_v1) +
+               rand_range(0.f, 1.f) * (triangle.m_v3 - triangle.m_v1);
     }
 
     glm::vec3 m_v1;

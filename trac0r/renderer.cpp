@@ -203,7 +203,8 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     fmt::print("    Executing kernel ({}x{}/{}x{}, global work items: {}, items per work group: "
                "{}, total work groups: {}) on device {}\n",
                m_width, m_height, local_work_size_x, local_work_size_y, global_work_size,
-               local_work_size_x * local_work_size_y, global_work_size / work_group_size, device_name);
+               local_work_size_x * local_work_size_y, global_work_size / work_group_size,
+               device_name);
     fmt::print(
         "    Max work group size: {}, Local mem size used by kernel: {} KB, minimum private mem "
         "size per work item: {} KB\n",
@@ -221,7 +222,8 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     event.wait();
     m_last_frame_kernel_run_time = timer.elapsed();
 
-    // Transfer data from GPU back to CPU (TODO In later versions, just expose it to the OpenGL buffer
+    // Transfer data from GPU back to CPU (TODO In later versions, just expose it to the OpenGL
+    // buffer
     // and render it directly in order to get rid of this transfer)
     m_compute_queues[0].enqueueReadBuffer(dev_output_buf, CL_TRUE, 0,
                                           image_size * sizeof(cl_float4), &host_output[0]);
@@ -246,20 +248,28 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     const auto num_light_paths = 1'000'000;
 
     // Assume worst case and just make it m_max_depth * N
-    m_lvc.resize(m_max_depth * num_light_paths); 
+    m_lvc.resize(m_max_depth * num_light_paths);
 #pragma omp parallel for simd schedule(dynamic, 1024)
     for (auto i = 0; i < num_light_paths; i++) {
         // Pick a random light triangle
         auto rand_index = rand_range(0UL, static_cast<unsigned long>(light_triangles.size() - 1));
-        light_triangles[rand_index]; 
+
+        // Pick a random location on triangle and start tracing it
+        const Triangle &triangle = light_triangles[rand_index];
+        glm::vec3 rand_surface_point = Triangle::random_point(triangle);
+        glm::vec3 new_ray_dir = oriented_cosine_weighted_hemisphere_sample(triangle.m_normal);
+        Ray ray = Ray{rand_surface_point, new_ray_dir};
+        trace_ray(ray)
         // TODO
     }
 
 #pragma omp parallel for simd collapse(2) schedule(dynamic, 1024)
-    // Reverse path tracing part: Trace a ray through every camera pixel 
+    // Reverse path tracing part: Trace a ray through every camera pixel
     for (auto x = 0; x < m_width; x += stride_x) {
         for (auto y = 0; y < m_height; y += stride_y) {
             glm::vec4 new_color = trace_pixel_color(x, y, m_max_depth, m_camera, m_scene);
+            // TODO Split this into trace_ray and something that calculates the camera ray location
+            // Or maybe actually do that in kernel or something
             if (scene_changed)
                 m_luminance[y * m_width + x] = new_color;
             else
@@ -333,9 +343,10 @@ void Renderer::print_sysinfo() const {
 
 void Renderer::print_last_frame_timings() const {
 #ifdef OPENCL
-        fmt::print("      {:<15} {:>12.3f} ms\n", "Buffer write to device", m_last_frame_buffer_write_time);
-        fmt::print("      {:<15} {:>20.3f} ms\n", "Kernel run time", m_last_frame_kernel_run_time);
-        fmt::print("      {:<15} {:>15.3f} ms\n", "Buffer read to host", m_last_frame_buffer_read_time);
+    fmt::print("      {:<15} {:>12.3f} ms\n", "Buffer write to device",
+               m_last_frame_buffer_write_time);
+    fmt::print("      {:<15} {:>20.3f} ms\n", "Kernel run time", m_last_frame_kernel_run_time);
+    fmt::print("      {:<15} {:>15.3f} ms\n", "Buffer read to host", m_last_frame_buffer_read_time);
 #endif
 }
 }
