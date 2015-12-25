@@ -109,34 +109,13 @@ inline glm::vec3 oriented_uniform_cone_sample(glm::vec3 dir, float angle) {
     glm::vec3 random_vec_on_cone{glm::sin(s) * glm::sqrt(1.f - t * t),
                                  glm::cos(s) * glm::sqrt(1.f - t * t), t};
 
-    glm::vec3 o0 = ortho(dir);
-    glm::vec3 o1 = glm::normalize(glm::cross(o0, dir));
+    glm::vec3 o1 = glm::normalize(ortho(dir));
     glm::vec3 o2 = glm::normalize(glm::cross(o1, dir));
+    // glm::vec3 o2 = glm::normalize(glm::cross(o1, dir));
 
     glm::vec3 projected_random = dir * random_vec_on_cone.z + o1 * random_vec_on_cone.x +
                                  o2 * random_vec_on_cone.y;
     return projected_random;
-}
-
-/**
- * @brief Selects a random point on a sphere with cosine-weighted distribution.
- *
- * @return A random point on the surface of a sphere
- */
-// From http://www.rorydriscoll.com/2009/01/07/better-sampling/
-// TODO: https://pathtracing.wordpress.com/2011/03/03/cosine-weighted-hemisphere/
-inline glm::vec3 cosine_sample_sphere() {
-    float s = rand_range(0.f, 1.f);
-    float t = rand_range(0.f, 1.f);
-
-    float r = glm::sqrt(s);
-    float theta = glm::two_pi<float>() * t;
-
-    float x = r * glm::cos(theta);
-    float y = r * glm::sin(theta);
-    float z = glm::sqrt(glm::max(0.f, 1.f - s));
-
-    return glm::vec3{x, y, z};
 }
 
 /**
