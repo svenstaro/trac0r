@@ -56,12 +56,18 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
                     intersect_info.m_angle_between * -glm::sign(intersect_info.m_angle_between);
 
                 // Find new random direction for diffuse reflection
-                glm::vec3 new_ray_dir = oriented_uniform_hemisphere_sample(intersect_info.m_normal);
 
-                // Get angle between new random ray direction and the surface's normal
-                float cos_theta = glm::dot(new_ray_dir, intersect_info.m_normal);
+                // We're using importance sampling for this since it converges much faster than uniform sampling
+                // See http://blog.hvidtfeldts.net/index.php/2015/01/path-tracing-3d-fractals/ and
+                // http://www.rorydriscoll.com/2009/01/07/better-sampling/ and
+                // https://pathtracing.wordpress.com/2011/03/03/cosine-weighted-hemisphere/
+                glm::vec3 new_ray_dir = oriented_cosine_weighted_hemisphere_sample(intersect_info.m_normal);
+                luminance *= intersect_info.m_material.m_color;
 
-                luminance *= 2.f * intersect_info.m_material.m_color * cos_theta;
+                // For completeness, this is what it looks like with uniform sampling:
+                // glm::vec3 new_ray_dir = oriented_uniform_hemisphere_sample(intersect_info.m_normal);
+                // float cos_theta = glm::dot(new_ray_dir, intersect_info.m_normal);
+                // luminance *= 2.f * intersect_info.m_material.m_color * cos_theta;
 
                 // Make a new ray
                 next_ray = Ray{intersect_info.m_pos, new_ray_dir};

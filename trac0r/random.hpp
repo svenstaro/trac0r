@@ -79,7 +79,7 @@ std::enable_if_t<std::is_floating_point<T>::value, T> inline rand_range(const T 
 inline glm::vec3 uniform_sample_sphere() {
     glm::vec3 rand_vec =
         glm::vec3(rand_range(-1.f, 1.f), rand_range(-1.f, 1.f), rand_range(-1.f, 1.f));
-    return normalize(rand_vec);
+    return glm::normalize(rand_vec);
 }
 
 /**
@@ -121,6 +121,7 @@ inline glm::vec3 oriented_uniform_cone_sample(glm::vec3 dir, float angle) {
  *
  * @return A random point on the surface of a sphere
  */
+// From http://www.rorydriscoll.com/2009/01/07/better-sampling/
 // TODO: https://pathtracing.wordpress.com/2011/03/03/cosine-weighted-hemisphere/
 inline glm::vec3 cosine_sample_sphere() {
     float s = rand_range(0.f, 1.f);
@@ -131,8 +132,9 @@ inline glm::vec3 cosine_sample_sphere() {
 
     float x = r * glm::cos(theta);
     float y = r * glm::sin(theta);
+    float z = glm::sqrt(glm::max(0.f, 1.f - s));
 
-    return glm::vec3{x, y, glm::sqrt(glm::max(0.f, 1.f - s))};
+    return glm::vec3{x, y, z};
 }
 
 /**
@@ -156,9 +158,66 @@ inline glm::vec3 oriented_uniform_hemisphere_sample(glm::vec3 dir) {
  *
  * @return A random point the on the hemisphere
  */
+// inline glm::vec3 oriented_cosine_weighted_hemisphere_sample(glm::vec3 dir) {
+//     glm::vec3 v = cosine_sample_sphere();
+//     return v * glm::sign(glm::dot(v, dir));
+// }
+
+// inline glm::vec3 oriented_cosine_weighted_hemisphere_sample(glm::vec3 dir) {
+//     float Xi1 = rand_range(0.f, 1.f);
+//     float Xi2 = rand_range(0.f, 1.f);
+//
+//     float theta = glm::acos(glm::sqrt(1.0 - Xi1));
+//     float phi = glm::two_pi<float>() * Xi2;
+//
+//     float xs = glm::sin(theta) * glm::cos(phi);
+//     float ys = glm::cos(theta);
+//     float zs = glm::sin(theta) * glm::sin(phi);
+//
+//     glm::vec3 y(dir.x, dir.y, dir.z);
+//     glm::vec3 h = y;
+//     if (glm::abs(h.x) <= glm::abs(h.y) && glm::abs(h.x) <= glm::abs(h.z))
+//         h.x = 1.0;
+//     else if (glm::abs(h.y) <= glm::abs(h.x) && glm::abs(h.y) <= glm::abs(h.z))
+//         h.y = 1.0;
+//     else
+//         h.z = 1.0;
+//
+//     glm::vec3 x = glm::normalize(glm::cross(h, y));
+//     glm::vec3 z = glm::normalize(glm::cross(x, y));
+//
+//     glm::vec3 direction = xs * x + ys * y + zs * z;
+//     return glm::normalize(direction);
+// }
+
+
+/**
+ * @brief Returns a vector orthogonal to a given vector in 3D space.
+ *
+ * @param v The vector to find an orthogonal vector for
+ *
+ * @return A vector orthogonal to the given vector
+ */
+inline glm::vec3 ortho(glm::vec3 v) {
+    // Awesome branchless function for finding an orthogonal vector in 3D space by
+    // http://lolengine.net/blog/2013/09/21/picking-orthogonal-vector-combing-coconuts
+    //
+    // Their "boring" branching is commented here for completeness:
+    // return glm::abs(v.x) > glm::abs(v.z) ? glm::vec3(-v.y, v.x, 0.0) : glm::vec3(0.0, -v.z, v.y);
+
+    float k = glm::fract(glm::abs(v.x) + 0.5f);
+    return glm::vec3(-v.y, v.x - k * v.z, k * v.y);
+}
+
 inline glm::vec3 oriented_cosine_weighted_hemisphere_sample(glm::vec3 dir) {
-    glm::vec3 v = cosine_sample_sphere();
-    return v * glm::sign(glm::dot(v, dir));
+    float power = 1.f;
+    glm::vec3 o1 = glm::normalize(ortho(dir));
+    glm::vec3 o2 = glm::normalize(glm::cross(dir, o1));
+    glm::vec2 r = glm::vec2{rand_range(0.f, 1.f), rand_range(0.f, 1.f)};
+    r.x = r.x * glm::two_pi<float>();
+    r.y = glm::pow(r.y, 1.0 / (power + 1.0));
+    float oneminus = glm::sqrt(1.0 - r.y * r.y);
+    return glm::cos(r.x) * oneminus * o1 + glm::sin(r.x) * oneminus * o2 + r.y * dir;
 }
 }
 
