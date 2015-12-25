@@ -85,37 +85,27 @@ inline glm::vec3 uniform_sample_sphere() {
 }
 
 /**
- * @brief Selects a random point on a sphere with uniform distribution.
+ * @brief Selects a random point on a sphere with uniform or cosine-weighted distribution.
+ *
+ * @param dir A vector around which the hemisphere will be centered
+ * @param power 0.f means uniform distribution while 1.f means cosine-weighted
+ * @param angle When a full hemisphere is desired, use pi/2. 0 equals perfect reflection. The value
+ * should therefore be between 0 and pi/2. This angle is equal to half the cone width.
  *
  * @return A random point on the surface of a sphere
  */
-inline glm::vec3 uniform_sample_sphere2() {
-    float s = rand_range(0.f, glm::two_pi<float>());
-    float t = rand_range(-1.f, 1.f);
-    return {glm::sin(s) * glm::sqrt(1.f - t * t), glm::cos(s) * glm::sqrt(1.f - t * t), t};
-}
-
-/**
- * @brief Selects a random point on a cone with uniform distribution.
- *
- * @param dir Direction in which the cone is oriented
- * @param angle Angle of the cone in radians
- *
- * @return A random point on the surface of a cone
- */
-inline glm::vec3 oriented_uniform_cone_sample(glm::vec3 dir, float angle) {
-    float s = rand_range(0.f, glm::two_pi<float>());
-    float t = rand_range(glm::cos(angle), 1.f);
-    glm::vec3 random_vec_on_cone{glm::sin(s) * glm::sqrt(1.f - t * t),
-                                 glm::cos(s) * glm::sqrt(1.f - t * t), t};
+inline glm::vec3 sample_hemisphere(glm::vec3 dir, float power, float angle) {
+    // Code by Mikael Hvidtfeldt Christensen
+    // from http://blog.hvidtfeldts.net/index.php/2015/01/path-tracing-3d-fractals/
+    // Thanks!
 
     glm::vec3 o1 = glm::normalize(ortho(dir));
-    glm::vec3 o2 = glm::normalize(glm::cross(o1, dir));
-    // glm::vec3 o2 = glm::normalize(glm::cross(o1, dir));
-
-    glm::vec3 projected_random = dir * random_vec_on_cone.z + o1 * random_vec_on_cone.x +
-                                 o2 * random_vec_on_cone.y;
-    return projected_random;
+    glm::vec3 o2 = glm::normalize(glm::cross(dir, o1));
+    glm::vec2 r = glm::vec2{rand_range(0.f, 1.f), rand_range(glm::cos(angle), 1.f)};
+    r.x = r.x * glm::two_pi<float>();
+    r.y = glm::pow(r.y, 1.f / (power + 1.f));
+    float oneminus = glm::sqrt(1.f - r.y * r.y);
+    return glm::cos(r.x) * oneminus * o1 + glm::sin(r.x) * oneminus * o2 + r.y * dir;
 }
 
 /**
@@ -140,17 +130,19 @@ inline glm::vec3 oriented_uniform_hemisphere_sample(glm::vec3 dir) {
  * @return A random point the on the hemisphere
  */
 inline glm::vec3 oriented_cosine_weighted_hemisphere_sample(glm::vec3 dir) {
-    // Code by Mikael Hvidtfeldt Christensen
-    // from http://blog.hvidtfeldts.net/index.php/2015/01/path-tracing-3d-fractals/
-    // Thanks!
-    float power = 1.f;
-    glm::vec3 o1 = glm::normalize(ortho(dir));
-    glm::vec3 o2 = glm::normalize(glm::cross(dir, o1));
-    glm::vec2 r = glm::vec2{rand_range(0.f, 1.f), rand_range(0.f, 1.f)};
-    r.x = r.x * glm::two_pi<float>();
-    r.y = glm::pow(r.y, 1.f / (power + 1.f));
-    float oneminus = glm::sqrt(1.f - r.y * r.y);
-    return glm::cos(r.x) * oneminus * o1 + glm::sin(r.x) * oneminus * o2 + r.y * dir;
+    return sample_hemisphere(dir, 1.f, glm::half_pi<float>());
+}
+
+/**
+ * @brief Selects a random point on a cone with uniform distribution.
+ *
+ * @param dir Direction in which the cone is oriented
+ * @param angle Angle of the cone in radians
+ *
+ * @return A random point on the surface of a cone
+ */
+inline glm::vec3 oriented_cosine_weighted_cone_sample(glm::vec3 dir, float angle) {
+    return sample_hemisphere(dir, 1.f, angle);
 }
 }
 

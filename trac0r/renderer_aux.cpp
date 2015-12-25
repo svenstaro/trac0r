@@ -148,7 +148,7 @@ glm::vec4 Renderer::trace_pixel_color(const unsigned x, const unsigned y, const 
                     (2.f * intersect_info.m_angle_between * intersect_info.m_normal);
 
                 // Find new random direction on cone for glossy reflection
-                glm::vec3 new_ray_dir = oriented_uniform_cone_sample(reflected_dir, real_roughness);
+                glm::vec3 new_ray_dir = oriented_cosine_weighted_cone_sample(reflected_dir, real_roughness);
 
                 luminance *= intersect_info.m_material.m_color;
 
