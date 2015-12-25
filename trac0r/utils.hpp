@@ -18,6 +18,24 @@
 
 namespace trac0r {
 
+/**
+ * @brief Returns a vector orthogonal to a given vector in 3D space.
+ *
+ * @param v The vector to find an orthogonal vector for
+ *
+ * @return A vector orthogonal to the given vector
+ */
+inline glm::vec3 ortho(glm::vec3 v) {
+    // Awesome branchless function for finding an orthogonal vector in 3D space by
+    // http://lolengine.net/blog/2013/09/21/picking-orthogonal-vector-combing-coconuts
+    //
+    // Their "boring" branching is commented here for completeness:
+    // return glm::abs(v.x) > glm::abs(v.z) ? glm::vec3(-v.y, v.x, 0.0) : glm::vec3(0.0, -v.z, v.y);
+
+    float k = glm::fract(glm::abs(v.x) + 0.5f);
+    return glm::vec3(-v.y, v.x - k * v.z, k * v.y);
+}
+
 inline glm::vec3 get_middle_point(glm::vec3 v1, glm::vec3 v2) {
     return (v1 - v2) / 2.f + v2;
 }
