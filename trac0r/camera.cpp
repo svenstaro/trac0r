@@ -1,5 +1,7 @@
 #include "camera.hpp"
 
+#include "random.hpp"
+
 #include <glm/glm.hpp>
 #include <glm/gtx/vector_angle.hpp>
 #include <glm/gtx/intersect.hpp>
@@ -194,4 +196,20 @@ void Camera::rebuild(Camera &camera) {
         glm::normalize(glm::cross(dir(camera), up(camera))) * (canvas_width(camera) / 2);
     camera.m_canvas_dir_y = glm::normalize(up(camera)) * (canvas_height(camera) / 2);
 }
+
+Ray Camera::pixel_to_ray(const Camera &camera, unsigned x, unsigned y) {
+    glm::vec2 rel_pos = Camera::screenspace_to_camspace(camera, x, y);
+
+    // Subpixel sampling / antialiasing
+    glm::vec2 pixel_size = Camera::pixel_size(camera);
+    glm::vec2 jitter = {rand_range(-pixel_size.x / 2.f, pixel_size.x / 2.f),
+                        rand_range(-pixel_size.y / 2.f, pixel_size.y / 2.f)};
+    rel_pos += jitter;
+
+    glm::vec3 world_pos = Camera::camspace_to_worldspace(camera, rel_pos);
+    glm::vec3 ray_dir = glm::normalize(world_pos - Camera::pos(camera));
+
+    return Ray{world_pos, ray_dir};
+}
+
 }

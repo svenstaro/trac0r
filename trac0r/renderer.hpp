@@ -15,9 +15,8 @@ namespace trac0r {
 
 class Renderer {
   public:
-    Renderer(const int width, const int height, const Camera &camera, const Scene &scene);
-    static glm::vec4 trace_pixel_color(const unsigned x, const unsigned y, const unsigned max_depth,
-                                       const Camera &camera, const Scene &scene);
+    Renderer(const int width, const int height, const Camera &camera, const Scene &scene, bool print_perf);
+    static glm::vec4 trace_ray(const Ray &ray, const unsigned max_depth, const Scene &scene);
     std::vector<glm::vec4> &render(bool screen_changed, int stride_x, int stride_y);
     void print_sysinfo() const;
     void print_last_frame_timings() const;
@@ -39,6 +38,7 @@ class Renderer {
     const int m_height;
     const Camera &m_camera;
     const Scene &m_scene;
+    bool m_print_perf = false;
 
 #ifdef OPENCL
     double m_last_frame_buffer_write_time;

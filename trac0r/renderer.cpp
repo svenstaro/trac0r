@@ -14,8 +14,8 @@
 
 namespace trac0r {
 
-Renderer::Renderer(const int width, const int height, const Camera &camera, const Scene &scene)
-    : m_width(width), m_height(height), m_camera(camera), m_scene(scene) {
+Renderer::Renderer(const int width, const int height, const Camera &camera, const Scene &scene, bool print_perf)
+    : m_width(width), m_height(height), m_camera(camera), m_scene(scene), m_print_perf(print_perf) {
     m_luminance.resize(width * height, glm::vec4{0});
 
 #ifdef OPENCL
@@ -177,7 +177,8 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
                                            sizeof(DeviceTriangle) * dev_triangles.size(),
                                            &dev_triangles[0]);
 
-    m_last_frame_buffer_write_time = timer.elapsed();
+    if (m_print_perf)
+        m_last_frame_buffer_write_time = timer.elapsed();
 
     m_kernel.setArg(0, dev_output_buf);
     m_kernel.setArg(1, m_width);
@@ -220,7 +221,9 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
 
     // Wait for kernel to finish computing
     event.wait();
-    m_last_frame_kernel_run_time = timer.elapsed();
+
+    if (m_print_perf)
+        m_last_frame_kernel_run_time = timer.elapsed();
 
     // Transfer data from GPU back to CPU (TODO In later versions, just expose it to the OpenGL
     // buffer
@@ -239,13 +242,16 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
         }
     }
 
-    m_last_frame_buffer_read_time = timer.elapsed();
+    if (m_print_perf)
+        m_last_frame_buffer_read_time = timer.elapsed();
 #else
+    Timer timer;
+
     const auto &accel_struct = Scene::accel_struct(m_scene);
     const auto &light_triangles = FlatStructure::light_triangles(accel_struct);
 
-    // Forward path tracing part: Trace a bunch of rays through every light
-    const auto num_light_paths = 1'000'000;
+    // Light tracing part: Trace a bunch of rays through every light
+    const auto num_light_paths = 10'000;
 
     // Assume worst case and just make it m_max_depth * N
     m_lvc.resize(m_max_depth * num_light_paths);
@@ -259,23 +265,29 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
         glm::vec3 rand_surface_point = Triangle::random_point(triangle);
         glm::vec3 new_ray_dir = oriented_cosine_weighted_hemisphere_sample(triangle.m_normal);
         Ray ray = Ray{rand_surface_point, new_ray_dir};
-        trace_ray(ray)
+        glm::vec4 new_color = trace_ray(ray, m_max_depth, m_scene);
+        (void)new_color;
         // TODO
     }
+
+    if (m_print_perf)
+        fmt::print("    {:<15} {:>10.3f} ms\n", "Light tracing", timer.elapsed());
 
 #pragma omp parallel for simd collapse(2) schedule(dynamic, 1024)
     // Reverse path tracing part: Trace a ray through every camera pixel
     for (auto x = 0; x < m_width; x += stride_x) {
         for (auto y = 0; y < m_height; y += stride_y) {
-            glm::vec4 new_color = trace_pixel_color(x, y, m_max_depth, m_camera, m_scene);
-            // TODO Split this into trace_ray and something that calculates the camera ray location
-            // Or maybe actually do that in kernel or something
+            Ray ray = Camera::pixel_to_ray(m_camera, x, y);
+            glm::vec4 new_color = trace_ray(ray, m_max_depth, m_scene);
             if (scene_changed)
                 m_luminance[y * m_width + x] = new_color;
             else
                 m_luminance[y * m_width + x] += new_color;
         }
     }
+
+    if (m_print_perf)
+        fmt::print("    {:<15} {:>10.3f} ms\n", "Path tracing", timer.elapsed());
 #endif
 
     return m_luminance;

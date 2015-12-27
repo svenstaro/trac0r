@@ -1,6 +1,8 @@
 #ifndef CAMERA_HPP
 #define CAMERA_HPP
 
+#include "trac0r/ray.hpp"
+
 #include <glm/glm.hpp>
 
 namespace trac0r {
@@ -103,6 +105,17 @@ class Camera {
      * @return A world space coordinate on the camera's canvas.
      */
     static glm::vec3 worldpoint_to_worldspace(const Camera &camera, glm::vec3 world_point);
+
+    /**
+     * @brief Creates a ray that shoots through the camera's canvas at the position coresponding to
+     * the provided pixel coordinates.
+     *
+     * @param x Pixel coordinate x
+     * @param y Pixel coordinate y
+     *
+     * @return A new ray pointing from the sensor to this pixel in world space
+     */
+    static Ray pixel_to_ray(const Camera &camera, unsigned x, unsigned y);
 
   private:
     static void rebuild(Camera &camera);
