@@ -33,6 +33,7 @@ glm::vec4 Renderer::trace_ray(const Ray &ray, const unsigned max_depth, const Sc
             if (intersect_info.m_material.m_type == 1) {
                 return_color = luminance * intersect_info.m_material.m_color *
                                intersect_info.m_material.m_emittance / continuation_probability;
+                break;
             }
 
             // Diffuse Material
