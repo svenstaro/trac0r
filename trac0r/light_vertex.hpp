@@ -5,7 +5,7 @@
 
 struct LightVertex {
     glm::vec3 m_pos;
-    glm::vec3 m_albedo;
+    glm::vec3 m_luminance;
 };
 
 #endif /* end of include guard: LIGHT_VERTEX_HPP */
