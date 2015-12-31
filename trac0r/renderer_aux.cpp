@@ -12,8 +12,6 @@ namespace trac0r {
 glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, const Scene &scene) {
     Ray next_ray = ray;
     glm::vec3 luminance{1};
-
-    // Russian Roulette
     size_t depth = 0;
 
     // We'll run until terminated by Russian Roulette
@@ -161,8 +159,6 @@ void Renderer::trace_light_ray(const Ray &ray, const unsigned max_depth, const S
                                const unsigned light_vertex_count, std::vector<LightVertex> &lvc) {
     Ray next_ray = ray;
     glm::vec3 luminance{1};
-
-    // Russian Roulette
     size_t depth = 0;
 
     // We'll run until terminated by Russian Roulette
