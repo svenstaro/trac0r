@@ -35,7 +35,7 @@ class Renderer {
     std::vector<glm::vec4> m_luminance;
 
     /**
-     * @brief LVC for light traces
+     * @brief Light Vertex Cache (LVC) for light traces
      */
     std::vector<LightVertex> m_lvc;
 
