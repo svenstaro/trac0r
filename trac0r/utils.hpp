@@ -4,6 +4,7 @@
 #include <cppformat/format.h>
 
 #include <glm/glm.hpp>
+#include <glm/gtx/log_base.hpp>
 
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -17,6 +18,38 @@
 #include <string>
 
 namespace trac0r {
+
+/**
+ * @brief Calculate Mean Square Error of two frames
+ *
+ * @param frame1 The first frame to compare against
+ * @param frame2 The second frame to compare against the first one
+ *
+ * @return Mean square error as a scalar
+ */
+inline float mse(std::vector<glm::vec4> frame1, std::vector<glm::vec4> frame2) {
+    glm::vec4 error{0.f};
+    for (size_t n = 0; n < frame1.size(); n++) {
+        glm::vec4 difference = frame1[n] - frame2[n];
+        error += difference * difference;
+    }
+
+    // We'll use only RGB channels because A is always 1.f and thusly not meaningful
+    float mean = (error.r + error.g + error.b) / 3.f;
+    return mean / frame1.size();
+}
+
+/**
+ * @brief Peak signal-to-noise ratio
+ *
+ * @param frame1 The first frame to compare against
+ * @param frame2 The second frame to compare against the first one
+ *
+ * @return
+ */
+inline float psnr(std::vector<glm::vec4> frame1, std::vector<glm::vec4> frame2) {
+    return 10.f * glm::log(1.f / mse(frame1, frame2), 10.f);
+}
 
 /**
  * @brief Returns a vector orthogonal to a given vector in 3D space.
