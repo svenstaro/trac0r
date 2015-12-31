@@ -256,7 +256,7 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
 
     // Assume worst case and just make it m_max_depth * N
     m_lvc.resize(m_max_depth * num_light_paths);
-#pragma omp parallel for simd schedule(dynamic, 1024)
+#pragma omp parallel for schedule(dynamic, 1024)
     for (auto i = 0; i < num_light_paths; i++) {
         // Pick a random light triangle
         auto rand_index = rand_range(0UL, static_cast<unsigned long>(light_triangles.size() - 1));
@@ -272,7 +272,8 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     if (m_print_perf)
         fmt::print("    {:<15} {:>10.3f} ms\n", "Light tracing", timer.elapsed());
 
-#pragma omp parallel for simd collapse(2) schedule(dynamic, 1024)
+// TODO Make OpenMp simd option work
+#pragma omp parallel for collapse(2) schedule(dynamic, 1024)
     // Reverse path tracing part: Trace a ray through every camera pixel
     for (auto x = 0; x < m_width; x += stride_x) {
         for (auto y = 0; y < m_height; y += stride_y) {
