@@ -14,7 +14,8 @@
 
 namespace trac0r {
 
-Renderer::Renderer(const int width, const int height, const Camera &camera, const Scene &scene, bool print_perf)
+Renderer::Renderer(const int width, const int height, const Camera &camera, const Scene &scene,
+                   bool print_perf)
     : m_width(width), m_height(height), m_camera(camera), m_scene(scene), m_print_perf(print_perf) {
     m_luminance.resize(width * height, glm::vec4{0});
 
@@ -255,17 +256,17 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
 
     // Assume worst case and just make it m_max_depth * N
     m_lvc.resize(m_max_depth * num_light_paths);
-// #pragma omp parallel for simd schedule(dynamic, 1024)
+#pragma omp parallel for simd schedule(dynamic, 1024)
     for (auto i = 0; i < num_light_paths; i++) {
         // Pick a random light triangle
         auto rand_index = rand_range(0UL, static_cast<unsigned long>(light_triangles.size() - 1));
 
         // Pick a random location on triangle and start tracing it
-        const Triangle &triangle = light_triangles[rand_index];
-        glm::vec3 rand_surface_point = Triangle::random_point(triangle);
-        glm::vec3 new_ray_dir = oriented_cosine_weighted_hemisphere_sample(triangle.m_normal);
+        const Triangle &light_triangle = light_triangles[rand_index];
+        glm::vec3 rand_surface_point = Triangle::random_point(light_triangle);
+        glm::vec3 new_ray_dir = oriented_cosine_weighted_hemisphere_sample(light_triangle.m_normal);
         Ray ray = Ray{rand_surface_point, new_ray_dir};
-        trace_light_ray(ray, m_max_depth, m_scene, i, m_lvc);
+        trace_light_ray(ray, m_max_depth, m_scene, light_triangle, i, m_lvc);
     }
 
     if (m_print_perf)

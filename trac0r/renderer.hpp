@@ -20,7 +20,8 @@ class Renderer {
              bool print_perf);
     static glm::vec4 trace_camera_ray(const Ray &ray, const unsigned max_depth, const Scene &scene);
     static void trace_light_ray(const Ray &ray, const unsigned max_depth, const Scene &scene,
-                                const unsigned light_path_index, std::vector<LightVertex> &lvc);
+                                const Triangle &light_triangle, const unsigned light_path_index,
+                                std::vector<LightVertex> &lvc);
     std::vector<glm::vec4> &render(bool screen_changed, int stride_x, int stride_y);
     void print_sysinfo() const;
     void print_last_frame_timings() const;

@@ -25,13 +25,14 @@ glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, c
         }
         depth++;
 
-        // TODO Refactor out all of the material BRDFs into the material class so we don't duplicate them 
+        // TODO Refactor out all of the material BRDFs into the material class so we don't duplicate
+        // them
         auto intersect_info = Scene::intersect(scene, next_ray);
         if (intersect_info.m_has_intersected) {
             // Emitter Material
             if (intersect_info.m_material.m_type == 1) {
                 return_color = luminance * intersect_info.m_material.m_color *
-                             intersect_info.m_material.m_emittance / continuation_probability;
+                               intersect_info.m_material.m_emittance / continuation_probability;
                 break;
             }
 
@@ -157,8 +158,10 @@ glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, c
 }
 
 void Renderer::trace_light_ray(const Ray &ray, const unsigned max_depth, const Scene &scene,
-                               const unsigned light_path_index, std::vector<LightVertex> &lvc) {
+                               const Triangle &light_triangle, const unsigned light_path_index,
+                               std::vector<LightVertex> &lvc) {
     Ray next_ray = ray;
+    glm::vec3 return_color = light_triangle.m_material.m_color;
     glm::vec3 luminance{1};
     size_t depth = 0;
 
@@ -176,8 +179,8 @@ void Renderer::trace_light_ray(const Ray &ray, const unsigned max_depth, const S
         if (intersect_info.m_has_intersected) {
             // Emitter Material
             if (intersect_info.m_material.m_type == 1) {
-                luminance *= intersect_info.m_material.m_color *
-                             intersect_info.m_material.m_emittance / continuation_probability;
+                return_color = luminance * intersect_info.m_material.m_color *
+                               intersect_info.m_material.m_emittance / continuation_probability;
                 break;
             }
 
