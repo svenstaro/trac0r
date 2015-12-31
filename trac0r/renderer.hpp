@@ -10,13 +10,17 @@
 #endif
 
 #include <chrono>
+#include <memory>
 
 namespace trac0r {
 
 class Renderer {
   public:
-    Renderer(const int width, const int height, const Camera &camera, const Scene &scene, bool print_perf);
-    static glm::vec4 trace_ray(const Ray &ray, const unsigned max_depth, const Scene &scene);
+    Renderer(const int width, const int height, const Camera &camera, const Scene &scene,
+             bool print_perf);
+    static glm::vec4 trace_camera_ray(const Ray &ray, const unsigned max_depth, const Scene &scene);
+    static void trace_light_ray(const Ray &ray, const unsigned max_depth, const Scene &scene,
+                                const unsigned light_vertex_count, std::vector<LightVertex> &lvc);
     std::vector<glm::vec4> &render(bool screen_changed, int stride_x, int stride_y);
     void print_sysinfo() const;
     void print_last_frame_timings() const;

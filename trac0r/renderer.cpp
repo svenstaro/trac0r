@@ -265,9 +265,7 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
         glm::vec3 rand_surface_point = Triangle::random_point(triangle);
         glm::vec3 new_ray_dir = oriented_cosine_weighted_hemisphere_sample(triangle.m_normal);
         Ray ray = Ray{rand_surface_point, new_ray_dir};
-        glm::vec4 new_color = trace_ray(ray, m_max_depth, m_scene);
-        (void)new_color;
-        // TODO
+        trace_light_ray(ray, m_max_depth, m_scene, i, m_lvc);
     }
 
     if (m_print_perf)
@@ -278,7 +276,7 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     for (auto x = 0; x < m_width; x += stride_x) {
         for (auto y = 0; y < m_height; y += stride_y) {
             Ray ray = Camera::pixel_to_ray(m_camera, x, y);
-            glm::vec4 new_color = trace_ray(ray, m_max_depth, m_scene);
+            glm::vec4 new_color = trace_camera_ray(ray, m_max_depth, m_scene);
             if (scene_changed)
                 m_luminance[y * m_width + x] = new_color;
             else
