@@ -26,6 +26,7 @@ glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, c
         }
         depth++;
 
+        // TODO Refactor out all of the material BRDFs into the material class so we don't duplicate them 
         auto intersect_info = Scene::intersect(scene, next_ray);
         if (intersect_info.m_has_intersected) {
             // Emitter Material
@@ -159,7 +160,6 @@ glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, c
 void Renderer::trace_light_ray(const Ray &ray, const unsigned max_depth, const Scene &scene,
                                const unsigned light_vertex_count, std::vector<LightVertex> &lvc) {
     Ray next_ray = ray;
-    glm::vec3 return_color{0};
     glm::vec3 luminance{1};
 
     // Russian Roulette
@@ -179,8 +179,8 @@ void Renderer::trace_light_ray(const Ray &ray, const unsigned max_depth, const S
         if (intersect_info.m_has_intersected) {
             // Emitter Material
             if (intersect_info.m_material.m_type == 1) {
-                return_color = luminance * intersect_info.m_material.m_color *
-                               intersect_info.m_material.m_emittance / continuation_probability;
+                luminance *= intersect_info.m_material.m_color *
+                             intersect_info.m_material.m_emittance / continuation_probability;
                 break;
             }
 
