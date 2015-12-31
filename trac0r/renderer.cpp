@@ -255,7 +255,7 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
 
     // Assume worst case and just make it m_max_depth * N
     m_lvc.resize(m_max_depth * num_light_paths);
-#pragma omp parallel for simd schedule(dynamic, 1024)
+// #pragma omp parallel for simd schedule(dynamic, 1024)
     for (auto i = 0; i < num_light_paths; i++) {
         // Pick a random light triangle
         auto rand_index = rand_range(0UL, static_cast<unsigned long>(light_triangles.size() - 1));

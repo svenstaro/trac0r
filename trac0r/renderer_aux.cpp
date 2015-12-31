@@ -11,6 +11,7 @@ namespace trac0r {
 // #pragma omp declare simd // TODO make this work
 glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, const Scene &scene) {
     Ray next_ray = ray;
+    glm::vec3 return_color{0};
     glm::vec3 luminance{1};
     size_t depth = 0;
 
@@ -29,7 +30,7 @@ glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, c
         if (intersect_info.m_has_intersected) {
             // Emitter Material
             if (intersect_info.m_material.m_type == 1) {
-                luminance *= intersect_info.m_material.m_color *
+                return_color = luminance * intersect_info.m_material.m_color *
                              intersect_info.m_material.m_emittance / continuation_probability;
                 break;
             }
@@ -152,11 +153,11 @@ glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, c
         }
     }
 
-    return glm::vec4(luminance, 1.f);
+    return glm::vec4(return_color, 1.f);
 }
 
 void Renderer::trace_light_ray(const Ray &ray, const unsigned max_depth, const Scene &scene,
-                               const unsigned light_vertex_count, std::vector<LightVertex> &lvc) {
+                               const unsigned light_path_index, std::vector<LightVertex> &lvc) {
     Ray next_ray = ray;
     glm::vec3 luminance{1};
     size_t depth = 0;
@@ -293,6 +294,9 @@ void Renderer::trace_light_ray(const Ray &ray, const unsigned max_depth, const S
                 // Make a new ray
                 next_ray = Ray{intersect_info.m_pos, new_ray_dir};
             }
+
+            unsigned lvc_index = (depth - 1) + light_path_index * max_depth;
+            lvc[lvc_index] = LightVertex{intersect_info.m_pos, luminance};
         } else {
             break;
         }
