@@ -16,6 +16,7 @@
 #include <chrono>
 #include <cmath>
 #include <string>
+#include <vector>
 
 namespace trac0r {
 

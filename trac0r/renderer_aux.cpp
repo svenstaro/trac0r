@@ -159,7 +159,7 @@ glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, c
             glm::vec3 final_luminance{0.f};
             for (unsigned i = 0; i < max_light_vertices; i++) {
                 // Get a random light vertex
-                unsigned lvc_index = rand_range(0UL, lvc.size());
+                unsigned lvc_index = rand_range(static_cast<size_t>(0), lvc.size());
                 auto light_vertex = lvc[lvc_index];
                 if (can_connect_vertices(scene, intersect_info.m_pos, light_vertex.m_pos)) {
                     connected_vertices_cnt++;
