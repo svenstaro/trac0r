@@ -251,19 +251,24 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     const auto &accel_struct = Scene::accel_struct(m_scene);
     const auto &light_triangles = FlatStructure::light_triangles(accel_struct);
 
-    // Light tracing part: Trace a bunch of rays through every light
-    const auto num_light_paths = 10'000;
-
     // Assume worst case and just make it m_max_depth * N
-    m_lvc.resize(m_max_depth * num_light_paths);
+    m_lvc.resize(m_max_depth * m_max_light_paths);
 #pragma omp parallel for schedule(dynamic, 1024)
-    for (auto i = 0; i < num_light_paths; i++) {
+    for (auto i = 0U; i < m_max_light_paths; i++) {
         // Pick a random light triangle
         auto rand_index = rand_range(0UL, static_cast<unsigned long>(light_triangles.size() - 1));
 
         // Pick a random location on triangle and start tracing it
         const Triangle &light_triangle = light_triangles[rand_index];
         glm::vec3 rand_surface_point = Triangle::random_point(light_triangle);
+
+        // Place a light vertex on the light triangle surface at the beginning of the light path
+        // (which conviently happens to be index 0 of every light path)
+        unsigned lvc_index = i * m_max_depth;
+        m_lvc[lvc_index] =
+            LightVertex{rand_surface_point,
+                        light_triangle.m_material.m_color * light_triangle.m_material.m_emittance};
+
         glm::vec3 new_ray_dir = oriented_cosine_weighted_hemisphere_sample(light_triangle.m_normal);
         Ray ray = Ray{rand_surface_point, new_ray_dir};
         trace_light_ray(ray, m_max_depth, m_scene, light_triangle, i, m_lvc);
@@ -272,13 +277,14 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     if (m_print_perf)
         fmt::print("    {:<15} {:>10.3f} ms\n", "Light tracing", timer.elapsed());
 
-// TODO Make OpenMp simd option work
+// TODO Make OpenMP simd option work
 #pragma omp parallel for collapse(2) schedule(dynamic, 1024)
     // Reverse path tracing part: Trace a ray through every camera pixel
     for (auto x = 0; x < m_width; x += stride_x) {
         for (auto y = 0; y < m_height; y += stride_y) {
             Ray ray = Camera::pixel_to_ray(m_camera, x, y);
-            glm::vec4 new_color = trace_camera_ray(ray, m_max_depth, m_scene);
+            glm::vec4 new_color =
+                trace_camera_ray(ray, m_max_depth, m_scene, m_max_light_vertices, m_lvc);
             if (scene_changed)
                 m_luminance[y * m_width + x] = new_color;
             else
@@ -291,6 +297,20 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
 #endif
 
     return m_luminance;
+}
+
+bool Renderer::connect_camera_light_vertices(const Scene &scene, const glm::vec3 &cam_vertex_pos,
+                                             const glm::vec3 &light_vertex_pos) {
+    // Make a new dir originating from the camera vertex position and directed at the position of
+    // the light vertex and see whether we can connect
+    glm::vec3 ray_dir = glm::normalize(light_vertex_pos - cam_vertex_pos);
+    Ray ray_to_light_vertex{cam_vertex_pos, ray_dir};
+    auto intersect_info = Scene::intersect(scene, ray_to_light_vertex);
+    // If we got the same position, great
+    if (intersect_info.m_has_intersected && intersect_info.m_pos == light_vertex_pos)
+        return true;
+    else
+        return false;
 }
 
 void Renderer::print_sysinfo() const {

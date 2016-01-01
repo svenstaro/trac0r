@@ -9,7 +9,8 @@
 
 namespace trac0r {
 // #pragma omp declare simd // TODO make this work
-glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, const Scene &scene) {
+glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, const Scene &scene,
+                                     unsigned max_light_vertices, std::vector<LightVertex> &lvc) {
     Ray next_ray = ray;
     glm::vec3 return_color{0};
     glm::vec3 luminance{1};
@@ -149,6 +150,9 @@ glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, c
                 // Make a new ray
                 next_ray = Ray{intersect_info.m_pos, new_ray_dir};
             }
+
+
+
         } else {
             break;
         }
@@ -161,8 +165,8 @@ void Renderer::trace_light_ray(const Ray &ray, const unsigned max_depth, const S
                                const Triangle &light_triangle, const unsigned light_path_index,
                                std::vector<LightVertex> &lvc) {
     Ray next_ray = ray;
-    glm::vec3 return_color = light_triangle.m_material.m_color;
-    glm::vec3 luminance{1};
+    glm::vec3 return_color{0.f};
+    glm::vec3 luminance = light_triangle.m_material.m_color * light_triangle.m_material.m_emittance;
     size_t depth = 0;
 
     // We'll run until terminated by Russian Roulette
@@ -175,12 +179,12 @@ void Renderer::trace_light_ray(const Ray &ray, const unsigned max_depth, const S
         }
         depth++;
 
+        // TODO Refactor out all of the material BRDFs into the material class so we don't duplicate
+        // them
         auto intersect_info = Scene::intersect(scene, next_ray);
         if (intersect_info.m_has_intersected) {
             // Emitter Material
             if (intersect_info.m_material.m_type == 1) {
-                return_color = luminance * intersect_info.m_material.m_color *
-                               intersect_info.m_material.m_emittance / continuation_probability;
                 break;
             }
 
@@ -298,7 +302,10 @@ void Renderer::trace_light_ray(const Ray &ray, const unsigned max_depth, const S
                 next_ray = Ray{intersect_info.m_pos, new_ray_dir};
             }
 
-            unsigned lvc_index = (depth - 1) + light_path_index * max_depth;
+            luminance /= continuation_probability;
+
+            // Place a light vertex at the collision position
+            unsigned lvc_index = depth + light_path_index * max_depth;
             lvc[lvc_index] = LightVertex{intersect_info.m_pos, luminance};
         } else {
             break;
