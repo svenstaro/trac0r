@@ -37,7 +37,7 @@ class Renderer {
     unsigned m_max_light_paths = 10000;
 
     // Connect every camera vertex to this many random light vertices
-    unsigned m_max_light_vertices = 1;
+    unsigned m_max_light_vertices = 5;
 
     /**
      * @brief We accumulate our "photons" into here for each pixel
