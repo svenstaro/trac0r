@@ -151,8 +151,26 @@ glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, c
                 next_ray = Ray{intersect_info.m_pos, new_ray_dir};
             }
 
+            // Try to connect to several light verticesto our current intersection position (as this
+            // is effectively our camera vertex)
 
+            // Keep track of how many light vertices we could successfully connect to so we can return an average value
+            unsigned connected_vertices_cnt = 0;
+            glm::vec3 final_luminance{0.f};
+            for (unsigned i = 0; i < max_light_vertices; i++) {
+                // Get a random light vertex
+                unsigned lvc_index = rand_range(0UL, lvc.size());
+                auto light_vertex = lvc[lvc_index];
+                if (can_connect_vertices(scene, intersect_info.m_pos, light_vertex.m_pos)) {
+                    connected_vertices_cnt++;
+                    final_luminance += luminance * light_vertex.m_luminance;
+                }
+            }
 
+            if (connected_vertices_cnt > 0) {
+                luminance = final_luminance / static_cast<float>(connected_vertices_cnt);
+            }
+            return_color += luminance;
         } else {
             break;
         }
@@ -311,5 +329,19 @@ void Renderer::trace_light_ray(const Ray &ray, const unsigned max_depth, const S
             break;
         }
     }
+}
+
+bool Renderer::can_connect_vertices(const Scene &scene, const glm::vec3 &cam_vertex_pos,
+                                    const glm::vec3 &light_vertex_pos) {
+    // Make a new dir originating from the camera vertex position and directed at the position of
+    // the light vertex and see whether we can connect
+    glm::vec3 ray_dir = glm::normalize(light_vertex_pos - cam_vertex_pos);
+    Ray ray_to_light_vertex{cam_vertex_pos, ray_dir};
+    auto intersect_info = Scene::intersect(scene, ray_to_light_vertex);
+    // If we got the same position, great
+    if (intersect_info.m_has_intersected && intersect_info.m_pos == light_vertex_pos)
+        return true;
+    else
+        return false;
 }
 }

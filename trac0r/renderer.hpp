@@ -23,20 +23,21 @@ class Renderer {
     static void trace_light_ray(const Ray &ray, const unsigned max_depth, const Scene &scene,
                                 const Triangle &light_triangle, const unsigned light_path_index,
                                 std::vector<LightVertex> &lvc);
-    static bool connect_camera_light_vertices(const Scene &scene, const glm::vec3 &cam_vertex_pos,
-                                              const glm::vec3 &light_vertex_pos);
+    static bool can_connect_vertices(const Scene &scene, const glm::vec3 &cam_vertex_pos,
+                                     const glm::vec3 &light_vertex_pos);
     std::vector<glm::vec4> &render(bool screen_changed, int stride_x, int stride_y);
     void print_sysinfo() const;
     void print_last_frame_timings() const;
 
   private:
-    unsigned m_max_depth = 6;
+    unsigned m_max_light_subpath_depth = 3;
+    unsigned m_max_camera_subpath_depth = 3;
 
     // Light tracing part: Trace a bunch of rays through every light
     unsigned m_max_light_paths = 10000;
 
-    // Connect every camera vertex to this many light vertices
-    unsigned m_max_light_vertices = 100;
+    // Connect every camera vertex to this many random light vertices
+    unsigned m_max_light_vertices = 1;
 
     /**
      * @brief We accumulate our "photons" into here for each pixel
