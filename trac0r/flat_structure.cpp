@@ -68,7 +68,7 @@ void FlatStructure::rebuild(FlatStructure &flatstruct) {
     for (auto &shape : FlatStructure::shapes(flatstruct)) {
         for (auto &tri : Shape::triangles(shape)) {
             // Put lights into a list for easy access
-            if (tri.m_material.m_type == 4) {
+            if (tri.m_material.m_type == 1) {
                 flatstruct.m_light_triangles.push_back(tri);
             }
         }

@@ -4,6 +4,7 @@
 
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include <iostream>
 
@@ -12,9 +13,10 @@ namespace trac0r {
 glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, const Scene &scene,
                                      unsigned max_light_vertices, std::vector<LightVertex> &lvc) {
     Ray next_ray = ray;
-    glm::vec3 return_color{0};
-    glm::vec3 luminance{1};
+    glm::vec3 return_color{0.f};
+    glm::vec3 luminance{1.f};
     size_t depth = 0;
+    unsigned connected_vertices_cnt = 0;
 
     // We'll run until terminated by Russian Roulette
     while (true) {
@@ -32,8 +34,9 @@ glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, c
         if (intersect_info.m_has_intersected) {
             // Emitter Material
             if (intersect_info.m_material.m_type == 1) {
-                return_color = luminance * intersect_info.m_material.m_color *
-                               intersect_info.m_material.m_emittance / continuation_probability;
+                connected_vertices_cnt++;
+                return_color += luminance * intersect_info.m_material.m_color *
+                                intersect_info.m_material.m_emittance / continuation_probability;
                 break;
             }
 
@@ -154,27 +157,27 @@ glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, c
             // Try to connect to several light verticesto our current intersection position (as this
             // is effectively our camera vertex)
 
-            // Keep track of how many light vertices we could successfully connect to so we can return an average value
-            unsigned connected_vertices_cnt = 0;
-            glm::vec3 final_luminance{0.f};
+            // Keep track of how many light vertices we could successfully connect to so we can
+            // return an average value
             for (unsigned i = 0; i < max_light_vertices; i++) {
                 // Get a random light vertex
                 unsigned lvc_index = rand_range(static_cast<size_t>(0), lvc.size());
                 auto light_vertex = lvc[lvc_index];
                 if (can_connect_vertices(scene, intersect_info.m_pos, light_vertex.m_pos)) {
                     connected_vertices_cnt++;
-                    final_luminance += luminance * light_vertex.m_luminance;
+                    return_color += luminance * light_vertex.m_luminance;
                 }
             }
 
-            if (connected_vertices_cnt > 0) {
-                luminance = final_luminance / static_cast<float>(connected_vertices_cnt);
-            }
-            return_color += luminance;
         } else {
             break;
         }
     }
+
+    // fmt::print("{} ", connected_vertices_cnt);
+    // Average by all connected vertices to get an average color value
+    if (connected_vertices_cnt > 0)
+        return_color /= static_cast<float>(connected_vertices_cnt);
 
     return glm::vec4(return_color, 1.f);
 }
@@ -183,7 +186,6 @@ void Renderer::trace_light_ray(const Ray &ray, const unsigned max_depth, const S
                                const Triangle &light_triangle, const unsigned light_path_index,
                                std::vector<LightVertex> &lvc) {
     Ray next_ray = ray;
-    glm::vec3 return_color{0.f};
     glm::vec3 luminance = light_triangle.m_material.m_color * light_triangle.m_material.m_emittance;
     size_t depth = 0;
 
@@ -338,10 +340,13 @@ bool Renderer::can_connect_vertices(const Scene &scene, const glm::vec3 &cam_ver
     glm::vec3 ray_dir = glm::normalize(light_vertex_pos - cam_vertex_pos);
     Ray ray_to_light_vertex{cam_vertex_pos, ray_dir};
     auto intersect_info = Scene::intersect(scene, ray_to_light_vertex);
-    // If we got the same position, great
-    if (intersect_info.m_has_intersected && intersect_info.m_pos == light_vertex_pos)
+
+    if (intersect_info.m_has_intersected &&
+        glm::abs(glm::length(intersect_info.m_pos - light_vertex_pos)) <
+            std::numeric_limits<float>::epsilon()) {
         return true;
-    else
+    } else {
         return false;
+    }
 }
 }
