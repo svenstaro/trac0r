@@ -30,8 +30,8 @@ class Renderer {
     void print_last_frame_timings() const;
 
   private:
-    unsigned m_max_light_subpath_depth = 3;
-    unsigned m_max_camera_subpath_depth = 3;
+    unsigned m_max_camera_subpath_depth = 10;
+    unsigned m_max_light_subpath_depth = 5;
 
     // Light tracing part: Trace a bunch of rays through every light
     unsigned m_max_light_paths = 10000;
