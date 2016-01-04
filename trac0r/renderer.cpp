@@ -270,6 +270,7 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
                                           image_size * sizeof(cl_float4), &host_output[0]);
 
     // Accumulate energy
+    // TODO Do this in opencl
     for (uint32_t x = 0; x < m_width; x += stride_x) {
         for (uint32_t y = 0; y < m_height; y += stride_y) {
             auto lol = reinterpret_cast<glm::vec4 *>(&host_output[y * m_width + x]);

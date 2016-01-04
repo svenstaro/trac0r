@@ -4,6 +4,7 @@
 #include "trac0r/utils.hpp"
 #include "trac0r/timer.hpp"
 #include "trac0r/flat_structure.hpp"
+#include "trac0r/filtering.hpp"
 
 #include <SDL_ttf.h>
 #include <SDL_image.h>
@@ -301,6 +302,14 @@ void Viewer::mainloop() {
 
     if (m_print_perf)
         fmt::print("    {:<15} {:>10.3f} ms\n", "Pixel transfer", timer.elapsed());
+
+    // std::vector<uint32_t> m_pixels_filtered;
+    // m_pixels_filtered.resize(m_screen_width * m_screen_height, 0);
+    // trac0r::box_filter(m_pixels, width, height, m_pixels_filtered);
+    // m_pixels = m_pixels_filtered;
+    //
+    // if (m_print_perf)
+    //     fmt::print("    {:<15} {:>10.3f} ms\n", "Image filtering", timer.elapsed());
 
     SDL_RenderClear(m_render);
     SDL_UpdateTexture(m_render_tex, 0, m_pixels.data(), width * sizeof(uint32_t));
