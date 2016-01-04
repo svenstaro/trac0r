@@ -363,26 +363,26 @@ inline IntersectionInfo Scene_intersect(__global Triangle *triangles, const uint
     for (unsigned s = 0; s < num_shapes; s++) {
         __global Shape *shape = &(shapes[s]);
         if (intersect_ray_aabb(ray, &(shape->m_aabb))) {
-            // for (unsigned i = shape->m_triangle_index_start; i < shape->m_triangle_index_end; i++) {
-            //     float dist_to_intersect;
-            //     __global Triangle *tri = &(triangles[i]);
-            //     bool intersected = intersect_ray_triangle(ray, tri, &dist_to_intersect);
-            //     if (intersected) {
-            //         // Find closest triangle
-            //         if (dist_to_intersect < closest_dist) {
-            //             closest_dist = dist_to_intersect;
-            //             closest_triangle = *tri;
-            //
-            //             intersect_info.m_has_intersected = true;
-            //             intersect_info.m_pos = ray->m_origin + ray->m_dir * closest_dist;
-            //             intersect_info.m_incoming_ray = *ray;
-            //             intersect_info.m_angle_between =
-            //                 dot(closest_triangle.m_normal, intersect_info.m_incoming_ray.m_dir);
-            //             intersect_info.m_normal = closest_triangle.m_normal;
-            //             intersect_info.m_material = closest_triangle.m_material;
-            //         }
-            //     }
-            // }
+            for (unsigned i = shape->m_triangle_index_start; i < shape->m_triangle_index_end; i++) {
+                float dist_to_intersect;
+                __global Triangle *tri = &(triangles[i]);
+                bool intersected = intersect_ray_triangle(ray, tri, &dist_to_intersect);
+                if (intersected) {
+                    // Find closest triangle
+                    if (dist_to_intersect < closest_dist) {
+                        closest_dist = dist_to_intersect;
+                        closest_triangle = *tri;
+
+                        intersect_info.m_has_intersected = true;
+                        intersect_info.m_pos = ray->m_origin + ray->m_dir * closest_dist;
+                        intersect_info.m_incoming_ray = *ray;
+                        intersect_info.m_angle_between =
+                            dot(closest_triangle.m_normal, intersect_info.m_incoming_ray.m_dir);
+                        intersect_info.m_normal = closest_triangle.m_normal;
+                        intersect_info.m_material = closest_triangle.m_material;
+                    }
+                }
+            }
         }
     }
 
