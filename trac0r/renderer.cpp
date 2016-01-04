@@ -58,8 +58,11 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     };
 
     struct DeviceMaterial {
-        cl_float3 m_reflectance;
-        cl_float3 m_emittance;
+        cl_uchar m_type;
+        cl_float3 m_color;
+        cl_float m_roughness;
+        cl_float m_ior;
+        cl_float m_emittance;
     };
 
     struct DeviceTriangle {
@@ -155,11 +158,12 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     for (auto &shape : FlatStructure::shapes(accel_struct)) {
         for (auto &tri : Shape::triangles(shape)) {
             DeviceMaterial dev_mat;
-            dev_mat.m_reflectance = {{tri.m_material.m_reflectance.r,
-                                      tri.m_material.m_reflectance.g,
-                                      tri.m_material.m_reflectance.b}};
-            dev_mat.m_emittance = {{tri.m_material.m_emittance.r, tri.m_material.m_emittance.g,
-                                    tri.m_material.m_emittance.b}};
+            dev_mat.m_type = tri.m_material.m_type;
+            dev_mat.m_color = {
+                {tri.m_material.m_color.r, tri.m_material.m_color.g, tri.m_material.m_color.b}};
+            dev_mat.m_roughness = tri.m_material.m_roughness;
+            dev_mat.m_ior = tri.m_material.m_ior;
+            dev_mat.m_emittance = tri.m_material.m_emittance;
             DeviceTriangle dev_tri;
             dev_tri.m_v1 = {{tri.m_v1.x, tri.m_v1.y, tri.m_v1.z}};
             dev_tri.m_v2 = {{tri.m_v2.x, tri.m_v2.y, tri.m_v2.z}};
@@ -183,7 +187,7 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
 
     m_kernel.setArg(0, dev_output_buf);
     m_kernel.setArg(1, m_width);
-    m_kernel.setArg(2, m_max_depth);
+    m_kernel.setArg(2, m_max_camera_subpath_depth);
     m_kernel.setArg(3, dev_prng_buf);
     m_kernel.setArg(4, dev_camera_buf);
     m_kernel.setArg(5, dev_triangles_buf);
@@ -248,43 +252,13 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
 #else
     Timer timer;
 
-    const auto &accel_struct = Scene::accel_struct(m_scene);
-    const auto &light_triangles = FlatStructure::light_triangles(accel_struct);
-
-    // Assume worst case and just make it m_max_depth * N
-    m_lvc.resize(m_max_light_subpath_depth * m_max_light_paths);
-#pragma omp parallel for schedule(dynamic, 1024)
-    for (unsigned i = 0; i < m_max_light_paths; i++) {
-        // Pick a random light triangle
-        auto rand_index = rand_range(0UL, static_cast<unsigned long>(light_triangles.size() - 1));
-
-        // Pick a random location on triangle and start tracing it
-        const Triangle &light_triangle = light_triangles[rand_index];
-        glm::vec3 rand_surface_point = Triangle::random_point(light_triangle);
-
-        // Place a light vertex on the light triangle surface at the beginning of the light path
-        // (which conviently happens to be index 0 of every light path)
-        unsigned lvc_index = i * m_max_light_subpath_depth;
-        m_lvc[lvc_index] =
-            LightVertex{rand_surface_point,
-                        light_triangle.m_material.m_color * light_triangle.m_material.m_emittance};
-
-        glm::vec3 new_ray_dir = oriented_cosine_weighted_hemisphere_sample(light_triangle.m_normal);
-        Ray ray = Ray{rand_surface_point, new_ray_dir};
-        trace_light_ray(ray, m_max_light_subpath_depth, m_scene, light_triangle, i, m_lvc);
-    }
-
-    if (m_print_perf)
-        fmt::print("    {:<15} {:>10.3f} ms\n", "Light tracing", timer.elapsed());
-
 // TODO Make OpenMP simd option work
 #pragma omp parallel for collapse(2) schedule(dynamic, 1024)
     // Reverse path tracing part: Trace a ray through every camera pixel
     for (auto x = 0; x < m_width; x += stride_x) {
         for (auto y = 0; y < m_height; y += stride_y) {
             Ray ray = Camera::pixel_to_ray(m_camera, x, y);
-            glm::vec4 new_color =
-                trace_camera_ray(ray, m_max_camera_subpath_depth, m_scene, m_max_light_vertices, m_lvc);
+            glm::vec4 new_color = trace_camera_ray(ray, m_max_camera_subpath_depth, m_scene);
             if (scene_changed)
                 m_luminance[y * m_width + x] = new_color;
             else
@@ -306,50 +280,52 @@ void Renderer::print_sysinfo() const {
     cl::Platform::get(&platforms);
     for (const auto &platform : platforms) {
         std::vector<cl::Device> devices;
-        platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+        platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
 
-        auto platform_name = platform.getInfo<CL_PLATFORM_NAME>();
-        auto platform_version = platform.getInfo<CL_PLATFORM_VERSION>();
-        fmt::print("  {} ({})\n", platform_name, platform_version);
-        for (size_t i = 0; i < devices.size(); i++) {
-            auto device_name = devices[i].getInfo<CL_DEVICE_NAME>();
-            auto device_version = devices[i].getInfo<CL_DEVICE_VERSION>();
-            auto driver_version = devices[i].getInfo<CL_DRIVER_VERSION>();
-            auto max_compute_units = devices[i].getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>();
-            auto max_work_item_dimensions =
-                devices[i].getInfo<CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS>();
-            auto max_work_item_sizes = devices[i].getInfo<CL_DEVICE_MAX_WORK_ITEM_SIZES>();
-            auto max_work_group_size = devices[i].getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
-            auto max_mem_alloc_size = devices[i].getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>();
-            auto max_parameter_size = devices[i].getInfo<CL_DEVICE_MAX_PARAMETER_SIZE>();
-            auto global_mem_cacheline_size =
-                devices[i].getInfo<CL_DEVICE_GLOBAL_MEM_CACHELINE_SIZE>();
-            auto global_mem_cache_size = devices[i].getInfo<CL_DEVICE_GLOBAL_MEM_CACHE_SIZE>();
-            auto global_mem_size = devices[i].getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>();
-            auto max_constant_buffer_size =
-                devices[i].getInfo<CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE>();
-            auto max_constant_args = devices[i].getInfo<CL_DEVICE_MAX_CONSTANT_ARGS>();
-            auto local_mem_size = devices[i].getInfo<CL_DEVICE_LOCAL_MEM_SIZE>();
-            auto preferred_work_size_multiple =
-                m_kernel.getWorkGroupInfo<CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE>(devices[i]);
-            fmt::print("    Device {}: {}, OpenCL version: {}, driver version: {}\n", i,
-                       device_name, device_version, driver_version);
-            fmt::print("    Compute units: {}, Max work item dim: {}, Max work item sizes: "
-                       "{}/{}/{}, Max work group size: {}\n",
-                       max_compute_units, max_work_item_dimensions, max_work_item_sizes[0],
-                       max_work_item_sizes[1], max_work_item_sizes[2], max_work_group_size);
-            fmt::print("    Max mem alloc size: {} MB, Max parameter size: {} B\n",
-                       max_mem_alloc_size / (1024 * 1024), max_parameter_size);
-            fmt::print("    Global mem cacheline size: {} B, Global mem cache size: {} KB, Global "
-                       "mem size: {} MB\n",
-                       global_mem_cacheline_size, global_mem_cache_size / 1024,
-                       global_mem_size / (1024 * 1024));
-            fmt::print("    Max constant buffer size: {} KB, Max constant args: {}, Local mem "
-                       "size: {} KB\n",
-                       max_constant_buffer_size / 1024, max_constant_args, local_mem_size / 1024);
-            fmt::print("    Preferred work group size multiple: {}\n",
-                       preferred_work_size_multiple);
-            fmt::print("\n");
+        if (devices.size() > 0) {
+            auto platform_name = platform.getInfo<CL_PLATFORM_NAME>();
+            auto platform_version = platform.getInfo<CL_PLATFORM_VERSION>();
+            fmt::print("  {} ({})\n", platform_name, platform_version);
+            for (size_t i = 0; i < devices.size(); i++) {
+                auto device_name = devices[i].getInfo<CL_DEVICE_NAME>();
+                auto device_version = devices[i].getInfo<CL_DEVICE_VERSION>();
+                auto driver_version = devices[i].getInfo<CL_DRIVER_VERSION>();
+                auto max_compute_units = devices[i].getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>();
+                auto max_work_item_dimensions =
+                    devices[i].getInfo<CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS>();
+                auto max_work_item_sizes = devices[i].getInfo<CL_DEVICE_MAX_WORK_ITEM_SIZES>();
+                auto max_work_group_size = devices[i].getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
+                auto max_mem_alloc_size = devices[i].getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>();
+                auto max_parameter_size = devices[i].getInfo<CL_DEVICE_MAX_PARAMETER_SIZE>();
+                auto global_mem_cacheline_size =
+                    devices[i].getInfo<CL_DEVICE_GLOBAL_MEM_CACHELINE_SIZE>();
+                auto global_mem_cache_size = devices[i].getInfo<CL_DEVICE_GLOBAL_MEM_CACHE_SIZE>();
+                auto global_mem_size = devices[i].getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>();
+                auto max_constant_buffer_size =
+                    devices[i].getInfo<CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE>();
+                auto max_constant_args = devices[i].getInfo<CL_DEVICE_MAX_CONSTANT_ARGS>();
+                auto local_mem_size = devices[i].getInfo<CL_DEVICE_LOCAL_MEM_SIZE>();
+                auto preferred_work_size_multiple =
+                    m_kernel.getWorkGroupInfo<CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE>(devices[i]);
+                fmt::print("    Device {}: {}, OpenCL version: {}, driver version: {}\n", i,
+                           device_name, device_version, driver_version);
+                fmt::print("    Compute units: {}, Max work item dim: {}, Max work item sizes: "
+                           "{}/{}/{}, Max work group size: {}\n",
+                           max_compute_units, max_work_item_dimensions, max_work_item_sizes[0],
+                           max_work_item_sizes[1], max_work_item_sizes[2], max_work_group_size);
+                fmt::print("    Max mem alloc size: {} MB, Max parameter size: {} B\n",
+                           max_mem_alloc_size / (1024 * 1024), max_parameter_size);
+                fmt::print("    Global mem cacheline size: {} B, Global mem cache size: {} KB, Global "
+                           "mem size: {} MB\n",
+                           global_mem_cacheline_size, global_mem_cache_size / 1024,
+                           global_mem_size / (1024 * 1024));
+                fmt::print("    Max constant buffer size: {} KB, Max constant args: {}, Local mem "
+                           "size: {} KB\n",
+                           max_constant_buffer_size / 1024, max_constant_args, local_mem_size / 1024);
+                fmt::print("    Preferred work group size multiple: {}\n",
+                           preferred_work_size_multiple);
+                fmt::print("\n");
+            }
         }
     }
 #else

@@ -38,11 +38,6 @@ struct IntersectionInfo {
      * @brief Material at the point of intersection.
      */
     Material m_material;
-
-    /**
-     * @brief TODO
-     */
-    glm::vec3 m_coeff{1};
 };
 }
 
