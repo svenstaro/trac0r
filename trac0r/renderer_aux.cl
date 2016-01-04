@@ -385,8 +385,6 @@ inline IntersectionInfo Scene_intersect(__global Triangle *triangles, const uint
             }
         }
     }
-    //     }
-    // }
 
     return intersect_info;
 }
