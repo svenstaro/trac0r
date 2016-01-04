@@ -46,11 +46,11 @@ Renderer::Renderer(const int width, const int height, const Camera &camera, cons
     fmt::print("{}\n", build_log);
     if (result != CL_SUCCESS)
         exit(1);
-    m_kernel = cl::Kernel(m_program, "renderer_trace_pixel_color");
-    auto preferred_work_size_multiple =
-        m_kernel.getWorkGroupInfo<CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE>(m_compute_devices[0]);
-    fmt::print("{}\n", preferred_work_size_multiple);
-    exit(0);
+    m_kernel = cl::Kernel(m_program, "renderer_trace_camera_ray", &result);
+    if (result != CL_SUCCESS) {
+        fmt::print("{}\n", opencl_error_string(result));
+        exit(1);
+    }
 #endif
 }
 
@@ -163,8 +163,7 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
         for (auto &tri : Shape::triangles(shape)) {
             DeviceMaterial dev_mat;
             dev_mat.m_type = tri.m_material.m_type;
-            dev_mat.m_color = {
-                {tri.m_material.m_color.r, tri.m_material.m_color.g, tri.m_material.m_color.b}};
+            dev_mat.m_color = {{tri.m_material.m_color.r, tri.m_material.m_color.g, tri.m_material.m_color.b}};
             dev_mat.m_roughness = tri.m_material.m_roughness;
             dev_mat.m_ior = tri.m_material.m_ior;
             dev_mat.m_emittance = tri.m_material.m_emittance;
@@ -195,7 +194,7 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     m_kernel.setArg(3, dev_prng_buf);
     m_kernel.setArg(4, dev_camera_buf);
     m_kernel.setArg(5, dev_triangles_buf);
-    m_kernel.setArg(6, static_cast<unsigned>(dev_triangles.size()));
+    m_kernel.setArg(6, static_cast<uint32_t>(dev_triangles.size()));
     cl::Event event;
 
     cl::Device device = m_compute_queues[0].getInfo<CL_QUEUE_DEVICE>();
@@ -241,8 +240,8 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
                                           image_size * sizeof(cl_float4), &host_output[0]);
 
     // Accumulate energy
-    for (auto x = 0; x < m_width; x += stride_x) {
-        for (auto y = 0; y < m_height; y += stride_y) {
+    for (uint32_t x = 0; x < m_width; x += stride_x) {
+        for (uint32_t y = 0; y < m_height; y += stride_y) {
             auto lol = reinterpret_cast<glm::vec4 *>(&host_output[y * m_width + x]);
             if (scene_changed)
                 m_luminance[y * m_width + x] = *lol;

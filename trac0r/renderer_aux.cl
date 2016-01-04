@@ -295,7 +295,7 @@ inline bool intersect_ray_aabb(const Ray *ray, const AABB *aabb) {
 
 // Möller-Trumbore intersection algorithm
 // (see https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm)
-inline bool intersect_ray_triangle(const Ray *ray, __constant const Triangle *triangle,
+inline bool intersect_ray_triangle(const Ray *ray, __global const Triangle *triangle,
                                    float *dist) {
     // Calculate edges of triangle from v0.
     float3 e0 = triangle->m_v2 - triangle->m_v1;
@@ -345,7 +345,7 @@ inline bool intersect_ray_triangle(const Ray *ray, __constant const Triangle *tr
     return false;
 }
 
-inline IntersectionInfo Scene_intersect(__constant Triangle *accel_struct, const uint num_triangles,
+inline IntersectionInfo Scene_intersect(__global Triangle *accel_struct, const uint num_triangles,
                                         Ray *ray) {
     IntersectionInfo intersect_info; // TODO use proper constructor
     intersect_info.m_has_intersected = false;
@@ -358,7 +358,7 @@ inline IntersectionInfo Scene_intersect(__constant Triangle *accel_struct, const
     //         for (auto &tri : Shape::triangles(shape)) {
     for (unsigned i = 0; i < num_triangles; i++) {
         float dist_to_intersect;
-        __constant Triangle *tri = &(accel_struct[i]);
+        __global Triangle *tri = &(accel_struct[i]);
         bool intersected = intersect_ray_triangle(ray, tri, &dist_to_intersect);
         if (intersected) {
             // Find closest triangle
@@ -382,10 +382,10 @@ inline IntersectionInfo Scene_intersect(__constant Triangle *accel_struct, const
     return intersect_info;
 }
 
-__kernel void renderer_trace_camera_ray(__write_only __global float4 *output, const int width,
-                                        const unsigned max_depth, __global PRNG *prng,
+__kernel void renderer_trace_camera_ray(__write_only __global float4 *output, const uint width,
+                                        const uint max_depth, __global PRNG *prng,
                                         __constant Camera *camera,
-                                        __constant Triangle *accel_struct,
+                                        __global Triangle *accel_struct,
                                         const uint num_triangles) {
     int x = get_global_id(0);
     int y = get_global_id(1);

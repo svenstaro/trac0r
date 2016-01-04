@@ -24,15 +24,15 @@ class Renderer {
     void print_last_frame_timings() const;
 
   private:
-    unsigned m_max_camera_subpath_depth = 10;
+    const uint32_t m_max_camera_subpath_depth = 10;
 
     /**
      * @brief We accumulate our "photons" into here for each pixel
      */
     std::vector<glm::vec4> m_luminance;
 
-    const int m_width;
-    const int m_height;
+    const uint32_t m_width;
+    const uint32_t m_height;
     const Camera &m_camera;
     const Scene &m_scene;
     bool m_print_perf = false;
