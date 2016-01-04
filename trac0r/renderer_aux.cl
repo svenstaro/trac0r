@@ -100,7 +100,7 @@ inline float rand_range(__global PRNG *prng, const float min, const float max) {
 inline float3 uniform_sample_sphere(__global PRNG *prng) {
     float3 rand_vec = (float3)(rand_range(prng, -1.f, 1.f), rand_range(prng, -1.f, 1.f),
                                rand_range(prng, -1.f, 1.f));
-    return normalize(rand_vec);
+    return fast_normalize(rand_vec);
 }
 
 inline float3 oriented_oriented_hemisphere_sample(__global PRNG *prng, const float3 dir) {
@@ -125,13 +125,13 @@ inline float3 sample_hemisphere(__global PRNG *prng, float3 dir, float power, fl
     // at http://blog.hvidtfeldts.net/index.php/2015/01/path-tracing-3d-fractals/
     // Thanks!
 
-    float3 o1 = normalize(ortho(dir));
-    float3 o2 = normalize(cross(dir, o1));
-    float2 r = (float2)(rand_range(prng, 0.f, 1.f), rand_range(prng, cos(angle), 1.f));
+    float3 o1 = fast_normalize(ortho(dir));
+    float3 o2 = fast_normalize(cross(dir, o1));
+    float2 r = (float2)(rand_range(prng, 0.f, 1.f), rand_range(prng, native_cos(angle), 1.f));
     r.x = r.x * M_PI_F * 2.f;
-    r.y = pow(r.y, 1.f / (power + 1.f));
+    r.y = native_powr(r.y, 1.f / (power + 1.f));
     float oneminus = sqrt(1.f - r.y * r.y);
-    return cos(r.x) * oneminus * o1 + sin(r.x) * oneminus * o2 + r.y * dir;
+    return native_cos(r.x) * oneminus * o1 + native_sin(r.x) * oneminus * o2 + r.y * dir;
 }
 
 inline float3 oriented_cosine_weighted_hemisphere_sample(__global PRNG *prng, float3 dir) {
@@ -151,12 +151,12 @@ inline float3 refract(float3 incident, float3 normal, float eta) {
     if (k < 0.f)
         return (float3)(0.f);
     else
-        return eta * incident - (eta * dot(normal, incident) + sqrt(k)) * normal;
+        return eta * incident - (eta * dot(normal, incident) + native_sqrt(k)) * normal;
 }
 
 inline bool AABB_is_null(const AABB *aabb) {
-    bool min_null = length(aabb->m_min) == 0;
-    bool max_null = length(aabb->m_max) == 0;
+    bool min_null = fast_length(aabb->m_min) == 0;
+    bool max_null = fast_length(aabb->m_max) == 0;
     return min_null && max_null;
 }
 
@@ -257,7 +257,7 @@ inline Ray Camera_pixel_to_ray(__global PRNG *prng, __constant Camera *camera, u
     rel_pos += jitter;
 
     float3 world_pos = Camera_camspace_to_worldspace(camera, rel_pos);
-    float3 ray_dir = normalize(world_pos - camera->m_pos);
+    float3 ray_dir = fast_normalize(world_pos - camera->m_pos);
 
     return ray_construct(world_pos, ray_dir);
 }
@@ -363,26 +363,26 @@ inline IntersectionInfo Scene_intersect(__global Triangle *triangles, const uint
     for (unsigned s = 0; s < num_shapes; s++) {
         __global Shape *shape = &(shapes[s]);
         if (intersect_ray_aabb(ray, &(shape->m_aabb))) {
-            for (unsigned i = shape->m_triangle_index_start; i < shape->m_triangle_index_end; i++) {
-                float dist_to_intersect;
-                __global Triangle *tri = &(triangles[i]);
-                bool intersected = intersect_ray_triangle(ray, tri, &dist_to_intersect);
-                if (intersected) {
-                    // Find closest triangle
-                    if (dist_to_intersect < closest_dist) {
-                        closest_dist = dist_to_intersect;
-                        closest_triangle = *tri;
-
-                        intersect_info.m_has_intersected = true;
-                        intersect_info.m_pos = ray->m_origin + ray->m_dir * closest_dist;
-                        intersect_info.m_incoming_ray = *ray;
-                        intersect_info.m_angle_between =
-                            dot(closest_triangle.m_normal, intersect_info.m_incoming_ray.m_dir);
-                        intersect_info.m_normal = closest_triangle.m_normal;
-                        intersect_info.m_material = closest_triangle.m_material;
-                    }
-                }
-            }
+            // for (unsigned i = shape->m_triangle_index_start; i < shape->m_triangle_index_end; i++) {
+            //     float dist_to_intersect;
+            //     __global Triangle *tri = &(triangles[i]);
+            //     bool intersected = intersect_ray_triangle(ray, tri, &dist_to_intersect);
+            //     if (intersected) {
+            //         // Find closest triangle
+            //         if (dist_to_intersect < closest_dist) {
+            //             closest_dist = dist_to_intersect;
+            //             closest_triangle = *tri;
+            //
+            //             intersect_info.m_has_intersected = true;
+            //             intersect_info.m_pos = ray->m_origin + ray->m_dir * closest_dist;
+            //             intersect_info.m_incoming_ray = *ray;
+            //             intersect_info.m_angle_between =
+            //                 dot(closest_triangle.m_normal, intersect_info.m_incoming_ray.m_dir);
+            //             intersect_info.m_normal = closest_triangle.m_normal;
+            //             intersect_info.m_material = closest_triangle.m_material;
+            //         }
+            //     }
+            // }
         }
     }
 
@@ -472,7 +472,7 @@ __kernel void renderer_trace_camera_ray(__write_only __global float4 *output, co
 
                 float n = n1 / n2;
 
-                float cos_t = 1.f - pow(n, 2) * (1.f - pow(intersect_info.m_angle_between, 2));
+                float cos_t = 1.f - pown(n, 2) * (1.f - pown(intersect_info.m_angle_between, 2));
 
                 float3 new_ray_dir;
                 // Handle total internal reflection
@@ -483,14 +483,14 @@ __kernel void renderer_trace_camera_ray(__write_only __global float4 *output, co
                     break;
                 }
 
-                cos_t = sqrt(cos_t);
+                cos_t = native_sqrt(cos_t);
 
                 // Fresnel coefficients
                 float r1 = n1 * intersect_info.m_angle_between - n2 * cos_t;
                 float r2 = n1 * intersect_info.m_angle_between + n2 * cos_t;
                 float r3 = n2 * intersect_info.m_angle_between - n1 * cos_t;
                 float r4 = n2 * intersect_info.m_angle_between + n1 * cos_t;
-                float r = pow(r1 / r2, 2) + pow(r3 / r4, 2) * 0.5f;
+                float r = pown(r1 / r2, 2) + pown(r3 / r4, 2) * 0.5f;
 
                 if (rand_range(prng, 0.f, 1.f) < r) {
                     // Reflection
@@ -539,6 +539,4 @@ __kernel void renderer_trace_camera_ray(__write_only __global float4 *output, co
     }
 
     output[index] = (float4)(return_color.x, return_color.y, return_color.z, 1.f);
-    // output[index] = (float4)(rand_range(prng, 0.f, 1.f), rand_range(prng, 0.f, 1.f),
-    //                          rand_range(prng, 0.f, 1.f), 1.f);
 }
