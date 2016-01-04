@@ -18,14 +18,13 @@ clang-opencl:
 	mkdir -p build
 	cd build; CXX=clang++ cmake -DOPENCL=1 ..; make -j
 
-benchmark:
-	mkdir -p build
-	cd build; CXX=g++ cmake -DBENCHMARK=1 ..; make -j
+benchmark: default
+	build/trac0r_viewer -b
 
-memcheck: benchmark
+memcheck: default
 	valgrind --leak-check=full build/trac0r_viewer
 
-cachecheck: benchmark
+cachecheck: default
 	perf stat -r 5 -B -e cache-references,cache-misses build/trac0r_viewer
 
 run: default

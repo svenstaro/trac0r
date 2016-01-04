@@ -2,7 +2,6 @@
 
 #include "trac0r/shape.hpp"
 #include "trac0r/utils.hpp"
-#include "trac0r/timer.hpp"
 #include "trac0r/flat_structure.hpp"
 #include "trac0r/filtering.hpp"
 
@@ -40,8 +39,15 @@ Viewer::~Viewer() {
     SDL_Quit();
 }
 
-int Viewer::init() {
+int Viewer::init(int argc, char *argv[]) {
     fmt::print("Start init\n");
+
+    for (auto i = 0; i < argc; i++) {
+        std::string argv_str(argv[i]);
+        if (argv_str == "-b") {
+            m_max_frames = 50;
+        }
+    }
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
         std::cerr << "SDL_Init error: " << SDL_GetError() << std::endl;
@@ -152,11 +158,6 @@ void Viewer::mainloop() {
     double dt = (current_time - m_last_frame_time) / 1000.0;
     m_last_frame_time = current_time;
     auto fps = 1. / dt;
-
-#ifdef BENCHMARK
-    if (m_frame > m_max_frames)
-        shutdown();
-#endif
 
     // Input
     SDL_Event e;
@@ -430,7 +431,17 @@ void Viewer::mainloop() {
 
     if (m_print_perf) {
         fmt::print("    {:<15} {:>10.3f} ms\n", "Rendering", timer.elapsed());
-        fmt::print("    {:<15} {:>10.3f} ms\n\n", "=> Budget", 1000.f / 60.f - total.elapsed());
+        fmt::print("    {:<15} {:>10.3f} ms\n\n", "=> Total", total.peek());
+        fmt::print("    {:<15} {:>10.3f} ms\n\n", "=> Budget", 1000.f / 60.f - total.peek());
+    }
+
+    m_frame_total += total.elapsed();
+    if (m_max_frames != 0 && m_frame > m_max_frames) {
+        fmt::print("Benchmark results:\n");
+        fmt::print("    {:<15} {:>10}\n", "Frames rendered", m_max_frames);
+        fmt::print("    {:<15} {:>10.3f} ms\n", "Total runtime", m_frame_total);
+        fmt::print("    {:<15} {:>10.3f} ms\n", "Avg. frame", m_frame_total / m_max_frames);
+        shutdown();
     }
 }
 

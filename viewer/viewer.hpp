@@ -5,6 +5,7 @@
 #include "trac0r/triangle.hpp"
 #include "trac0r/renderer.hpp"
 #include "trac0r/scene.hpp"
+#include "trac0r/timer.hpp"
 
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -19,7 +20,7 @@ class Viewer {
   public:
     ~Viewer();
 
-    int init();
+    int init(int argc, char *argv[]);
     void mainloop();
     bool is_running();
     void shutdown();
@@ -45,9 +46,11 @@ class Viewer {
     int m_screen_width = 800;
     int m_screen_height = 640;
 
-#ifdef BENCHMARK
-    int m_max_frames = 10;
-#endif
+    /**
+     * @brief Used for benchmarking
+     */
+    int m_max_frames = 0;
+    float m_frame_total = 0.f;
 
     SDL_Renderer *m_render;
     SDL_Window *m_window;

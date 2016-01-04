@@ -9,10 +9,10 @@ void mainloop(void *args) {
     viewer->mainloop();
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     Viewer viewer;
 
-    if (viewer.init() != 0)
+    if (viewer.init(argc, argv) != 0)
         return 1;
 
 #ifdef __EMSCRIPTEN__
