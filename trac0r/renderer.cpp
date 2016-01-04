@@ -47,6 +47,10 @@ Renderer::Renderer(const int width, const int height, const Camera &camera, cons
     if (result != CL_SUCCESS)
         exit(1);
     m_kernel = cl::Kernel(m_program, "renderer_trace_pixel_color");
+    auto preferred_work_size_multiple =
+        m_kernel.getWorkGroupInfo<CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE>(m_compute_devices[0]);
+    fmt::print("{}\n", preferred_work_size_multiple);
+    exit(0);
 #endif
 }
 
