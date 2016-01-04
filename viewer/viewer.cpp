@@ -431,8 +431,8 @@ void Viewer::mainloop() {
 
     if (m_print_perf) {
         fmt::print("    {:<15} {:>10.3f} ms\n", "Rendering", timer.elapsed());
+        fmt::print("    {:<15} {:>10.3f} ms\n", "=> Budget", 1000.f / 60.f - total.peek());
         fmt::print("    {:<15} {:>10.3f} ms\n\n", "=> Total", total.peek());
-        fmt::print("    {:<15} {:>10.3f} ms\n\n", "=> Budget", 1000.f / 60.f - total.peek());
     }
 
     m_frame_total += total.elapsed();
