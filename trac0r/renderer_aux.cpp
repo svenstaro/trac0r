@@ -159,15 +159,15 @@ glm::vec4 Renderer::trace_camera_ray(const Ray &ray, const unsigned max_depth, c
 
             // Keep track of how many light vertices we could successfully connect to so we can
             // return an average value
-            // for (unsigned i = 0; i < max_light_vertices; i++) {
-            //     // Get a random light vertex
-            //     unsigned lvc_index = rand_range(static_cast<size_t>(0), lvc.size());
-            //     auto light_vertex = lvc[lvc_index];
-            //     if (can_connect_vertices(scene, intersect_info.m_pos, light_vertex.m_pos)) {
-            //         connected_vertices_cnt++;
-            //         return_color += luminance * light_vertex.m_luminance;
-            //     }
-            // }
+            for (unsigned i = 0; i < max_light_vertices; i++) {
+                // Get a random light vertex
+                unsigned lvc_index = rand_range(static_cast<size_t>(0), lvc.size());
+                auto light_vertex = lvc[lvc_index];
+                if (can_connect_vertices(scene, intersect_info.m_pos, light_vertex.m_pos)) {
+                    connected_vertices_cnt++;
+                    return_color += luminance * light_vertex.m_luminance;
+                }
+            }
 
         } else {
             break;
