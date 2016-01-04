@@ -20,6 +20,7 @@ typedef struct Camera {
     float m_far_plane_dist;
     int m_screen_width;
     int m_screen_height;
+    float2 m_pixel_size;
     float m_vertical_fov;
     float m_horizontal_fov;
 } Camera;
@@ -254,6 +255,20 @@ inline float3 Camera_camspace_to_worldspace(__constant const Camera *camera, flo
 //     }
 // }
 
+inline Ray Camera_pixel_to_ray(__global PRNG *prng, __constant Camera *camera, uint x, uint y) {
+    float2 rel_pos = Camera_screenspace_to_camspace(camera, x, y);
+
+    // Subpixel sampling / antialiasing
+    float2 jitter = {rand_range(prng, -camera->m_pixel_size.x / 2.f, camera->m_pixel_size.x / 2.f),
+                     rand_range(prng, -camera->m_pixel_size.y / 2.f, camera->m_pixel_size.y / 2.f)};
+    rel_pos += jitter;
+
+    float3 world_pos = Camera_camspace_to_worldspace(camera, rel_pos);
+    float3 ray_dir = normalize(world_pos - camera->m_pos);
+
+    return ray_construct(world_pos, ray_dir);
+}
+
 // From
 // http://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection
 inline bool intersect_ray_aabb(const Ray *ray, const AABB *aabb) {
@@ -295,8 +310,7 @@ inline bool intersect_ray_aabb(const Ray *ray, const AABB *aabb) {
 
 // Möller-Trumbore intersection algorithm
 // (see https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm)
-inline bool intersect_ray_triangle(const Ray *ray, __global const Triangle *triangle,
-                                   float *dist) {
+inline bool intersect_ray_triangle(const Ray *ray, __global const Triangle *triangle, float *dist) {
     // Calculate edges of triangle from v0.
     float3 e0 = triangle->m_v2 - triangle->m_v1;
     float3 e1 = triangle->m_v3 - triangle->m_v1;
@@ -384,18 +398,13 @@ inline IntersectionInfo Scene_intersect(__global Triangle *accel_struct, const u
 
 __kernel void renderer_trace_camera_ray(__write_only __global float4 *output, const uint width,
                                         const uint max_depth, __global PRNG *prng,
-                                        __constant Camera *camera,
-                                        __global Triangle *accel_struct,
+                                        __constant Camera *camera, __global Triangle *accel_struct,
                                         const uint num_triangles) {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-    int index = y * width + x;
+    uint x = get_global_id(0);
+    uint y = get_global_id(1);
+    uint index = y * width + x;
 
-    float2 rel_pos = Camera_screenspace_to_camspace(camera, x, y);
-    float3 world_pos = Camera_camspace_to_worldspace(camera, rel_pos);
-    float3 ray_dir = normalize(world_pos - camera->m_pos);
-
-    Ray next_ray = ray_construct(world_pos, ray_dir);
+    Ray next_ray = Camera_pixel_to_ray(prng, camera, x, y);
     float3 return_color = (float3)(0.f);
     float3 luminance = (float3)(1.f);
     size_t depth = 0;

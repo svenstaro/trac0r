@@ -99,6 +99,7 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
         cl_float m_far_plane_dist;
         cl_int m_screen_width;
         cl_int m_screen_height;
+        cl_float2 m_pixel_size;
         cl_float m_vertical_fov;
         cl_float m_horizontal_fov;
     };
@@ -149,6 +150,7 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
     dev_camera.m_far_plane_dist = Camera::far_plane_dist(m_camera);
     dev_camera.m_screen_width = Camera::screen_width(m_camera);
     dev_camera.m_screen_height = Camera::screen_height(m_camera);
+    dev_camera.m_pixel_size = {{Camera::pixel_size(m_camera).x, Camera::pixel_size(m_camera).y}};
     dev_camera.m_vertical_fov = Camera::vertical_fov(m_camera);
     dev_camera.m_horizontal_fov = Camera::horizontal_fov(m_camera);
     cl::Buffer dev_camera_buf(m_compute_context, CL_MEM_READ_ONLY, sizeof(dev_camera));
