@@ -33,6 +33,17 @@ typedef struct Material {
     float m_emittance;
 } Material;
 
+typedef struct AABB {
+    float3 m_min;
+    float3 m_max;
+} AABB;
+
+typedef struct Shape {
+    AABB m_aabb;
+    uint m_triangle_index_start;
+    uint m_triangle_index_end;
+} Shape;
+
 typedef struct Triangle {
     float3 m_v1;
     float3 m_v2;
@@ -62,11 +73,6 @@ typedef struct IntersectionInfo {
     Ray m_incoming_ray;
     Material m_material;
 } IntersectionInfo;
-
-typedef struct AABB {
-    float3 m_min;
-    float3 m_max;
-} AABB;
 
 // From http://xorshift.di.unimi.it/xorshift1024star.c
 inline ulong xorshift1024star(__global PRNG *prng) {
@@ -154,11 +160,11 @@ inline bool AABB_is_null(const AABB *aabb) {
     return min_null && max_null;
 }
 
-inline float3 AABB_min(const AABB *aabb) {
+inline float3 AABB_min(__global AABB *aabb) {
     return aabb->m_min;
 }
 
-inline float3 AABB_max(const AABB *aabb) {
+inline float3 AABB_max(__global AABB *aabb) {
     return aabb->m_max;
 }
 
@@ -169,19 +175,6 @@ inline float3 AABB_diagonal(const AABB *aabb) {
 inline float3 AABB_center(const AABB *aabb) {
     return aabb->m_min + (AABB_diagonal(aabb) * 0.5f);
 }
-
-// std_array<glm_vec3, 8> AABB_vertices(AABB &aabb) {
-//     std_array<glm_vec3, 8> result;
-//     result[0] = {aabb.m_min.x, aabb.m_min.y, aabb.m_min.z}; // lower left front
-//     result[1] = {aabb.m_max.x, aabb.m_min.y, aabb.m_min.z}; // lower right front
-//     result[2] = {aabb.m_min.x, aabb.m_max.y, aabb.m_min.z}; // upper left front
-//     result[3] = {aabb.m_max.x, aabb.m_max.y, aabb.m_min.z}; // upper right front
-//     result[4] = {aabb.m_min.x, aabb.m_min.y, aabb.m_max.z}; // lower left back
-//     result[5] = {aabb.m_max.x, aabb.m_min.y, aabb.m_max.z}; // lower right back
-//     result[6] = {aabb.m_min.x, aabb.m_max.y, aabb.m_max.z}; // upper left back
-//     result[7] = {aabb.m_max.x, aabb.m_max.y, aabb.m_max.z}; // upper right back
-//     return result;
-// }
 
 inline void AABB_extend(AABB *aabb, float3 point) {
     aabb->m_min = min(point, aabb->m_min);
@@ -271,7 +264,7 @@ inline Ray Camera_pixel_to_ray(__global PRNG *prng, __constant Camera *camera, u
 
 // From
 // http://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection
-inline bool intersect_ray_aabb(const Ray *ray, const AABB *aabb) {
+inline bool intersect_ray_aabb(const Ray *ray, __global AABB *aabb) {
     float tmin, tmax, tymin, tymax, tzmin, tzmax;
 
     float3 bounds[2];
@@ -359,34 +352,36 @@ inline bool intersect_ray_triangle(const Ray *ray, __global const Triangle *tria
     return false;
 }
 
-inline IntersectionInfo Scene_intersect(__global Triangle *accel_struct, const uint num_triangles,
-                                        Ray *ray) {
+inline IntersectionInfo Scene_intersect(__global Triangle *triangles, const uint num_triangles,
+                                        __global Shape *shapes, const uint num_shapes, Ray *ray) {
     IntersectionInfo intersect_info; // TODO use proper constructor
     intersect_info.m_has_intersected = false;
 
     // Keep track of closest triangle
     float closest_dist = FLT_MAX;
     Triangle closest_triangle;
-    // for (const auto &shape : FlatStructure::shapes(flatstruct)) {
-    //     if (intersect_ray_aabb(ray, Shape::aabb(shape))) {
-    //         for (auto &tri : Shape::triangles(shape)) {
-    for (unsigned i = 0; i < num_triangles; i++) {
-        float dist_to_intersect;
-        __global Triangle *tri = &(accel_struct[i]);
-        bool intersected = intersect_ray_triangle(ray, tri, &dist_to_intersect);
-        if (intersected) {
-            // Find closest triangle
-            if (dist_to_intersect < closest_dist) {
-                closest_dist = dist_to_intersect;
-                closest_triangle = *tri;
+    for (unsigned s = 0; s < num_shapes; s++) {
+        __global Shape *shape = &(shapes[s]);
+        if (intersect_ray_aabb(ray, &(shape->m_aabb))) {
+            for (unsigned i = shape->m_triangle_index_start; i < shape->m_triangle_index_end; i++) {
+                float dist_to_intersect;
+                __global Triangle *tri = &(triangles[i]);
+                bool intersected = intersect_ray_triangle(ray, tri, &dist_to_intersect);
+                if (intersected) {
+                    // Find closest triangle
+                    if (dist_to_intersect < closest_dist) {
+                        closest_dist = dist_to_intersect;
+                        closest_triangle = *tri;
 
-                intersect_info.m_has_intersected = true;
-                intersect_info.m_pos = ray->m_origin + ray->m_dir * closest_dist;
-                intersect_info.m_incoming_ray = *ray;
-                intersect_info.m_angle_between =
-                    dot(closest_triangle.m_normal, intersect_info.m_incoming_ray.m_dir);
-                intersect_info.m_normal = closest_triangle.m_normal;
-                intersect_info.m_material = closest_triangle.m_material;
+                        intersect_info.m_has_intersected = true;
+                        intersect_info.m_pos = ray->m_origin + ray->m_dir * closest_dist;
+                        intersect_info.m_incoming_ray = *ray;
+                        intersect_info.m_angle_between =
+                            dot(closest_triangle.m_normal, intersect_info.m_incoming_ray.m_dir);
+                        intersect_info.m_normal = closest_triangle.m_normal;
+                        intersect_info.m_material = closest_triangle.m_material;
+                    }
+                }
             }
         }
     }
@@ -398,8 +393,9 @@ inline IntersectionInfo Scene_intersect(__global Triangle *accel_struct, const u
 
 __kernel void renderer_trace_camera_ray(__write_only __global float4 *output, const uint width,
                                         const uint max_depth, __global PRNG *prng,
-                                        __constant Camera *camera, __global Triangle *accel_struct,
-                                        const uint num_triangles) {
+                                        __constant Camera *camera, __global Triangle *triangles,
+                                        const uint num_triangles, __global Shape *shapes,
+                                        const uint num_shapes) {
     uint x = get_global_id(0);
     uint y = get_global_id(1);
     uint index = y * width + x;
@@ -419,7 +415,7 @@ __kernel void renderer_trace_camera_ray(__write_only __global float4 *output, co
         }
         depth++;
 
-        IntersectionInfo intersect_info = Scene_intersect(accel_struct, num_triangles, &next_ray);
+        IntersectionInfo intersect_info = Scene_intersect(triangles, num_triangles, shapes, num_shapes, &next_ray);
         if (intersect_info.m_has_intersected) {
             // Emitter Material
             if (intersect_info.m_material.m_type == 1) {
