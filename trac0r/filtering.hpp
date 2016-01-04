@@ -5,7 +5,7 @@
 
 #include <cstdint>
 #include <vector>
-#include <algorithm>
+#include <numeric>
 
 #include <glm/glm.hpp>
 
