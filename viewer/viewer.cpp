@@ -174,6 +174,9 @@ void Viewer::mainloop() {
             if (e.key.keysym.sym == SDLK_b) {
                 m_debug = !m_debug;
             }
+            if (e.key.keysym.sym == SDLK_n) {
+                m_print_perf = !m_print_perf;
+            }
             if (e.key.keysym.sym == SDLK_1) {
                 m_stride_x = 1;
                 m_stride_y = 1;
