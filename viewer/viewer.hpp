@@ -39,7 +39,7 @@ class Viewer {
     bool m_look_mode = false;
     int m_last_frame_time = 0;
     bool m_debug = false;
-    bool m_print_perf = true;
+    bool m_print_perf = false;
     int m_stride_x = 1;
     int m_stride_y = 1;
     int m_frame = 0;
@@ -49,6 +49,7 @@ class Viewer {
     /**
      * @brief Used for benchmarking
      */
+    int m_benchmark_mode = 0;
     int m_max_frames = 0;
     float m_frame_total = 0.f;
 

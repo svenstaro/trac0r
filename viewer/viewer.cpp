@@ -45,6 +45,7 @@ int Viewer::init(int argc, char *argv[]) {
     for (auto i = 0; i < argc; i++) {
         std::string argv_str(argv[i]);
         if (argv_str == "-b") {
+            m_benchmark_mode = 1;
             m_max_frames = 50;
         }
     }
@@ -122,9 +123,9 @@ void Viewer::setup_scene() {
     auto box2 =
         trac0r::Shape::make_box({-0.2f, 0.15f, 0.1f}, {0, -0.5f, 0}, {0.3f, 0.6f, 0.3f}, glossy);
     auto sphere1 =
-        trac0r::Shape::make_icosphere({0.f, 0.1f, -0.3f}, {0, 0, 0}, 0.15f, 2, glass);
+        trac0r::Shape::make_icosphere({0.f, 0.1f, -0.3f}, {0, 0, 0}, 0.15f, 0, glass);
     auto sphere2 =
-        trac0r::Shape::make_icosphere({0.3f, 0.45f, 0.1f}, {0, 0, 0}, 0.15f, 2, glossy);
+        trac0r::Shape::make_icosphere({0.3f, 0.45f, 0.1f}, {0, 0, 0}, 0.15f, 0, glossy);
 
     Scene::add_shape(m_scene, wall_left);
     Scene::add_shape(m_scene, wall_right);
@@ -281,7 +282,9 @@ void Viewer::mainloop() {
         fmt::print("    {:<15} {:=10.3f} ms\n", "Scene rebuild", timer.elapsed());
 
     const auto luminance = m_renderer->render(m_scene_changed, m_stride_x, m_stride_y);
-    m_renderer->print_last_frame_timings();
+    if (m_print_perf) {
+        m_renderer->print_last_frame_timings();
+    }
 
     m_samples_accumulated += 1;
 
@@ -436,7 +439,7 @@ void Viewer::mainloop() {
     }
 
     m_frame_total += total.elapsed();
-    if (m_max_frames != 0 && m_frame > m_max_frames) {
+    if (m_benchmark_mode > 0 && m_max_frames != 0 && m_frame > m_max_frames) {
         fmt::print("Benchmark results:\n");
         fmt::print("    {:<15} {:>10}\n", "Frames rendered", m_max_frames);
         fmt::print("    {:<15} {:>10.3f} ms\n", "Total runtime", m_frame_total);
