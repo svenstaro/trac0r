@@ -19,7 +19,7 @@ clang-opencl:
 	cd build; CXX=clang++ cmake -DOPENCL=1 ..; make -j
 
 benchmark: default
-	build/trac0r_viewer -b
+	build/trac0r_viewer -b1
 
 memcheck: default
 	valgrind --leak-check=full build/trac0r_viewer

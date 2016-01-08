@@ -44,9 +44,21 @@ int Viewer::init(int argc, char *argv[]) {
 
     for (auto i = 0; i < argc; i++) {
         std::string argv_str(argv[i]);
-        if (argv_str == "-b") {
+        if (argv_str == "-b1") {
             m_benchmark_mode = 1;
+            m_max_frames = 500;
+        } else if (argv_str == "-b2") {
+            m_benchmark_mode = 2;
+            m_max_frames = 250;
+        } else if (argv_str == "-b3") {
+            m_benchmark_mode = 3;
+            m_max_frames = 125;
+        } else if (argv_str == "-b4") {
+            m_benchmark_mode = 4;
             m_max_frames = 50;
+        } else if (argv_str == "-b5") {
+            m_benchmark_mode = 5;
+            m_max_frames = 25;
         }
     }
 
@@ -91,8 +103,8 @@ int Viewer::init(int argc, char *argv[]) {
 
     // Setup scene
     setup_scene();
-    m_renderer =
-        std::make_unique<trac0r::Renderer>(m_screen_width, m_screen_height, m_camera, m_scene, m_print_perf);
+    m_renderer = std::make_unique<trac0r::Renderer>(m_screen_width, m_screen_height, m_camera,
+                                                    m_scene, m_print_perf);
     m_renderer->print_sysinfo();
 
     fmt::print("Finish init\n");
@@ -122,10 +134,18 @@ void Viewer::setup_scene() {
                                         default_material);
     auto box2 =
         trac0r::Shape::make_box({-0.2f, 0.15f, 0.1f}, {0, -0.5f, 0}, {0.3f, 0.6f, 0.3f}, glossy);
-    auto sphere1 =
-        trac0r::Shape::make_icosphere({0.f, 0.1f, -0.3f}, {0, 0, 0}, 0.15f, 0, glass);
-    auto sphere2 =
-        trac0r::Shape::make_icosphere({0.3f, 0.45f, 0.1f}, {0, 0, 0}, 0.15f, 0, glossy);
+    if (m_benchmark_mode > 0) {
+        auto sphere1 = trac0r::Shape::make_icosphere({0.f, 0.1f, -0.3f}, {0, 0, 0}, 0.15f, m_benchmark_mode - 1,
+                                                     default_material);
+        Scene::add_shape(m_scene, sphere1);
+    } else {
+        auto sphere1 =
+            trac0r::Shape::make_icosphere({0.f, 0.1f, -0.3f}, {0, 0, 0}, 0.15f, 2, glass);
+        auto sphere2 =
+            trac0r::Shape::make_icosphere({0.3f, 0.45f, 0.1f}, {0, 0, 0}, 0.15f, 2, glossy);
+        Scene::add_shape(m_scene, sphere1);
+        Scene::add_shape(m_scene, sphere2);
+    }
 
     Scene::add_shape(m_scene, wall_left);
     Scene::add_shape(m_scene, wall_right);
@@ -135,8 +155,6 @@ void Viewer::setup_scene() {
     Scene::add_shape(m_scene, lamp);
     Scene::add_shape(m_scene, box1);
     Scene::add_shape(m_scene, box2);
-    Scene::add_shape(m_scene, sphere1);
-    Scene::add_shape(m_scene, sphere2);
 
     glm::vec3 cam_pos = {0, 0.31, -1.2};
     glm::vec3 cam_dir = {0, 0, 1};
@@ -447,6 +465,7 @@ void Viewer::mainloop() {
         fmt::print("    {:<15} {:>10}\n", "Frames rendered", m_max_frames);
         fmt::print("    {:<15} {:>10.3f} ms\n", "Total runtime", m_frame_total);
         fmt::print("    {:<15} {:>10.3f} ms\n", "Avg. frame", m_frame_total / m_max_frames);
+        fmt::print("    {:<15} {:>10.3f} FPS\n", "Avg. FPS", 1.f / ((m_frame_total / 1000.f) / m_max_frames));
         shutdown();
     }
 }

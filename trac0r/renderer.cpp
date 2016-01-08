@@ -313,6 +313,16 @@ std::vector<glm::vec4> &Renderer::render(bool scene_changed, int stride_x, int s
 }
 
 void Renderer::print_sysinfo() const {
+    auto count_shapes = 0;
+    auto count_triangles = 0;
+    for (const auto shape : FlatStructure::shapes(Scene::accel_struct(m_scene))) {
+        count_shapes++;
+        for (const auto triangle : Shape::triangles(shape)) {
+            (void)triangle;
+            count_triangles++;
+        }
+    }
+    fmt::print("Scene has {} triangles and {} Shapes\n", count_triangles, count_shapes);
 #ifdef OPENCL
     fmt::print("Rendering on OpenCL\n");
     std::vector<cl::Platform> platforms;
