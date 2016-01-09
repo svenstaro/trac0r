@@ -20,6 +20,10 @@ clang-opencl:
 
 benchmark: default
 	build/trac0r_viewer -b1
+	build/trac0r_viewer -b2
+	build/trac0r_viewer -b3
+	build/trac0r_viewer -b4
+	build/trac0r_viewer -b5
 
 memcheck: default
 	valgrind --leak-check=full build/trac0r_viewer
