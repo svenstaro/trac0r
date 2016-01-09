@@ -70,12 +70,6 @@ std::enable_if_t<std::is_floating_point<T>::value, T> inline rand_range(const T 
  * @brief Selects a random point on a sphere with uniform distribution.
  * point on a uniform.
  *
- * TODO Add this to bibtex
- * Marsaglia, G. "Choosing a Point from the Surface of a Sphere." Ann. Math. Stat. 43, 645-646,
- * 1972.
- * Muller, M. E. "A Note on a Method for Generating Points Uniformly on N-Dimensional Spheres."
- * Comm. Assoc. Comput. Mach. 2, 19-20, Apr. 1959.
- *
  * @return A random point on the surface of a sphere
  */
 inline glm::vec3 uniform_sample_sphere() {
