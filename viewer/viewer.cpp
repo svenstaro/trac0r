@@ -60,6 +60,13 @@ int Viewer::init(int argc, char *argv[]) {
             m_benchmark_mode = 5;
             m_max_frames = 25;
         }
+
+        // Save image after n frames and quit
+        auto found = argv_str.find("-f");
+        if (found != std::string::npos) {
+            m_benchmark_mode = -1;
+            m_max_frames = std::stoi(argv_str.substr(found + 2, argv_str.length()));
+        }
     }
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
@@ -135,8 +142,8 @@ void Viewer::setup_scene() {
     auto box2 =
         trac0r::Shape::make_box({-0.2f, 0.15f, 0.1f}, {0, -0.5f, 0}, {0.3f, 0.6f, 0.3f}, glossy);
     if (m_benchmark_mode > 0) {
-        auto sphere1 = trac0r::Shape::make_icosphere({0.f, 0.1f, -0.3f}, {0, 0, 0}, 0.15f, m_benchmark_mode - 1,
-                                                     default_material);
+        auto sphere1 = trac0r::Shape::make_icosphere({0.f, 0.1f, -0.3f}, {0, 0, 0}, 0.15f,
+                                                     m_benchmark_mode - 1, default_material);
         Scene::add_shape(m_scene, sphere1);
     } else {
         auto sphere1 =
@@ -460,12 +467,21 @@ void Viewer::mainloop() {
     }
 
     m_frame_total += total.elapsed();
-    if (m_benchmark_mode > 0 && m_max_frames != 0 && m_frame > m_max_frames) {
+    if (m_benchmark_mode < 0 && m_max_frames != 0 && m_frame > m_max_frames) {
+        auto filename = std::string("trac0r-") + std::to_string(m_max_frames) + std::string(".bmp");
+        SDL_Surface *sshot = SDL_CreateRGBSurface(0, m_screen_width, m_screen_height, 32,
+                                                  0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+        SDL_RenderReadPixels(m_render, NULL, SDL_PIXELFORMAT_ARGB8888, sshot->pixels, sshot->pitch);
+        SDL_SaveBMP(sshot, filename.c_str());
+        SDL_FreeSurface(sshot);
+        shutdown();
+    } else if (m_benchmark_mode > 0 && m_max_frames != 0 && m_frame > m_max_frames) {
         fmt::print("Benchmark results:\n");
         fmt::print("    {:<15} {:>10}\n", "Frames rendered", m_max_frames);
         fmt::print("    {:<15} {:>10.3f} ms\n", "Total runtime", m_frame_total);
         fmt::print("    {:<15} {:>10.3f} ms\n", "Avg. frame", m_frame_total / m_max_frames);
-        fmt::print("    {:<15} {:>10.3f} FPS\n", "Avg. FPS", 1.f / ((m_frame_total / 1000.f) / m_max_frames));
+        fmt::print("    {:<15} {:>10.3f} FPS\n", "Avg. FPS",
+                   1.f / ((m_frame_total / 1000.f) / m_max_frames));
         shutdown();
     }
 }
