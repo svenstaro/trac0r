@@ -7,7 +7,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "cppformat/format.h"
+#include "fmt/format.h"
 
 #include <fstream>
 #include <thread>

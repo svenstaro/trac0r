@@ -4,7 +4,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
-#include <cppformat/format.h>
+#include <fmt/format.h>
 
 #include <iostream>
 

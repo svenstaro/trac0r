@@ -13,7 +13,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
-#include <cppformat/format.h>
+#include <fmt/format.h>
 
 #ifdef OPENCL
 #include <CL/cl.hpp>
@@ -124,8 +124,8 @@ void Viewer::setup_scene() {
     trac0r::Material default_material{2, {0.740063, 0.742313, 0.733934}};
     trac0r::Material diffuse_red{2, {0.366046, 0.0371827, 0.0416385}};
     trac0r::Material diffuse_green{2, {0.162928, 0.408903, 0.0833759}};
-    trac0r::Material glass{3, {0.5f, 0.5f, 0.9f}, 0.0f, 1.51714f};
-    trac0r::Material glossy{4, {1.f, 1.f, 1.f}, 0.09f};
+    // trac0r::Material glass{3, {0.5f, 0.5f, 0.9f}, 0.0f, 1.51714f};
+    // trac0r::Material glossy{4, {1.f, 1.f, 1.f}, 0.09f};
     auto wall_left = trac0r::Shape::make_plane({-0.5f, 0.4f, 0}, {0, 0, -glm::half_pi<float>()},
                                                {1, 1}, diffuse_red);
     auto wall_right = trac0r::Shape::make_plane({0.5f, 0.4f, 0}, {0, 0, glm::half_pi<float>()},
@@ -140,16 +140,16 @@ void Viewer::setup_scene() {
     auto box1 = trac0r::Shape::make_box({0.3f, 0.1f, 0.1f}, {0, 0.6f, 0}, {0.2f, 0.5f, 0.2f},
                                         default_material);
     auto box2 =
-        trac0r::Shape::make_box({-0.2f, 0.15f, 0.1f}, {0, -0.5f, 0}, {0.3f, 0.6f, 0.3f}, glossy);
+        trac0r::Shape::make_box({-0.2f, 0.15f, 0.1f}, {0, -0.5f, 0}, {0.3f, 0.6f, 0.3f}, default_material);
     if (m_benchmark_mode > 0) {
         auto sphere1 = trac0r::Shape::make_icosphere({0.f, 0.1f, -0.3f}, {0, 0, 0}, 0.15f,
                                                      m_benchmark_mode - 1, default_material);
         Scene::add_shape(m_scene, sphere1);
     } else {
         auto sphere1 =
-            trac0r::Shape::make_icosphere({0.f, 0.1f, -0.3f}, {0, 0, 0}, 0.15f, 2, glass);
+            trac0r::Shape::make_icosphere({0.f, 0.1f, -0.3f}, {0, 0, 0}, 0.15f, 1, default_material);
         auto sphere2 =
-            trac0r::Shape::make_icosphere({0.3f, 0.45f, 0.1f}, {0, 0, 0}, 0.15f, 2, glossy);
+            trac0r::Shape::make_icosphere({0.3f, 0.45f, 0.1f}, {0, 0, 0}, 0.15f, 1, default_material);
         Scene::add_shape(m_scene, sphere1);
         Scene::add_shape(m_scene, sphere2);
     }

@@ -1,7 +1,7 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
-#include <cppformat/format.h>
+#include <fmt/format.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtx/log_base.hpp>

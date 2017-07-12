@@ -34,3 +34,6 @@
 external/
 build/
 build-web/
+
+# Misc
+*.plist

@@ -15,7 +15,7 @@ endif()
 set(trac0r_flags -O0 -g ${OpenMP_CXX_FLAGS} -Wall -Wextra -pedantic -Werror -std=c++14 -Wno-unused-parameter)
 set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} ${OpenMP_CXX_FLAGS}")
 
-file(GLOB cppformat_src external/cppformat/*.cc)
+file(GLOB cppformat_src external/cppformat/fmt/*.cc)
 add_library(cppformat ${cppformat_src})
 
 file(GLOB sdl2_gfx_src external/sdl2_gfx/*.c)
@@ -54,7 +54,7 @@ endif()
 
 include_directories(SYSTEM
     ${SDL2_INCLUDE_DIRS}
-    external/
+    external/cppformat
     external/glm
     external/sdl2_gfx
     ${CMAKE_SOURCE_DIR}

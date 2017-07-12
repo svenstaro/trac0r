@@ -3,7 +3,7 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/vector_query.hpp>
 
-#include <cppformat/format.h>
+#include <fmt/format.h>
 #include <glm/gtx/string_cast.hpp>
 
 namespace trac0r {

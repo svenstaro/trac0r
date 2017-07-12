@@ -8,7 +8,7 @@
 #include <glm/gtc/constants.hpp>
 
 #include <glm/gtx/string_cast.hpp>
-#include <cppformat/format.h>
+#include <fmt/format.h>
 
 namespace trac0r {
 
