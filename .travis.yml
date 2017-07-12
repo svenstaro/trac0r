@@ -12,6 +12,8 @@ matrix:
     - env: COMPILER="gcc"
     - env: COMPILER="clang"
     - env: COMPILER="emscripten"
+  allow_failures:
+    - env: COMPILER="emscripten"
 
 script:
     PACKAGES='base-devel emscripten sdl2 sdl2_gfx sdl2_image sdl2_mixer sdl2_ttf cmake clang python';
